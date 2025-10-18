@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 // import 'dart:async';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
@@ -107,20 +108,26 @@ class MyApp extends StatelessWidget {
               // Log top-level colors likely used by widgets (card/bg/shadow approximations)
               // debugPrint('[Theme/App] Light scaffoldBg=${light.colorScheme.surface.value.toRadixString(16)} card≈${light.colorScheme.surface.value.toRadixString(16)} shadow=${light.colorScheme.shadow.value.toRadixString(16)}');
               // debugPrint('[Theme/App] Dark scaffoldBg=${dark.colorScheme.surface.value.toRadixString(16)} card≈${dark.colorScheme.surface.value.toRadixString(16)} shadow=${dark.colorScheme.shadow.value.toRadixString(16)}');
-              return MaterialApp(
+              
+              // Build Cupertino themes from Material color schemes
+              final cupertinoLight = buildCupertinoLightTheme(light.colorScheme);
+              final cupertinoDark = buildCupertinoDarkTheme(dark.colorScheme);
+              
+              return CupertinoApp(
                 debugShowCheckedModeBanner: false,
                 title: 'Kelivo',
                 // App UI language; null = follow system (respects iOS per-app language)
                 locale: settings.appLocaleForMaterialApp,
                 supportedLocales: AppLocalizations.supportedLocales,
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
-                theme: light,
-                darkTheme: dark,
-                themeMode: settings.themeMode,
+                localizationsDelegates: const [
+                  ...AppLocalizations.localizationsDelegates,
+                  DefaultCupertinoLocalizations.delegate,
+                ],
+                theme: settings.themeMode == ThemeMode.dark ? cupertinoDark : cupertinoLight,
                 navigatorObservers: <NavigatorObserver>[routeObserver],
                 home: const HomePage(),
                 builder: (ctx, child) {
-                  final bright = Theme.of(ctx).brightness;
+                  final bright = CupertinoTheme.of(ctx).brightness ?? Brightness.light;
                   final overlay = bright == Brightness.dark
                       ? const SystemUiOverlayStyle(
                           statusBarColor: Colors.transparent,
@@ -150,10 +157,17 @@ class MyApp extends StatelessWidget {
                 });
               }
 
+                  // Wrap with Theme to provide Material theme for existing Material widgets
                   return AnnotatedRegion<SystemUiOverlayStyle>(
                     value: overlay,
-                    child: AppSnackBarOverlay(
-                      child: child ?? const SizedBox.shrink(),
+                    child: Theme(
+                      data: settings.themeMode == ThemeMode.dark ? dark : light,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: AppSnackBarOverlay(
+                          child: child ?? const SizedBox.shrink(),
+                        ),
+                      ),
                     ),
                   );
                 },
