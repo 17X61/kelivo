@@ -1,5 +1,6 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 // CJK/Latin fallback to stabilize fontWeight (w100–w600) on iOS for Chinese
@@ -357,5 +358,116 @@ ThemeData buildDarkThemeForScheme(ColorScheme staticScheme, {ColorScheme? dynami
   return theme.copyWith(
     textTheme: _withFontFallback(theme.textTheme, kDefaultFontFamilyFallback),
     primaryTextTheme: _withFontFallback(theme.primaryTextTheme, kDefaultFontFamilyFallback),
+  );
+}
+
+// Build Cupertino theme from Material ColorScheme
+CupertinoThemeData buildCupertinoLightTheme(ColorScheme scheme) {
+  return CupertinoThemeData(
+    brightness: Brightness.light,
+    primaryColor: scheme.primary,
+    primaryContrastingColor: scheme.onPrimary,
+    scaffoldBackgroundColor: scheme.surface,
+    barBackgroundColor: scheme.surface.withOpacity(0.9),
+    textTheme: CupertinoTextThemeData(
+      primaryColor: scheme.onSurface,
+      textStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 17,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      actionTextStyle: TextStyle(
+        color: scheme.primary,
+        fontSize: 17,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      tabLabelTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 10,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      navTitleTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      navLargeTitleTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 34,
+        fontWeight: FontWeight.w700,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      navActionTextStyle: TextStyle(
+        color: scheme.primary,
+        fontSize: 17,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      pickerTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 21,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      dateTimePickerTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 21,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+    ),
+  );
+}
+
+CupertinoThemeData buildCupertinoDarkTheme(ColorScheme scheme) {
+  return CupertinoThemeData(
+    brightness: Brightness.dark,
+    primaryColor: scheme.primary,
+    primaryContrastingColor: scheme.onPrimary,
+    scaffoldBackgroundColor: scheme.surface,
+    barBackgroundColor: scheme.surface.withOpacity(0.9),
+    textTheme: CupertinoTextThemeData(
+      primaryColor: scheme.onSurface,
+      textStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 17,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      actionTextStyle: TextStyle(
+        color: scheme.primary,
+        fontSize: 17,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      tabLabelTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 10,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      navTitleTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      navLargeTitleTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 34,
+        fontWeight: FontWeight.w700,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      navActionTextStyle: TextStyle(
+        color: scheme.primary,
+        fontSize: 17,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      pickerTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 21,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+      dateTimePickerTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 21,
+        fontFamilyFallback: kDefaultFontFamilyFallback,
+      ),
+    ),
   );
 }
