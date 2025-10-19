@@ -1607,6 +1607,30 @@ abstract class AppLocalizations {
   /// **'Import from Cherry Studio'**
   String get backupPageImportFromCherryStudio;
 
+  /// No description provided for @backupPageAutoSyncWebDav.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Sync from WebDAV'**
+  String get backupPageAutoSyncWebDav;
+
+  /// No description provided for @backupPageAutoSyncInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Interval'**
+  String get backupPageAutoSyncInterval;
+
+  /// No description provided for @backupPageEveryNMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {n} minutes'**
+  String backupPageEveryNMinutes(int n);
+
+  /// No description provided for @backupPageRestoreCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore completed'**
+  String get backupPageRestoreCompleted;
+
   /// No description provided for @chatHistoryPageTitle.
   ///
   /// In en, this message translates to:

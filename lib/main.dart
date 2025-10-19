@@ -22,6 +22,7 @@ import 'core/services/chat/chat_service.dart';
 import 'core/services/mcp/mcp_tool_service.dart';
 import 'utils/sandbox_path_resolver.dart';
 import 'shared/widgets/snackbar.dart';
+import 'core/services/backup/auto_sync_service.dart';
 
 final RouteObserver<ModalRoute<dynamic>> routeObserver = RouteObserver<ModalRoute<dynamic>>();
 bool _didCheckUpdates = false; // one-time update check flag
@@ -61,6 +62,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TtsProvider()),
         ChangeNotifierProvider(create: (_) => UpdateProvider()),
         ChangeNotifierProvider(create: (_) => QuickPhraseProvider()),
+        // Auto WebDAV sync (pull latest and merge) while app is running
+        ChangeNotifierProvider(create: (ctx) => WebDavAutoSyncService(
+              chatService: ctx.read<ChatService>(),
+              settings: ctx.read<SettingsProvider>(),
+            )),
       ],
       child: Builder(
         builder: (context) {

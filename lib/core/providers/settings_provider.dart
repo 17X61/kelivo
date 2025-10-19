@@ -46,6 +46,9 @@ class SettingsProvider extends ChangeNotifier {
   static const String _searchSelectedKey = 'search_selected_v1';
   static const String _searchEnabledKey = 'search_enabled_v1';
   static const String _webDavConfigKey = 'webdav_config_v1';
+  static const String _webDavAutoSyncEnabledKey = 'webdav_auto_sync_enabled_v1';
+  static const String _webDavAutoSyncIntervalMinutesKey = 'webdav_auto_sync_interval_minutes_v1';
+  static const String _webDavLastSyncedFileKey = 'webdav_last_sync_file_v1';
 
   List<String> _providersOrder = const [];
   List<String> get providersOrder => _providersOrder;
@@ -215,6 +218,9 @@ class SettingsProvider extends ChangeNotifier {
     if (webdavStr != null && webdavStr.isNotEmpty) {
       try { _webDavConfig = WebDavConfig.fromJson(jsonDecode(webdavStr) as Map<String, dynamic>); } catch (_) {}
     }
+    _webDavAutoSyncEnabled = prefs.getBool(_webDavAutoSyncEnabledKey) ?? false;
+    _webDavAutoSyncIntervalMinutes = prefs.getInt(_webDavAutoSyncIntervalMinutesKey) ?? 60;
+    _webDavLastSyncedFile = prefs.getString(_webDavLastSyncedFileKey);
     if (_providerConfigs.isEmpty) {
       // Seed a couple of sensible defaults on first launch, but do not recreate
       // providers implicitly during later reads (e.g., when switching chats).
@@ -295,6 +301,40 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_webDavConfigKey, jsonEncode(cfg.toJson()));
+  }
+
+  bool _webDavAutoSyncEnabled = false;
+  int _webDavAutoSyncIntervalMinutes = 60; // default 60 minutes
+  String? _webDavLastSyncedFile;
+
+  bool get webDavAutoSyncEnabled => _webDavAutoSyncEnabled;
+  int get webDavAutoSyncIntervalMinutes => _webDavAutoSyncIntervalMinutes;
+  String? get webDavLastSyncedFile => _webDavLastSyncedFile;
+
+  Future<void> setWebDavAutoSyncEnabled(bool enabled) async {
+    _webDavAutoSyncEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_webDavAutoSyncEnabledKey, enabled);
+  }
+
+  Future<void> setWebDavAutoSyncIntervalMinutes(int minutes) async {
+    if (minutes <= 0) minutes = 60;
+    _webDavAutoSyncIntervalMinutes = minutes;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_webDavAutoSyncIntervalMinutesKey, minutes);
+  }
+
+  Future<void> setWebDavLastSyncedFile(String? name) async {
+    _webDavLastSyncedFile = name;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    if (name == null || name.isEmpty) {
+      await prefs.remove(_webDavLastSyncedFileKey);
+    } else {
+      await prefs.setString(_webDavLastSyncedFileKey, name);
+    }
   }
 
   Future<void> _initSearchConnectivityTests() async {
