@@ -2545,4 +2545,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providersPageExportAction => 'Export';
+
+  // --- Added for WebDAV auto-sync ---
+  @override
+  String get backupPageAutoSyncWebDav => 'Auto Sync from WebDAV';
+
+  @override
+  String get backupPageAutoSyncInterval => 'Sync Interval';
+
+  @override
+  String backupPageEveryNMinutes(int n) {
+    return 'Every $n minutes';
+  }
+
+  @override
+  String get backupPageRestoreCompleted => 'Restore completed';
 }

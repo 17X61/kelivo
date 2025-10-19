@@ -7374,4 +7374,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get providersPageExportAction => '匯出';
+
+  // --- 新增：WebDAV 自動同步 ---
+  @override
+  String get backupPageAutoSyncWebDav => '自動從 WebDAV 同步';
+
+  @override
+  String get backupPageAutoSyncInterval => '同步間隔';
+
+  @override
+  String backupPageEveryNMinutes(int n) {
+    return '每' + n.toString() + '分鐘';
+  }
+
+  @override
+  String get backupPageRestoreCompleted => '恢復完成';
 }

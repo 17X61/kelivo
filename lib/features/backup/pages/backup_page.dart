@@ -156,6 +156,71 @@ class _BackupPageState extends State<BackupPage> {
     }
   }
 
+  Future<void> _showIntervalSheet(BuildContext context, SettingsProvider settings) async {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final options = <int>[15, 30, 60, 120, 360, 720, 1440];
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: cs.onSurface.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(l10n.backupPageAutoSyncInterval, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 10),
+                for (final m in options)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        await settings.setWebDavAutoSyncIntervalMinutes(m);
+                        if (context.mounted) Navigator.of(context).pop();
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : const Color(0xFFF7F7F9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: cs.outlineVariant.withOpacity(0.18)),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        child: Row(
+                          children: [
+                            Expanded(child: Text(l10n.backupPageEveryNMinutes(m))),
+                            if (settings.webDavAutoSyncIntervalMinutes == m)
+                              Icon(Lucide.Check, size: 18, color: cs.primary),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -225,6 +290,26 @@ class _BackupPageState extends State<BackupPage> {
                     final newCfg = cfg.copyWith(includeFiles: v);
                     await settings.setWebDavConfig(newCfg);
                     vm.updateConfig(newCfg);
+                  },
+                ),
+                _iosDivider(context),
+                _iosSwitchRow(
+                  context,
+                  icon: Lucide.RefreshCw,
+                  label: l10n.backupPageAutoSyncWebDav,
+                  value: settings.webDavAutoSyncEnabled,
+                  onChanged: (v) async {
+                    await settings.setWebDavAutoSyncEnabled(v);
+                  },
+                ),
+                _iosDivider(context),
+                _iosNavRow(
+                  context,
+                  icon: Lucide.History,
+                  label: l10n.backupPageAutoSyncInterval,
+                  detailText: l10n.backupPageEveryNMinutes(settings.webDavAutoSyncIntervalMinutes),
+                  onTap: () async {
+                    await _showIntervalSheet(context, settings);
                   },
                 ),
               ]),
@@ -317,23 +402,18 @@ class _BackupPageState extends State<BackupPage> {
                         },
                         onRestore: (item) async {
                           Navigator.of(ctx).pop();
-                          
+
                           if (!mounted) return;
                           final mode = await _chooseImportModeDialog(context);
-                          
+
                           if (mode == null) return;
-                          
+
                           await _runWithImportingOverlay(context, () => vm.restoreFromItem(item, mode: mode));
                           if (!mounted) return;
-                          await showDialog(
-                            context: context,
-                            builder: (dctx) => AlertDialog(
-                              title: Text(l10n.backupPageRestartRequired),
-                              content: Text(l10n.backupPageRestartContent),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.of(dctx).pop(), child: Text(l10n.backupPageOK)),
-                              ],
-                            ),
+                          showAppSnackBar(
+                            context,
+                            message: l10n.backupPageRestoreCompleted,
+                            type: NotificationType.success,
                           );
                         },
                       ),
@@ -435,13 +515,10 @@ class _BackupPageState extends State<BackupPage> {
     
     await _runWithImportingOverlay(context, () => vm.restoreFromLocalFile(File(path), mode: mode));
     if (!mounted) return;
-    await showDialog(
-      context: context,
-      builder: (dctx) => AlertDialog(
-        title: Text(l10n.backupPageRestartRequired),
-        content: Text(l10n.backupPageRestartContent),
-        actions: [TextButton(onPressed: () => Navigator.of(dctx).pop(), child: Text(l10n.backupPageOK))],
-      ),
+    showAppSnackBar(
+      context,
+      message: l10n.backupPageRestoreCompleted,
+      type: NotificationType.success,
     );
   }
 
