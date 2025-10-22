@@ -52,6 +52,8 @@ class SettingsProvider extends ChangeNotifier {
   static const String _searchSelectedKey = 'search_selected_v1';
   static const String _searchEnabledKey = 'search_enabled_v1';
   static const String _webDavConfigKey = 'webdav_config_v1';
+  static const String _exportShowReasoningToolCardsKey = 'export_show_reasoning_tool_cards_v1';
+  static const String _exportShowThinkingContentKey = 'export_show_thinking_content_v1';
 
   List<String> _providersOrder = const [];
   List<String> get providersOrder => _providersOrder;
@@ -182,6 +184,9 @@ class SettingsProvider extends ChangeNotifier {
     _showUserMessageActions = prefs.getBool(_displayShowUserMessageActionsKey) ?? true;
     _autoCollapseThinking = prefs.getBool(_displayAutoCollapseThinkingKey) ?? true;
     _showMessageNavButtons = prefs.getBool(_displayShowMessageNavKey) ?? true;
+    // export settings
+    _exportShowReasoningToolCards = prefs.getBool(_exportShowReasoningToolCardsKey) ?? false;
+    _exportShowThinkingContent = prefs.getBool(_exportShowThinkingContentKey) ?? false;
     _hapticsOnGenerate = prefs.getBool(_displayHapticsOnGenerateKey) ?? false;
     _hapticsOnDrawer = prefs.getBool(_displayHapticsOnDrawerKey) ?? true;
     _hapticsGlobalEnabled = prefs.getBool(_displayHapticsGlobalEnabledKey) ?? true;
@@ -700,6 +705,28 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     await prefs.setBool(_displayShowMessageNavKey, v);
   }
 
+  // Export: show reasoning and tool cards in exported images
+  bool _exportShowReasoningToolCards = false;
+  bool get exportShowReasoningToolCards => _exportShowReasoningToolCards;
+  Future<void> setExportShowReasoningToolCards(bool v) async {
+    if (_exportShowReasoningToolCards == v) return;
+    _exportShowReasoningToolCards = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_exportShowReasoningToolCardsKey, v);
+  }
+
+  // Export: show expanded thinking content in exported images
+  bool _exportShowThinkingContent = false;
+  bool get exportShowThinkingContent => _exportShowThinkingContent;
+  Future<void> setExportShowThinkingContent(bool v) async {
+    if (_exportShowThinkingContent == v) return;
+    _exportShowThinkingContent = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_exportShowThinkingContentKey, v);
+  }
+
   // Display: create a new chat on app launch
   bool _newChatOnLaunch = true;
   bool get newChatOnLaunch => _newChatOnLaunch;
@@ -952,6 +979,8 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     copy._showUserMessageActions = _showUserMessageActions;
     copy._autoCollapseThinking = _autoCollapseThinking;
     copy._showMessageNavButtons = _showMessageNavButtons;
+    copy._exportShowReasoningToolCards = _exportShowReasoningToolCards;
+    copy._exportShowThinkingContent = _exportShowThinkingContent;
     copy._hapticsOnGenerate = _hapticsOnGenerate;
     copy._hapticsOnDrawer = _hapticsOnDrawer;
     copy._hapticsGlobalEnabled = _hapticsGlobalEnabled;

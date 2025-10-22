@@ -173,6 +173,8 @@ Future<File?> _renderAndSaveMessageImage(BuildContext context, ChatMessage messa
     title: context.read<ChatService>().getConversation(message.conversationId)?.title ?? l10n.messageExportSheetDefaultTitle,
     cs: cs,
     chatFontScale: settings.chatFontScale,
+    showReasoningToolCards: settings.exportShowReasoningToolCards,
+    showThinkingContent: settings.exportShowThinkingContent,
     ),
   );
   return _renderWidgetDirectly(context, content);
@@ -212,6 +214,8 @@ Future<File?> _renderAndSaveChatImage(BuildContext context, Conversation convers
     chatFontScale: settings.chatFontScale,
     messages: messages,
     timestamp: conversation.updatedAt,
+    showReasoningToolCards: settings.exportShowReasoningToolCards,
+    showThinkingContent: settings.exportShowThinkingContent,
     ),
   );
   return _renderWidgetDirectly(context, content);
@@ -663,6 +667,8 @@ class _BatchExportSheetState extends State<_BatchExportSheet> {
                       _onExportImage();
                     },
                   ),
+                  const SizedBox(height: 16),
+                  _ExportOptionsSection(),
                 ],
               ),
             ),
@@ -833,6 +839,8 @@ class _ExportSheetState extends State<_ExportSheet> {
                       _onExportImage();
                     },
                   ),
+                  const SizedBox(height: 16),
+                  _ExportOptionsSection(),
                 ],
               ),
             ),
@@ -851,11 +859,15 @@ class _ExportedMessageCard extends StatelessWidget {
     required this.title,
     required this.cs,
     required this.chatFontScale,
+    this.showReasoningToolCards = false,
+    this.showThinkingContent = false,
   });
   final ChatMessage message;
   final String title;
   final ColorScheme cs;
   final double chatFontScale;
+  final bool showReasoningToolCards;
+  final bool showThinkingContent;
 
   @override
   Widget build(BuildContext context) {
@@ -866,7 +878,21 @@ class _ExportedMessageCard extends StatelessWidget {
     final bubbleFg = cs.onSurface;
     final time = DateFormat('yyyy-MM-dd HH:mm').format(message.timestamp);
 
-    final parsed = _parseContent(message.content);
+    // Extract thinking content from inline <think> tags
+    String contentWithoutThink = message.content;
+    String extractedThinking = '';
+    final thinkingRegex = RegExp(r"<think>([\s\S]*?)(?:</think>|$)", dotAll: true);
+    final thinkingMatches = thinkingRegex.allMatches(message.content);
+    if (thinkingMatches.isNotEmpty) {
+      extractedThinking = thinkingMatches
+          .map((m) => (m.group(1) ?? '').trim())
+          .where((s) => s.isNotEmpty)
+          .join('\n\n');
+      // Remove thinking blocks from content
+      contentWithoutThink = message.content.replaceAll(thinkingRegex, '').trim();
+    }
+
+    final parsed = _parseContent(contentWithoutThink);
     final mdText = StringBuffer();
     if (parsed.text.isNotEmpty) mdText.writeln(_softBreakMd(parsed.text));
     for (final p in parsed.images) {
@@ -915,6 +941,22 @@ class _ExportedMessageCard extends StatelessWidget {
             if (isAssistant) ...[
               _AssistantHeader(message: message),
               const SizedBox(height: 8),
+              // Show reasoning card if enabled and exists
+              if (showReasoningToolCards) ...[
+                if (message.reasoningText != null && message.reasoningText!.isNotEmpty) ...[
+                  _ExportReasoningCard(
+                    text: message.reasoningText!,
+                    expanded: showThinkingContent,
+                  ),
+                  const SizedBox(height: 8),
+                ] else if (extractedThinking.isNotEmpty) ...[
+                  _ExportReasoningCard(
+                    text: extractedThinking,
+                    expanded: showThinkingContent,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
               contentWidget,
             ] else ...[
               Align(
@@ -978,12 +1020,16 @@ class _ExportedChatImage extends StatelessWidget {
     required this.chatFontScale,
     required this.messages,
     required this.timestamp,
+    this.showReasoningToolCards = false,
+    this.showThinkingContent = false,
   });
   final String conversationTitle;
   final ColorScheme cs;
   final double chatFontScale;
   final List<ChatMessage> messages;
   final DateTime timestamp;
+  final bool showReasoningToolCards;
+  final bool showThinkingContent;
 
   @override
   Widget build(BuildContext context) {
@@ -1019,7 +1065,12 @@ class _ExportedChatImage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             for (final m in messages) ...[
-              _ExportedBubble(message: m, cs: cs),
+              _ExportedBubble(
+                message: m, 
+                cs: cs,
+                showReasoningToolCards: showReasoningToolCards,
+                showThinkingContent: showThinkingContent,
+              ),
               const SizedBox(height: 8),
             ],
             const SizedBox(height: 12),
@@ -1033,16 +1084,38 @@ class _ExportedChatImage extends StatelessWidget {
 }
 
 class _ExportedBubble extends StatelessWidget {
-  const _ExportedBubble({required this.message, required this.cs});
+  const _ExportedBubble({
+    required this.message, 
+    required this.cs,
+    this.showReasoningToolCards = false,
+    this.showThinkingContent = false,
+  });
   final ChatMessage message;
   final ColorScheme cs;
+  final bool showReasoningToolCards;
+  final bool showThinkingContent;
 
   @override
   Widget build(BuildContext context) {
     final isAssistant = message.role == 'assistant';
     final bubbleBg = cs.primary.withOpacity(0.08);
     final bubbleFg = cs.onSurface;
-    final parsed = _parseContent(message.content);
+    
+    // Extract thinking content from inline <think> tags
+    String contentWithoutThink = message.content;
+    String extractedThinking = '';
+    final thinkingRegex = RegExp(r"<think>([\s\S]*?)(?:</think>|$)", dotAll: true);
+    final thinkingMatches = thinkingRegex.allMatches(message.content);
+    if (thinkingMatches.isNotEmpty) {
+      extractedThinking = thinkingMatches
+          .map((m) => (m.group(1) ?? '').trim())
+          .where((s) => s.isNotEmpty)
+          .join('\n\n');
+      // Remove thinking blocks from content
+      contentWithoutThink = message.content.replaceAll(thinkingRegex, '').trim();
+    }
+    
+    final parsed = _parseContent(contentWithoutThink);
     final mdText = StringBuffer();
     if (parsed.text.isNotEmpty) mdText.writeln(_softBreakMd(parsed.text));
     for (final p in parsed.images) {
@@ -1068,6 +1141,24 @@ class _ExportedBubble extends StatelessWidget {
             children: [
               _AssistantHeader(message: message),
               const SizedBox(height: 8),
+              // Show reasoning card if enabled and exists
+              if (showReasoningToolCards) ...[
+                if (message.reasoningText != null && message.reasoningText!.isNotEmpty) ...[
+                  _ExportReasoningCard(
+                    text: message.reasoningText!,
+                    expanded: showThinkingContent,
+                  ),
+                  const SizedBox(height: 8),
+                ] else if (extractedThinking.isNotEmpty) ...[
+                  _ExportReasoningCard(
+                    text: extractedThinking,
+                    expanded: showThinkingContent,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
+              // Tool cards would be added here if available
+              // For now, we focus on reasoning cards which are more commonly used
               contentWidget,
             ],
           ),
@@ -1293,6 +1384,163 @@ class _DocRef {
   final String fileName;
   final String mime;
   _DocRef({required this.path, required this.fileName, required this.mime});
+}
+
+class _ExportReasoningCard extends StatelessWidget {
+  const _ExportReasoningCard({
+    required this.text,
+    required this.expanded,
+  });
+  final String text;
+  final bool expanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? cs.surface.withOpacity(0.8) : cs.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: cs.primary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Lucide.Brain,
+                size: 16,
+                color: cs.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '深度思考',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: cs.primary,
+                ),
+              ),
+            ],
+          ),
+          if (expanded) ...[
+            const SizedBox(height: 8),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                color: cs.onSurface.withOpacity(0.8),
+                height: 1.4,
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 4),
+            Text(
+              '思考过程已折叠',
+              style: TextStyle(
+                fontSize: 12,
+                color: cs.onSurface.withOpacity(0.5),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ExportOptionsSection extends StatelessWidget {
+  const _ExportOptionsSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Show reasoning and tool cards switch
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: cs.outlineVariant.withOpacity(0.35)),
+          ),
+          child: Row(
+            children: [
+              Icon(Lucide.Brain, size: 20, color: cs.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.messageExportSheetShowReasoningToolCards,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+              ),
+              Switch.adaptive(
+                value: settings.exportShowReasoningToolCards,
+                onChanged: (value) {
+                  settings.setExportShowReasoningToolCards(value);
+                  // If turning off the main switch, also turn off thinking content
+                  if (!value && settings.exportShowThinkingContent) {
+                    settings.setExportShowThinkingContent(false);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Show thinking content switch (only enabled if reasoning cards are shown)
+        Opacity(
+          opacity: settings.exportShowReasoningToolCards ? 1.0 : 0.5,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cs.outlineVariant.withOpacity(0.35)),
+            ),
+            child: Row(
+              children: [
+                Icon(Lucide.Eye, size: 20, color: cs.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10n.messageExportSheetShowThinkingContent,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: settings.exportShowReasoningToolCards
+                          ? cs.onSurface
+                          : cs.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                ),
+                Switch.adaptive(
+                  value: settings.exportShowThinkingContent,
+                  onChanged: settings.exportShowReasoningToolCards
+                      ? (value) {
+                          settings.setExportShowThinkingContent(value);
+                        }
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+      ),
+    );
+  }
 }
 
 class _ExportOptionTile extends StatelessWidget {
