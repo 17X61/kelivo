@@ -1113,6 +1113,12 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get exportDisclaimerAiGenerated => '内容由 AI 生成，请仔细甄别';
 
+
+  @override
+  String get messageExportSheetShowReasoningToolCards => '显示深度思考卡片和工具卡片';
+
+  @override
+  String get messageExportSheetShowThinkingContent => '显示思考内容';
   @override
   String get imagePreviewSheetSaveImage => '保存图片';
 
