@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'features/home/pages/home_page.dart';
+import 'features/home/pages/desktop_home_page.dart';
+import 'core/platform_extension.dart';
 import 'package:flutter/services.dart';
 // import 'package:logging/logging.dart' as logging;
 // Theme is now managed in SettingsProvider
@@ -40,7 +42,10 @@ Future<void> main() async {
   // Cache current Documents directory to fix sandboxed absolute paths on iOS
   await SandboxPathResolver.init();
   // Enable edge-to-edge to allow content under system bars (Android)
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  // Only apply edge-to-edge mode on mobile platforms
+  if (PlatformExtension.isMobile) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
   // Start app (no extra guarded zone logging)
   runApp(const MyApp());
 }
@@ -120,7 +125,9 @@ class MyApp extends StatelessWidget {
                 darkTheme: dark,
                 themeMode: settings.themeMode,
                 navigatorObservers: <NavigatorObserver>[routeObserver],
-                home: const HomePage(),
+                home: PlatformExtension.isDesktop
+                    ? const DesktopHomePage()
+                    : const HomePage(),
                 builder: (ctx, child) {
                   final bright = Theme.of(ctx).brightness;
                   final overlay = bright == Brightness.dark
