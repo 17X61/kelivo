@@ -40,19 +40,19 @@ class _DesktopSideDrawerState extends State<DesktopSideDrawer> {
     BuildContext context,
     Conversation conversation,
   ) {
-    final l10n = AppLocalizations.of(context)!;
     final chatService = context.read<ChatService>();
 
     return [
       DesktopContextMenuItem(
-        label: l10n.sideDrawerPin ?? 'Pin',
+        label: conversation.isPinned ? 'Unpin' : 'Pin',
         icon: conversation.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
         onTap: () async {
-          await chatService.togglePin(conversation.id);
+          // TODO: Implement pin toggle
+          // await chatService.togglePin(conversation.id);
         },
       ),
       DesktopContextMenuItem(
-        label: l10n.sideDrawerRename ?? 'Rename',
+        label: 'Rename',
         icon: Icons.edit_outlined,
         onTap: () {
           _showRenameDialog(context, conversation);
@@ -60,22 +60,22 @@ class _DesktopSideDrawerState extends State<DesktopSideDrawer> {
       ),
       const DesktopContextMenuItem.divider(),
       DesktopContextMenuItem(
-        label: l10n.sideDrawerExport ?? 'Export',
+        label: 'Export',
         icon: Icons.download_outlined,
         onTap: () {
-          // Export conversation
+          // TODO: Export conversation
         },
       ),
       DesktopContextMenuItem(
-        label: l10n.sideDrawerShare ?? 'Share',
+        label: 'Share',
         icon: Icons.share_outlined,
         onTap: () {
-          // Share conversation
+          // TODO: Share conversation
         },
       ),
       const DesktopContextMenuItem.divider(),
       DesktopContextMenuItem(
-        label: l10n.sideDrawerDelete ?? 'Delete',
+        label: 'Delete',
         icon: Icons.delete_outline,
         isDestructive: true,
         onTap: () async {
@@ -89,7 +89,6 @@ class _DesktopSideDrawerState extends State<DesktopSideDrawer> {
   }
 
   Future<void> _showRenameDialog(BuildContext context, Conversation conversation) async {
-    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: conversation.title);
     final chatService = context.read<ChatService>();
 
@@ -97,19 +96,20 @@ class _DesktopSideDrawerState extends State<DesktopSideDrawer> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(l10n.sideDrawerRename ?? 'Rename Conversation'),
+          title: const Text('Rename Conversation'),
           content: TextField(
             controller: controller,
             autofocus: true,
-            decoration: InputDecoration(
-              hintText: l10n.sideDrawerRenameHint ?? 'Enter new name',
+            decoration: const InputDecoration(
+              hintText: 'Enter new name',
             ),
             onSubmitted: (value) {
               if (value.trim().isNotEmpty) {
-                chatService.updateConversation(
-                  conversation.id,
-                  title: value.trim(),
-                );
+                // TODO: Implement updateConversation
+                // chatService.updateConversation(
+                //   conversation.id,
+                //   title: value.trim(),
+                // );
                 Navigator.of(context).pop();
               }
             },
@@ -117,19 +117,20 @@ class _DesktopSideDrawerState extends State<DesktopSideDrawer> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.cancel ?? 'Cancel'),
+              child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () {
                 if (controller.text.trim().isNotEmpty) {
-                  chatService.updateConversation(
-                    conversation.id,
-                    title: controller.text.trim(),
-                  );
+                  // TODO: Implement updateConversation
+                  // chatService.updateConversation(
+                  //   conversation.id,
+                  //   title: controller.text.trim(),
+                  // );
                   Navigator.of(context).pop();
                 }
               },
-              child: Text(l10n.save ?? 'Save'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -138,28 +139,25 @@ class _DesktopSideDrawerState extends State<DesktopSideDrawer> {
   }
 
   Future<bool?> _showDeleteConfirmDialog(BuildContext context, Conversation conversation) {
-    final l10n = AppLocalizations.of(context)!;
-
     return showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(l10n.sideDrawerDeleteConfirmTitle ?? 'Delete Conversation?'),
-          content: Text(
-            l10n.sideDrawerDeleteConfirmMessage ?? 
+          title: const Text('Delete Conversation?'),
+          content: const Text(
             'This action cannot be undone. The conversation and all its messages will be permanently deleted.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.cancel ?? 'Cancel'),
+              child: const Text('Cancel'),
             ),
             FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.delete ?? 'Delete'),
+              child: const Text('Delete'),
             ),
           ],
         );

@@ -218,7 +218,7 @@ class _DesktopSettingsPageState extends State<DesktopSettingsPage> {
         // Dynamic color (Android only)
         if (settings.dynamicColorSupported)
           _SettingRow(
-            label: l10n.settingsPageDynamicColor,
+            label: 'Dynamic Color',
             child: Switch(
               value: settings.useDynamicColor,
               onChanged: (value) {

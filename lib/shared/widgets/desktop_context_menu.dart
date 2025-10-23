@@ -47,7 +47,7 @@ Future<T?> showDesktopContextMenu<T>({
   return showMenu<T>(
     context: context,
     position: positionRect,
-    items: _buildMenuItems(context, items),
+    items: _buildMenuItems<T>(context, items),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppSizes.radiusMd),
     ),
@@ -55,11 +55,11 @@ Future<T?> showDesktopContextMenu<T>({
   );
 }
 
-List<PopupMenuEntry<dynamic>> _buildMenuItems(
+List<PopupMenuEntry<T>> _buildMenuItems<T>(
   BuildContext context,
   List<DesktopContextMenuItem> items,
 ) {
-  final List<PopupMenuEntry<dynamic>> entries = [];
+  final List<PopupMenuEntry<T>> entries = [];
   
   for (int i = 0; i < items.length; i++) {
     final item = items[i];
@@ -70,7 +70,7 @@ List<PopupMenuEntry<dynamic>> _buildMenuItems(
     }
     
     entries.add(
-      PopupMenuItem(
+      PopupMenuItem<T>(
         enabled: item.enabled,
         onTap: item.onTap,
         child: _ContextMenuItemWidget(item: item),
