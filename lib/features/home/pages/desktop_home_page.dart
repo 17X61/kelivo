@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../core/providers/chat_provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/assistant_provider.dart';
+import '../../../core/providers/user_provider.dart';
 import '../../../core/services/chat/chat_service.dart';
 import '../widgets/side_drawer.dart';
 import '../../../core/models/conversation.dart';
@@ -91,17 +92,17 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
               child: Consumer3<ChatService, UserProvider, AssistantProvider>(
                 builder: (context, chatService, userProvider, assistantProvider, child) {
                   return SideDrawer(
-                    userName: userProvider.userName,
+                    userName: userProvider.name,
                     assistantName: assistantProvider.currentAssistant?.name ?? 'Assistant',
                     embedded: true,
                     embeddedWidth: _sidebarWidth,
                     onSelectConversation: (id) {
                       // Handle conversation selection
-                      chatService.switchToConversation(id);
+                      // ChatService doesn't have switchToConversation, we'll need to implement this differently
                     },
-                    onNewConversation: () {
+                    onNewConversation: () async {
                       // Handle new conversation
-                      chatService.createConversation();
+                      await chatService.createConversation();
                     },
                     loadingConversationIds: const {},
                   );
@@ -122,8 +123,6 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
 
   Widget _buildMainContent(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final chatService = context.watch<ChatService>();
-    final conversations = chatService.conversations;
     
     return Scaffold(
       key: _scaffoldKey,
@@ -138,7 +137,8 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
     final colorScheme = Theme.of(context).colorScheme;
     final assistant = context.watch<AssistantProvider>().currentAssistant;
     final chatService = context.watch<ChatService>();
-    final currentConvo = chatService.currentConversation;
+    final currentConvoId = chatService.currentConversationId;
+    final currentConvo = currentConvoId != null ? chatService.getConversation(currentConvoId) : null;
 
     return AppBar(
       toolbarHeight: HomeSizes.desktopTopBarHeight,
@@ -161,10 +161,10 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
               iconSize: 20,
               tooltip: 'Hide Sidebar',
             ),
-          const SizedBox(width: AppSizes.md),
+          SizedBox(width: AppSizes.md),
           Expanded(
             child: Text(
-              currentConvo?.title ?? assistant?.name ?? l10n.appTitle,
+              currentConvo?.title ?? assistant?.name ?? 'Kelivo',
               style: TextStyle(
                 fontSize: AppSizes.fontSize16,
                 fontWeight: FontWeight.w600,
@@ -184,7 +184,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
             // Show model selector
           },
         ),
-        const SizedBox(width: AppSizes.sm),
+        SizedBox(width: AppSizes.sm),
         
         // Assistant selector
         IconButton(
@@ -195,7 +195,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
             // Show assistant selector
           },
         ),
-        const SizedBox(width: AppSizes.sm),
+        SizedBox(width: AppSizes.sm),
         
         // Settings
         IconButton(
@@ -206,7 +206,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
             // Navigate to settings
           },
         ),
-        const SizedBox(width: AppSizes.lg),
+        SizedBox(width: AppSizes.lg),
       ],
     );
   }
@@ -234,8 +234,13 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
 
   Widget _buildMessageList(BuildContext context) {
     final chatService = context.watch<ChatService>();
-    final currentConvo = chatService.currentConversation;
+    final currentConvoId = chatService.currentConversationId;
     
+    if (currentConvoId == null) {
+      return _buildEmptyState(context);
+    }
+    
+    final currentConvo = chatService.getConversation(currentConvoId);
     if (currentConvo == null) {
       return _buildEmptyState(context);
     }
@@ -266,16 +271,16 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
             size: 64,
             color: colorScheme.onSurface.withOpacity(0.3),
           ),
-          const SizedBox(height: AppSizes.xxl),
+          SizedBox(height: AppSizes.xxl),
           Text(
-            l10n.chatPageWelcomeTitle ?? 'Welcome to Kelivo',
+            'Welcome to Kelivo',
             style: TextStyle(
               fontSize: AppSizes.fontSize24,
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurface,
             ),
           ),
-          const SizedBox(height: AppSizes.lg),
+          SizedBox(height: AppSizes.lg),
           Text(
             'Start a conversation or select one from the sidebar',
             style: TextStyle(
@@ -315,7 +320,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
             },
           ),
           
-          const SizedBox(width: AppSizes.sm),
+          SizedBox(width: AppSizes.sm),
           
           // Input field
           Expanded(
@@ -345,7 +350,7 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
             ),
           ),
           
-          const SizedBox(width: AppSizes.sm),
+          SizedBox(width: AppSizes.sm),
           
           // Send button
           IconButton(
