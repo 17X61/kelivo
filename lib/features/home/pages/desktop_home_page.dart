@@ -8,7 +8,8 @@ import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/assistant_provider.dart';
 import '../../../core/providers/user_provider.dart';
 import '../../../core/services/chat/chat_service.dart';
-import '../widgets/side_drawer.dart';
+import '../widgets/desktop_side_drawer.dart';
+import '../../settings/pages/desktop_settings_page.dart';
 import '../../../core/models/conversation.dart';
 
 /// Desktop-specific home page with permanent sidebar and responsive layout
@@ -89,23 +90,15 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                   ),
                 ),
               ),
-              child: Consumer3<ChatService, UserProvider, AssistantProvider>(
-                builder: (context, chatService, userProvider, assistantProvider, child) {
-                  return SideDrawer(
-                    userName: userProvider.name,
-                    assistantName: assistantProvider.currentAssistant?.name ?? 'Assistant',
-                    embedded: true,
-                    embeddedWidth: _sidebarWidth,
-                    onSelectConversation: (id) {
-                      // Handle conversation selection
-                      // ChatService doesn't have switchToConversation, we'll need to implement this differently
-                    },
-                    onNewConversation: () async {
-                      // Handle new conversation
-                      await chatService.createConversation();
-                    },
-                    loadingConversationIds: const {},
-                  );
+              child: DesktopSideDrawer(
+                width: _sidebarWidth,
+                onSelectConversation: (id) {
+                  // Handle conversation selection
+                  // TODO: Switch to conversation
+                },
+                onNewConversation: () async {
+                  final chatService = context.read<ChatService>();
+                  await chatService.createConversation();
                 },
               ),
             ),
@@ -203,7 +196,11 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           iconSize: 20,
           tooltip: 'Settings',
           onPressed: () {
-            // Navigate to settings
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const DesktopSettingsPage(),
+              ),
+            );
           },
         ),
         SizedBox(width: AppSizes.lg),
