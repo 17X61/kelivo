@@ -814,9 +814,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     try {
       if (!_scrollController.hasClients) return;
       
+      final pos = _scrollController.position;
+      bool needsUpdate = false;
+      
       // Detect user scrolling
-      if (_scrollController.position.userScrollDirection != ScrollDirection.idle) {
-        _isUserScrolling = true;
+      if (pos.userScrollDirection != ScrollDirection.idle) {
+        if (!_isUserScrolling) {
+          _isUserScrolling = true;
+          needsUpdate = true;
+        }
         // Reset chained jump anchor when user manually scrolls
         _lastJumpUserMessageId = null;
         
@@ -824,7 +830,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         _userScrollTimer?.cancel();
         final secs = context.read<SettingsProvider>().autoScrollIdleSeconds;
         _userScrollTimer = Timer(Duration(seconds: secs), () {
-          if (mounted) {
+          if (mounted && _isUserScrolling) {
             setState(() {
               _isUserScrolling = false;
             });
@@ -832,12 +838,17 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         });
       }
       
-      // Only show when not near bottom
-      final pos = _scrollController.position;
-      final atBottom = pos.pixels >= (pos.maxScrollExtent - 24);
+      // Only show when not near bottom (with hysteresis to reduce flutter)
+      final atBottom = pos.pixels >= (pos.maxScrollExtent - 100);
       final shouldShow = !atBottom;
       if (_showJumpToBottom != shouldShow) {
-        setState(() => _showJumpToBottom = shouldShow);
+        _showJumpToBottom = shouldShow;
+        needsUpdate = true;
+      }
+      
+      // Batch state updates
+      if (needsUpdate && mounted) {
+        setState(() {});
       }
     } catch (_) {}
   }
@@ -882,9 +893,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           _loadVersionSelections();
           _restoreMessageUiState();
         });
-        // Ensure list lays out, then jump to bottom while hidden
-        try { await WidgetsBinding.instance.endOfFrame; } catch (_) {}
-        _scrollToBottom();
+        // Use reliable scroll for long conversations while keeping fade animation quick
+        try { 
+          await WidgetsBinding.instance.endOfFrame;
+          // Start scrolling immediately while fade-in happens
+          _scrollToBottomReliable(maxAttempts: 4);
+        } catch (_) {}
       }
     }
     if (mounted) {
@@ -2810,14 +2824,71 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         Future.microtask(_scrollToBottom);
         return;
       }
-      final max = _scrollController.position.maxScrollExtent;
-      _scrollController.jumpTo(max);
-      if (_showJumpToBottom) {
+      final pos = _scrollController.position;
+      final max = pos.maxScrollExtent;
+      
+      // Only scroll if not already at bottom (avoid unnecessary operations)
+      if ((pos.pixels - max).abs() > 1.0) {
+        _scrollController.jumpTo(max);
+      }
+      
+      if (_showJumpToBottom && mounted) {
         setState(() => _showJumpToBottom = false);
       }
     } catch (_) {
       // Ignore transient attachment errors
     }
+  }
+  
+  // Reliable scroll to bottom with retry mechanism for long conversations
+  Future<void> _scrollToBottomReliable({int maxAttempts = 5}) async {
+    if (!mounted) return;
+    
+    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        if (!_scrollController.hasClients || _scrollController.positions.length != 1) {
+          await Future.delayed(const Duration(milliseconds: 30));
+          continue;
+        }
+        
+        final pos = _scrollController.position;
+        final prevMax = pos.maxScrollExtent;
+        
+        // Jump to current max
+        if ((pos.pixels - prevMax).abs() > 1.0) {
+          _scrollController.jumpTo(prevMax);
+        }
+        
+        // Wait for layout to settle
+        await WidgetsBinding.instance.endOfFrame;
+        
+        // Check if max extent changed (indicates more content laid out)
+        if (_scrollController.hasClients && _scrollController.positions.length == 1) {
+          final newMax = _scrollController.position.maxScrollExtent;
+          
+          // If extent is still growing, continue attempts
+          if ((newMax - prevMax).abs() > 1.0) {
+            _scrollController.jumpTo(newMax);
+            continue;
+          }
+          
+          // If extent is stable and we're at bottom, we're done
+          if ((pos.pixels - newMax).abs() <= 1.0) {
+            break;
+          }
+        }
+        
+        // Small delay between attempts
+        if (attempt < maxAttempts - 1) {
+          await Future.delayed(const Duration(milliseconds: 30));
+        }
+      } catch (_) {
+        // Continue to next attempt on error
+      }
+    }
+    
+    // Final attempt to ensure we're at bottom
+    _scrollToBottom();
   }
 
   void _forceScrollToBottom() {
@@ -2832,8 +2903,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   void _forceScrollToBottomSoon() {
     _isUserScrolling = false;
     _userScrollTimer?.cancel();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    Future.delayed(_postSwitchScrollDelay, _scrollToBottom);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+      // Additional attempts to handle complex layouts
+      Future.delayed(const Duration(milliseconds: 50), _scrollToBottom);
+      Future.delayed(_postSwitchScrollDelay, _scrollToBottom);
+    });
   }
 
   void _measureInputBar() {
@@ -2851,8 +2926,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   // Ensure scroll reaches bottom even after widget tree transitions
   void _scrollToBottomSoon() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    Future.delayed(const Duration(milliseconds: 120), _scrollToBottom);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+      // Additional attempts for reliable scrolling
+      Future.delayed(const Duration(milliseconds: 50), _scrollToBottom);
+      Future.delayed(const Duration(milliseconds: 120), _scrollToBottom);
+    });
   }
 
   Future<void> _showQuickPhraseMenu() async {
@@ -3475,6 +3554,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         padding: const EdgeInsets.only(bottom: 16, top: 8),
                         itemCount: messages.length,
                         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        // Performance optimizations
+                        cacheExtent: 500, // Pre-render items for smoother scrolling
+                        addAutomaticKeepAlives: true,
+                        addRepaintBoundaries: true,
                         itemBuilder: (context, index) {
                           if (index < 0 || index >= messages.length) {
                             return const SizedBox.shrink();
@@ -4321,6 +4404,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                     padding: const EdgeInsets.only(bottom: 16, top: 8),
                                     itemCount: messages.length,
                                     keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                                    // Performance optimizations
+                                    cacheExtent: 500, // Pre-render items for smoother scrolling
+                                    addAutomaticKeepAlives: true,
+                                    addRepaintBoundaries: true,
                                     itemBuilder: (context, index) {
                                       if (index < 0 || index >= messages.length) return const SizedBox.shrink();
                                       final message = messages[index];
