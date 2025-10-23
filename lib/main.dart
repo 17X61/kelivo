@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'features/home/pages/home_page.dart';
+import 'desktop/pages/desktop_home_page.dart';
+import 'core/platform_helper.dart';
 import 'package:flutter/services.dart';
 // import 'package:logging/logging.dart' as logging;
 // Theme is now managed in SettingsProvider
@@ -120,7 +122,7 @@ class MyApp extends StatelessWidget {
                 darkTheme: dark,
                 themeMode: settings.themeMode,
                 navigatorObservers: <NavigatorObserver>[routeObserver],
-                home: const HomePage(),
+                home: PlatformHelper.isDesktop ? const DesktopHomePage() : const HomePage(),
                 builder: (ctx, child) {
                   final bright = Theme.of(ctx).brightness;
                   final overlay = bright == Brightness.dark
