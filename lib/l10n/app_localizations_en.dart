@@ -2120,6 +2120,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerDetailPageChangeButton => 'Change';
 
   @override
+  String get providerDetailPageUseStreamingLabel => 'Use Streaming';
+
+  @override
   String get providerDetailPageTestingMessage => 'Testing…';
 
   @override
@@ -2370,6 +2373,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchServicesAddDialogPasswordOptional => 'Password (optional)';
 
   @override
+  String get searchServicesAddDialogRegionOptional =>
+      'Region (optional, default: us-en)';
+
+  @override
   String get searchServicesEditDialogEdit => 'Edit';
 
   @override
@@ -2402,6 +2409,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchServicesEditDialogPasswordOptional => 'Password (optional)';
+
+  @override
+  String get searchServicesEditDialogRegionOptional =>
+      'Region (optional, default: us-en)';
 
   @override
   String get searchSettingsSheetTitle => 'Search Settings';
@@ -2841,6 +2852,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Uses web scraping to fetch Bing results. No API key required; may be unstable.';
 
   @override
+  String get searchProviderDuckDuckGoDescription =>
+      'Privacy-focused DuckDuckGo search via DDGS. No API key required; supports region selection.';
+
+  @override
   String get searchProviderBraveDescription =>
       'Independent search engine by Brave. Privacy-focused with no tracking or profiling.';
 
@@ -2878,6 +2893,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchServiceNameBingLocal => 'Bing (Local)';
+
+  @override
+  String get searchServiceNameDuckDuckGo => 'DuckDuckGo';
 
   @override
   String get searchServiceNameTavily => 'Tavily';

@@ -176,6 +176,143 @@ class ChatApiService {
     return 'image/png';
   }
 
+  static const String _geminiThoughtSigTag = 'gemini_thought_signatures';
+  static final RegExp _geminiThoughtSigComment = RegExp(
+    r'<!--\s*gemini_thought_signatures:(.*?)-->',
+    dotAll: true,
+  );
+
+  static _GeminiSignatureMeta _extractGeminiThoughtMeta(String raw) {
+    try {
+      final m = _geminiThoughtSigComment.firstMatch(raw);
+      if (m == null) return _GeminiSignatureMeta(cleanedText: raw);
+      final payloadRaw = (m.group(1) ?? '').trim();
+      Map<String, dynamic> data = const <String, dynamic>{};
+      try {
+        data = (jsonDecode(payloadRaw) as Map).cast<String, dynamic>();
+      } catch (_) {}
+      String? textKey;
+      dynamic textVal;
+      final text = data['text'];
+      if (text is Map) {
+        textKey = (text['k'] ?? text['key'])?.toString();
+        textVal = text['v'] ?? text['val'];
+        if (textKey != null && textKey.trim().isEmpty) {
+          textKey = null;
+        }
+      }
+      final images = <Map<String, dynamic>>[];
+      final imgList = data['images'];
+      if (imgList is List) {
+        for (final e in imgList) {
+          if (e is! Map) continue;
+          final k = (e['k'] ?? e['key'])?.toString() ?? '';
+          final v = e['v'] ?? e['val'];
+          if (k.isEmpty || v == null) continue;
+          images.add({'k': k, 'v': v});
+        }
+      }
+      final cleaned = raw.replaceRange(m.start, m.end, '').trimRight();
+      return _GeminiSignatureMeta(cleanedText: cleaned, textKey: textKey, textValue: textVal, images: images);
+    } catch (_) {
+      return _GeminiSignatureMeta(cleanedText: raw);
+    }
+  }
+
+  static String _buildGeminiThoughtSigComment({
+    String? textKey,
+    dynamic textValue,
+    List<Map<String, dynamic>> imageSigs = const <Map<String, dynamic>>[],
+  }) {
+    final imgs = imageSigs.where((e) => (e['k'] ?? '').toString().isNotEmpty && e.containsKey('v')).toList();
+    final hasText = (textKey ?? '').isNotEmpty && textValue != null;
+    if (!hasText && imgs.isEmpty) return '';
+    final payload = <String, dynamic>{};
+    if (hasText) payload['text'] = {'k': textKey, 'v': textValue};
+    if (imgs.isNotEmpty) payload['images'] = imgs;
+    return '\n<!-- $_geminiThoughtSigTag:${jsonEncode(payload)} -->';
+  }
+
+  static void _applyGeminiThoughtSignatures(_GeminiSignatureMeta meta, List<Map<String, dynamic>> parts, {bool attachDummyWhenMissing = false}) {
+    if (meta.hasAny) {
+      if (meta.hasText) {
+        for (final part in parts) {
+          if (part.containsKey('text')) {
+            part[meta.textKey!] = meta.textValue;
+            break;
+          }
+        }
+      }
+      if (meta.hasImages) {
+        int idx = 0;
+        for (final part in parts) {
+          if (idx >= meta.images.length) break;
+          if (part.containsKey('inline_data') || part.containsKey('inlineData')) {
+            final sig = meta.images[idx];
+            final k = (sig['k'] ?? '').toString();
+            final v = sig['v'];
+            if (k.isNotEmpty && v != null) {
+              part[k] = v;
+            }
+            idx++;
+          }
+        }
+      }
+    } else if (attachDummyWhenMissing) {
+      const dummy = 'context_engineering_is_the_way_to_go';
+      bool inlineFound = false;
+      bool textTagged = false;
+      for (final part in parts) {
+        final hasText = part.containsKey('text');
+        final hasInline = part.containsKey('inline_data') || part.containsKey('inlineData');
+        if (hasInline) {
+          inlineFound = true;
+          part.putIfAbsent('thoughtSignature', () => dummy);
+        }
+        if (hasText && hasInline && !textTagged) {
+          part.putIfAbsent('thoughtSignature', () => dummy);
+          textTagged = true;
+        }
+      }
+      if (inlineFound && !textTagged) {
+        for (final part in parts) {
+          if (part.containsKey('text')) {
+            part.putIfAbsent('thoughtSignature', () => dummy);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  static String _collectThoughtSigCommentFromParts(List<dynamic> parts) {
+    String? textKey;
+    dynamic textVal;
+    final images = <Map<String, dynamic>>[];
+    for (final p in parts) {
+      if (p is! Map) continue;
+      String? sigKey;
+      dynamic sigVal;
+      if (p.containsKey('thoughtSignature')) {
+        sigKey = 'thoughtSignature';
+        sigVal = p['thoughtSignature'];
+      } else if (p.containsKey('thought_signature')) {
+        sigKey = 'thought_signature';
+        sigVal = p['thought_signature'];
+      }
+      final hasText = ((p['text'] ?? '') as String? ?? '').isNotEmpty;
+      final hasInline = p['inlineData'] is Map || p['inline_data'] is Map || p['fileData'] is Map || p['file_data'] is Map;
+      if (hasText && sigKey != null && textKey == null) {
+        textKey = sigKey;
+        textVal = sigVal;
+      }
+      if (hasInline && sigKey != null && sigVal != null) {
+        images.add({'k': sigKey, 'v': sigVal});
+      }
+    }
+    return _buildGeminiThoughtSigComment(textKey: textKey, textValue: textVal, imageSigs: images);
+  }
+
   // Simple container for parsed text + image refs
   static Future<bool> _isValidRemoteImageUrl(String url) async {
     try {
@@ -1127,6 +1264,17 @@ class ChatApiService {
         (body as Map<String, dynamic>)['stream_options'] = {'include_usage': true};
       }
     }
+    // Inject Grok built-in search if configured
+    if (upstreamModelId.toLowerCase().contains('grok')) {
+      final builtIns = _builtInTools(config, modelId);
+      if (builtIns.contains('search')) {
+        (body as Map<String, dynamic>)['search_parameters'] = {
+          'mode': 'auto',
+          'return_citations': true,
+        };
+      }
+    }
+
     // Merge custom body keys (override takes precedence)
     final extraBodyCfg = _customBody(config, modelId);
     if (extraBodyCfg.isNotEmpty) {
@@ -1562,6 +1710,25 @@ class ChatApiService {
                         final cached = (u['prompt_tokens_details']?['cached_tokens'] ?? 0) as int? ?? 0;
                         usage = (usage ?? const TokenUsage()).merge(TokenUsage(promptTokens: prompt, completionTokens: completion, cachedTokens: cached));
                         totalTokens = usage!.totalTokens;
+                      }
+                      // Capture Grok citations
+                      final gCitations = o['citations'];
+                      if (gCitations is List && gCitations.isNotEmpty) {
+                        final items = <Map<String, dynamic>>[];
+                        for (int k = 0; k < gCitations.length; k++) {
+                          final u = gCitations[k].toString();
+                          items.add({'index': k + 1, 'url': u, 'title': u});
+                        }
+                        if (items.isNotEmpty) {
+                          final payload = jsonEncode({'items': items});
+                          yield ChatStreamChunk(
+                            content: '',
+                            isDone: false,
+                            totalTokens: usage?.totalTokens ?? 0,
+                            usage: usage,
+                            toolResults: [ToolResultInfo(id: 'builtin_search', name: 'search_web', arguments: const <String, dynamic>{}, content: payload)],
+                          );
+                        }
                       }
                       if (rc is String && rc.isNotEmpty) {
                         yield ChatStreamChunk(content: '', reasoning: rc, isDone: false, totalTokens: 0, usage: usage);
@@ -2466,6 +2633,25 @@ class ChatApiService {
                         final cached = (u['prompt_tokens_details']?['cached_tokens'] ?? 0) as int? ?? 0;
                         usage = (usage ?? const TokenUsage()).merge(TokenUsage(promptTokens: prompt, completionTokens: completion, cachedTokens: cached));
                         totalTokens = usage!.totalTokens;
+                      }
+                      // Capture Grok citations
+                      final gCitations = o['citations'];
+                      if (gCitations is List && gCitations.isNotEmpty) {
+                        final items = <Map<String, dynamic>>[];
+                        for (int k = 0; k < gCitations.length; k++) {
+                          final u = gCitations[k].toString();
+                          items.add({'index': k + 1, 'url': u, 'title': u});
+                        }
+                        if (items.isNotEmpty) {
+                          final payload = jsonEncode({'items': items});
+                          yield ChatStreamChunk(
+                            content: '',
+                            isDone: false,
+                            totalTokens: usage?.totalTokens ?? 0,
+                            usage: usage,
+                            toolResults: [ToolResultInfo(id: 'builtin_search', name: 'search_web', arguments: const <String, dynamic>{}, content: payload)],
+                          );
+                        }
                       }
                       if (rc is String && rc.isNotEmpty) {
                         yield ChatStreamChunk(content: '', reasoning: rc, isDone: false, totalTokens: 0, usage: usage);
@@ -3591,6 +3777,7 @@ class ChatApiService {
       List<Map<String, dynamic>> messages,
       {List<String>? userImagePaths, int? thinkingBudget, double? temperature, double? topP, int? maxTokens, List<Map<String, dynamic>>? tools, Future<String> Function(String, Map<String, dynamic>)? onToolCall, Map<String, String>? extraHeaders, Map<String, dynamic>? extraBody, bool stream = true}
       ) async* {
+    final bool _persistGeminiThoughtSigs = modelId.toLowerCase().contains('gemini-3');
     // Non-streaming path: use generateContent
     if (!stream) {
       final isVertex = config.vertexAI == true;
@@ -3610,7 +3797,8 @@ class ChatApiService {
         final role = msg['role'] == 'assistant' ? 'model' : 'user';
         final isLast = i == messages.length - 1;
         final parts = <Map<String, dynamic>>[];
-        final raw = (msg['content'] ?? '').toString();
+        final meta = _extractGeminiThoughtMeta((msg['content'] ?? '').toString());
+        final raw = meta.cleanedText;
         final hasMarkdownImages = raw.contains('![') && raw.contains('](');
         final hasCustomImages = raw.contains('[image:');
         final hasAttachedImages = isLast && role == 'user' && (userImagePaths?.isNotEmpty == true);
@@ -3661,6 +3849,9 @@ class ChatApiService {
           }
         } else {
           if (raw.isNotEmpty) parts.add({'text': raw});
+        }
+        if (role == 'model') {
+          _applyGeminiThoughtSignatures(meta, parts, attachDummyWhenMissing: _persistGeminiThoughtSigs);
         }
         contents.add({'role': role, 'parts': parts});
       }
@@ -3759,7 +3950,12 @@ class ChatApiService {
         }
         final buf = StringBuffer();
         for (final p in parts) { if (p is Map && p['text'] is String) buf.write(p['text']); }
-        yield ChatStreamChunk(content: buf.toString(), isDone: true, totalTokens: totalUsage?.totalTokens ?? 0, usage: totalUsage);
+        var contentStr = buf.toString();
+        if (_persistGeminiThoughtSigs) {
+          final metaComment = _collectThoughtSigCommentFromParts(parts);
+          if (metaComment.isNotEmpty) contentStr += metaComment;
+        }
+        yield ChatStreamChunk(content: contentStr, isDone: true, totalTokens: totalUsage?.totalTokens ?? 0, usage: totalUsage);
         return;
       }
     }
@@ -3795,7 +3991,8 @@ class ChatApiService {
       final role = msg['role'] == 'assistant' ? 'model' : 'user';
       final isLast = i == messages.length - 1;
       final parts = <Map<String, dynamic>>[];
-      final raw = (msg['content'] ?? '').toString();
+      final meta = _extractGeminiThoughtMeta((msg['content'] ?? '').toString());
+      final raw = meta.cleanedText;
 
       // Only parse images if there are images to process
       final hasMarkdownImages = raw.contains('![') && raw.contains('](');
@@ -3854,6 +4051,9 @@ class ChatApiService {
       } else {
         // No images, use simple text content
         if (raw.isNotEmpty) parts.add({'text': raw});
+      }
+      if (role == 'model') {
+        _applyGeminiThoughtSignatures(meta, parts, attachDummyWhenMissing: _persistGeminiThoughtSigs);
       }
       contents.add({'role': role, 'parts': parts});
     }
@@ -3940,11 +4140,23 @@ class ChatApiService {
         // Enable IMAGE+TEXT output modalities when model is configured to output images
         if (wantsImageOutput) 'responseModalities': ['TEXT', 'IMAGE'],
         if (isReasoning)
-          'thinkingConfig': {
-            'includeThoughts': off ? false : true,
-            if (!off && thinkingBudget != null && thinkingBudget >= 0)
-              'thinkingBudget': thinkingBudget,
-          },
+          'thinkingConfig': () {
+            final isGemini3Pro = modelId.contains(RegExp(r'gemini-3-pro-preview', caseSensitive: false));
+            if (off) return {'includeThoughts': false};
+            if (isGemini3Pro) {
+              String level = 'high';
+              if (thinkingBudget != null && thinkingBudget > 0) {
+                if (thinkingBudget < 2048) level = 'low';
+                else level = 'high';
+              }
+              return {'includeThoughts': true, 'thinkingLevel': level};
+            }
+            return {
+              'includeThoughts': true,
+              if (thinkingBudget != null && thinkingBudget >= 0)
+                'thinkingBudget': thinkingBudget,
+            };
+          }(),
       };
       final body = <String, dynamic>{
         'contents': convo,
@@ -3989,10 +4201,66 @@ class ChatApiService {
       String buffer = '';
       // Collect any function calls in this round
       final List<Map<String, dynamic>> calls = <Map<String, dynamic>>[]; // {id,name,args,res}
+      
+      // Track thought signature across chunks (Gemini 3 requirement)
+      String? persistentThoughtSigKey;
+      dynamic persistentThoughtSigVal;
+      // Capture thought signatures for history (Gemini 3 image/editing)
+      String? responseTextThoughtSigKey;
+      dynamic responseTextThoughtSigVal;
+      final List<Map<String, dynamic>> responseImageThoughtSigs = <Map<String, dynamic>>[];
 
-      // Track a streaming inline image (append base64 progressively)
-      bool _imageOpen = false; // true after we emit the data URL prefix
+      // Track a streaming inline image; buffer chunks and emit only the latest frame once finished
       String _imageMime = 'image/png';
+      String _pendingImageData = '';
+      String _pendingImageTrailingText = '';
+      bool _bufferingInlineImage = false;
+
+      bool _looksLikeImageStart(String data) {
+        const prefixes = <String>[
+          '/9j/', // jpeg
+          'iVBOR', // png
+          'R0lGOD', // gif
+          'UklGR', // webp
+          'Qk', // bmp variants
+          'SUkq', // tiff
+        ];
+        for (final p in prefixes) {
+          if (data.startsWith(p)) return true;
+        }
+        return false;
+      }
+
+      void _bufferInlineImageChunk(String mime, String data) {
+        _imageMime = mime.isNotEmpty ? mime : 'image/png';
+        final hasExisting = _pendingImageData.isNotEmpty;
+        // Gemini image-preview streams often send full preview frames instead of deltas.
+        // If the previous chunk already looks complete (padding) or a new frame header appears, replace it.
+        final prevLooksComplete = hasExisting && _pendingImageData.endsWith('=');
+        final newFrame = hasExisting && _looksLikeImageStart(data);
+        if (prevLooksComplete || newFrame) {
+          _pendingImageData = data;
+        } else {
+          _pendingImageData += data;
+        }
+        _bufferingInlineImage = true;
+        _receivedImage = true;
+      }
+
+      String _takeBufferedImageMarkdown() {
+        if (!_bufferingInlineImage || _pendingImageData.isEmpty) return '';
+        final sb = StringBuffer()
+          ..write('\n\n![image](data:${_imageMime};base64,')
+          ..write(_pendingImageData)
+          ..write(')');
+        if (_pendingImageTrailingText.isNotEmpty) {
+          sb.write(_pendingImageTrailingText);
+        }
+        _bufferingInlineImage = false;
+        _pendingImageData = '';
+        _pendingImageTrailingText = '';
+        return sb.toString();
+      }
 
       await for (final chunk in sse) {
         buffer += chunk;
@@ -4030,11 +4298,37 @@ class ChatApiService {
                 if (parts is! List) continue;
                 for (final p in parts) {
                   if (p is! Map) continue;
+                  String? partThoughtSigKey;
+                  dynamic partThoughtSigVal;
+                  if (p.containsKey('thoughtSignature')) {
+                    partThoughtSigKey = 'thoughtSignature';
+                    partThoughtSigVal = p['thoughtSignature'];
+                  } else if (p.containsKey('thought_signature')) {
+                    partThoughtSigKey = 'thought_signature';
+                    partThoughtSigVal = p['thought_signature'];
+                  }
                   final t = (p['text'] ?? '') as String? ?? '';
                   final thought = p['thought'] as bool? ?? false;
+
+                  // Check for thought signature in this part and update persistence
+                  if (partThoughtSigKey != null) {
+                    persistentThoughtSigKey = partThoughtSigKey;
+                    persistentThoughtSigVal = partThoughtSigVal;
+                  }
+
+                  // Capture thought signature for text part (Gemini 3 image/editing)
+                  if (_persistGeminiThoughtSigs && !thought && partThoughtSigKey != null && partThoughtSigVal != null) {
+                    if (t.isNotEmpty && responseTextThoughtSigKey == null) {
+                      responseTextThoughtSigKey = partThoughtSigKey;
+                      responseTextThoughtSigVal = partThoughtSigVal;
+                    }
+                  }
+
                   if (t.isNotEmpty) {
                     if (thought) {
                       reasoningDelta += t;
+                    } else if (_bufferingInlineImage) {
+                      _pendingImageTrailingText += t;
                     } else {
                       textDelta += t;
                     }
@@ -4046,13 +4340,11 @@ class ChatApiService {
                     final mime = (inline['mimeType'] ?? inline['mime_type'] ?? 'image/png').toString();
                     final data = (inline['data'] ?? '').toString();
                     if (data.isNotEmpty) {
-                      _imageMime = mime.isNotEmpty ? mime : 'image/png';
-                      if (!_imageOpen) {
-                        textDelta += '\n\n![image](data:${_imageMime};base64,';
-                        _imageOpen = true;
+                      if (_persistGeminiThoughtSigs && partThoughtSigKey != null && partThoughtSigVal != null) {
+                        final exists = responseImageThoughtSigs.any((e) => e['k'] == partThoughtSigKey && e['v'] == partThoughtSigVal);
+                        if (!exists) responseImageThoughtSigs.add({'k': partThoughtSigKey, 'v': partThoughtSigVal});
                       }
-                      textDelta += data;
-                      _receivedImage = true;
+                      _bufferInlineImageChunk(mime, data);
                     }
                   }
                   // Parse fileData: { fileUri: 'https://...', mimeType: 'image/png' }
@@ -4063,13 +4355,11 @@ class ChatApiService {
                     if (uri.startsWith('http')) {
                       try {
                         final b64 = await _downloadRemoteAsBase64(client, config, uri);
-                        _imageMime = mime.isNotEmpty ? mime : 'image/png';
-                        if (!_imageOpen) {
-                          textDelta += '\n\n![image](data:${_imageMime};base64,';
-                          _imageOpen = true;
+                        if (_persistGeminiThoughtSigs && partThoughtSigKey != null && partThoughtSigVal != null) {
+                          final exists = responseImageThoughtSigs.any((e) => e['k'] == partThoughtSigKey && e['v'] == partThoughtSigVal);
+                          if (!exists) responseImageThoughtSigs.add({'k': partThoughtSigKey, 'v': partThoughtSigVal});
                         }
-                        textDelta += b64;
-                        _receivedImage = true;
+                        _bufferInlineImageChunk(mime, b64);
                       } catch (_) {}
                     }
                   }
@@ -4084,6 +4374,25 @@ class ChatApiService {
                       try { args = (jsonDecode(rawArgs) as Map).cast<String, dynamic>(); } catch (_) {}
                     }
                     final id = 'call_${DateTime.now().microsecondsSinceEpoch}';
+                    
+                    // Capture thought signature (Gemini 3 Pro requirement)
+                    // Preserve exact key/value as received
+                    String? thoughtSigKey;
+                    dynamic thoughtSigVal;
+                    if (p.containsKey('thoughtSignature')) {
+                      thoughtSigKey = 'thoughtSignature';
+                      thoughtSigVal = p['thoughtSignature'];
+                    } else if (p.containsKey('thought_signature')) {
+                      thoughtSigKey = 'thought_signature';
+                      thoughtSigVal = p['thought_signature'];
+                    }
+                    
+                    // Fallback to persistent signature if not found in this part
+                    if (thoughtSigKey == null && persistentThoughtSigKey != null) {
+                      thoughtSigKey = persistentThoughtSigKey;
+                      thoughtSigVal = persistentThoughtSigVal;
+                    }
+
                     // Emit placeholder immediately
                     yield ChatStreamChunk(content: '', isDone: false, totalTokens: totalTokens, usage: usage, toolCalls: [ToolCallInfo(id: id, name: name, arguments: args)]);
                     String resText = '';
@@ -4091,7 +4400,14 @@ class ChatApiService {
                       resText = await onToolCall(name, args) ?? '';
                       yield ChatStreamChunk(content: '', isDone: false, totalTokens: totalTokens, usage: usage, toolResults: [ToolResultInfo(id: id, name: name, arguments: args, content: resText)]);
                     }
-                    calls.add({'id': id, 'name': name, 'args': args, 'result': resText});
+                    calls.add({
+                      'id': id,
+                      'name': name,
+                      'args': args,
+                      'result': resText,
+                      'thoughtSigKey': thoughtSigKey,
+                      'thoughtSigVal': thoughtSigVal,
+                    });
                   }
                 }
                 // Capture explicit finish reason if present
@@ -4122,6 +4438,14 @@ class ChatApiService {
                 }
               }
 
+              // When finishing, emit any buffered inline image (and trailing text) in one batch to avoid partial base64 during streaming.
+              if (finishReason != null) {
+                final pendingImage = _takeBufferedImageMarkdown();
+                if (pendingImage.isNotEmpty) {
+                  textDelta += pendingImage;
+                }
+              }
+
               if (reasoningDelta.isNotEmpty) {
                 yield ChatStreamChunk(content: '', reasoning: reasoningDelta, isDone: false, totalTokens: totalTokens, usage: usage);
               }
@@ -4129,16 +4453,22 @@ class ChatApiService {
                 yield ChatStreamChunk(content: textDelta, isDone: false, totalTokens: totalTokens, usage: usage);
               }
 
-              // If server signaled finish, close image markdown and end stream immediately
+              // If server signaled finish, end stream immediately
               if (finishReason != null && calls.isEmpty && (!_expectImage || _receivedImage)) {
-                if (_imageOpen) {
-                  yield ChatStreamChunk(content: ')', isDone: false, totalTokens: totalTokens, usage: usage);
-                  _imageOpen = false;
-                }
                 // Emit final citations if any not emitted
                 if (_builtinCitations.isNotEmpty) {
                   final payload = jsonEncode({'items': _builtinCitations});
                   yield ChatStreamChunk(content: '', isDone: false, totalTokens: totalTokens, usage: usage, toolResults: [ToolResultInfo(id: 'builtin_search', name: 'builtin_search', arguments: const <String, dynamic>{}, content: payload)]);
+                }
+                if (_persistGeminiThoughtSigs) {
+                  final metaComment = _buildGeminiThoughtSigComment(
+                    textKey: responseTextThoughtSigKey,
+                    textValue: responseTextThoughtSigVal,
+                    imageSigs: responseImageThoughtSigs,
+                  );
+                  if (metaComment.isNotEmpty) {
+                    yield ChatStreamChunk(content: metaComment, isDone: false, totalTokens: totalTokens, usage: usage);
+                  }
                 }
                 yield ChatStreamChunk(content: '', isDone: true, totalTokens: totalTokens, usage: usage);
                 return;
@@ -4150,17 +4480,23 @@ class ChatApiService {
         }
       }
 
-      // If we streamed an inline image but never closed the markdown, close it now
-      if (_imageOpen) {
-        yield ChatStreamChunk(content: ')', isDone: false, totalTokens: totalTokens, usage: usage);
-        _imageOpen = false;
+      // Flush any buffered inline image (e.g., when stream ends without explicit finishReason)
+      final pendingImage = _takeBufferedImageMarkdown();
+      if (pendingImage.isNotEmpty) {
+        yield ChatStreamChunk(content: pendingImage, isDone: false, totalTokens: totalTokens, usage: usage);
       }
 
       if (calls.isEmpty) {
         // No tool calls; this round finished
-        if (_imageOpen) {
-          yield ChatStreamChunk(content: ')', isDone: false, totalTokens: totalTokens, usage: usage);
-          _imageOpen = false;
+        if (_persistGeminiThoughtSigs) {
+          final metaComment = _buildGeminiThoughtSigComment(
+            textKey: responseTextThoughtSigKey,
+            textValue: responseTextThoughtSigVal,
+            imageSigs: responseImageThoughtSigs,
+          );
+          if (metaComment.isNotEmpty) {
+            yield ChatStreamChunk(content: metaComment, isDone: false, totalTokens: totalTokens, usage: usage);
+          }
         }
         yield ChatStreamChunk(content: '', isDone: true, totalTokens: totalTokens, usage: usage);
         return;
@@ -4171,10 +4507,18 @@ class ChatApiService {
         final name = (c['name'] ?? '').toString();
         final args = (c['args'] as Map<String, dynamic>? ?? const <String, dynamic>{});
         final resText = (c['result'] ?? '').toString();
+        final thoughtSigKey = c['thoughtSigKey'] as String?;
+        final thoughtSigVal = c['thoughtSigVal'];
+
         // Add the model's functionCall turn
-        convo.add({'role': 'model', 'parts': [
-          {'functionCall': {'name': name, 'args': args}},
-        ]});
+        final part = <String, dynamic>{
+          'functionCall': {'name': name, 'args': args},
+        };
+        if (thoughtSigKey != null && thoughtSigVal != null) {
+          part[thoughtSigKey] = thoughtSigVal;
+        }
+
+        convo.add({'role': 'model', 'parts': [part]});
         // Prepare JSON response object
         Map<String, dynamic> responseObj;
         try {
@@ -4242,6 +4586,23 @@ class _ParsedTextAndImages {
   final String text;
   final List<_ImageRef> images;
   const _ParsedTextAndImages(this.text, this.images);
+}
+
+class _GeminiSignatureMeta {
+  final String cleanedText;
+  final String? textKey;
+  final dynamic textValue;
+  final List<Map<String, dynamic>> images;
+  const _GeminiSignatureMeta({
+    required this.cleanedText,
+    this.textKey,
+    this.textValue,
+    this.images = const <Map<String, dynamic>>[],
+  });
+
+  bool get hasText => (textKey ?? '').isNotEmpty && textValue != null;
+  bool get hasImages => images.isNotEmpty;
+  bool get hasAny => hasText || hasImages;
 }
 
 class ChatStreamChunk {

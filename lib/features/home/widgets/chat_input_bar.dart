@@ -224,6 +224,26 @@ class _ChatInputBarState extends State<ChatInputBar> {
       );
     }
     setState(() {});
+    _ensureCaretVisible();
+  }
+
+  // Keep the caret visible after programmatic edits (e.g., Shift+Enter insert)
+  void _ensureCaretVisible() {
+    try {
+      final selection = _controller.selection;
+      if (!selection.isValid) return;
+      final focusNode = widget.focusNode ?? Focus.maybeOf(context);
+      final focusContext = focusNode?.context;
+      if (focusContext == null) return;
+      final editable = focusContext.findAncestorStateOfType<EditableTextState>();
+      if (editable == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        try {
+          editable.bringIntoView(selection.extent);
+        } catch (_) {}
+      });
+    } catch (_) {}
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, RawKeyEvent event) {
@@ -569,7 +589,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
           final isGeminiOfficial = cfg.providerType == ProviderKind.google && (cfg.vertexAI != true);
           final isClaude = cfg.providerType == ProviderKind.claude;
           final isOpenAIResponses = cfg.providerType == ProviderKind.openai && (cfg.useResponseApi == true);
-          if (isGeminiOfficial || isClaude || isOpenAIResponses) {
+          final isGrok = cfg.providerType == ProviderKind.openai && (currentModelId.toLowerCase().contains('grok'));
+          if (isGeminiOfficial || isClaude || isOpenAIResponses || isGrok) {
             final ov = cfg.modelOverrides[currentModelId] as Map?;
             final list = (ov?['builtInTools'] as List?) ?? const <dynamic>[];
             builtinSearchActive = list.map((e) => e.toString().toLowerCase()).contains('search');

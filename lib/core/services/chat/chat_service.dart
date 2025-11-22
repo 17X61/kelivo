@@ -16,6 +16,7 @@ class ChatService extends ChangeNotifier {
   late Box<Conversation> _conversationsBox;
   late Box<ChatMessage> _messagesBox;
   late Box _toolEventsBox; // key: assistantMessageId, value: List<Map<String,dynamic>>
+  String _sigKey(String id) => 'sig_$id';
   
   String? _currentConversationId;
   final Map<String, List<ChatMessage>> _messagesCache = {};
@@ -169,6 +170,7 @@ class ChatService extends ChangeNotifier {
       final msg = _messagesBox.get(messageId);
       if (msg != null && msg.role == 'assistant') {
         try { await _toolEventsBox.delete(msg.id); } catch (_) {}
+        try { await _toolEventsBox.delete(_sigKey(msg.id)); } catch (_) {}
       }
       await _messagesBox.delete(messageId);
     }
@@ -570,6 +572,25 @@ class ChatService extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Gemini thought signature persistence (per assistant message)
+  String? getGeminiThoughtSignature(String assistantMessageId) {
+    if (!_initialized) return null;
+    final v = _toolEventsBox.get(_sigKey(assistantMessageId));
+    if (v is String && v.trim().isNotEmpty) return v;
+    return null;
+  }
+
+  Future<void> setGeminiThoughtSignature(String assistantMessageId, String signature) async {
+    if (!_initialized) await init();
+    await _toolEventsBox.put(_sigKey(assistantMessageId), signature);
+    notifyListeners();
+  }
+
+  Future<void> removeGeminiThoughtSignature(String assistantMessageId) async {
+    if (!_initialized) await init();
+    try { await _toolEventsBox.delete(_sigKey(assistantMessageId)); } catch (_) {}
+  }
+
   Future<Conversation> forkConversation({
     required String title,
     required String? assistantId,
@@ -734,7 +755,41 @@ class ChatService extends ChangeNotifier {
 
     final conversation = _conversationsBox.get(message.conversationId);
     if (conversation != null) {
-      conversation.messageIds.remove(messageId);
+      // Preserve stable ordering for message groups when deleting a single
+      // version of a message. Without this, deleting the first version of a
+      // user message after editing (which appends new versions at the tail)
+      // would cause the remaining version to "move" after the assistant
+      // reply when collapsing versions in the UI.
+
+      final gid = message.groupId ?? message.id;
+      final ids = conversation.messageIds;
+      final removedIndex = ids.indexOf(messageId);
+
+      // Remove the message id from the conversation first.
+      ids.remove(messageId);
+
+      // If there are other versions in the same group, move one of them
+      // into the original slot so that the group keeps its relative order.
+      if (removedIndex >= 0) {
+        String? replacementId;
+        for (final mid in ids) {
+          if (mid == messageId) continue;
+          final m = _messagesBox.get(mid);
+          if (m == null) continue;
+          final mgid = m.groupId ?? m.id;
+          if (mgid == gid) {
+            replacementId = mid;
+            break;
+          }
+        }
+
+        if (replacementId != null) {
+          ids.remove(replacementId);
+          final insertAt = removedIndex <= ids.length ? removedIndex : ids.length;
+          ids.insert(insertAt, replacementId);
+        }
+      }
+
       await conversation.save();
     }
 
@@ -742,12 +797,12 @@ class ChatService extends ChangeNotifier {
     // Remove any tool events linked to this assistant message
     if (message.role == 'assistant') {
       try { await _toolEventsBox.delete(message.id); } catch (_) {}
+      try { await _toolEventsBox.delete(_sigKey(message.id)); } catch (_) {}
     }
 
-    // Update cache
-    if (_messagesCache.containsKey(message.conversationId)) {
-      _messagesCache[message.conversationId]!.removeWhere((m) => m.id == messageId);
-    }
+    // Update cache: clear this conversation so that next getMessages()
+    // reloads messages in the updated order from conversation.messageIds.
+    _messagesCache.remove(message.conversationId);
 
     // Clean up orphaned upload files that are no longer referenced by any message
     await _cleanupOrphanUploads();
