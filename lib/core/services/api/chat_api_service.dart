@@ -7,9 +7,11 @@ import '../../providers/settings_provider.dart';
 import '../../providers/model_provider.dart';
 import '../../models/token_usage.dart';
 import '../../../utils/sandbox_path_resolver.dart';
+import '../../../utils/app_directories.dart';
 import 'google_service_account_auth.dart';
 import '../../services/api_key_manager.dart';
 import 'package:Kelivo/secrets/fallback.dart';
+import '../../../utils/markdown_media_sanitizer.dart';
 
 class ChatApiService {
   /// Resolve the upstream/vendor model id for a given logical model key.
@@ -747,10 +749,9 @@ class ChatApiService {
           'generationConfig': {'temperature': 0.3},
         };
 
-        // Inject Gemini built-in tools (only for official Gemini API; Vertex may not support these)
+        // Inject Gemini built-in tools (now supported for both official API and Vertex)
         final builtIns = _builtInTools(config, modelId);
-        final isOfficialGemini = config.vertexAI != true; // heuristic per requirement
-        if (isOfficialGemini && builtIns.isNotEmpty) {
+        if (builtIns.isNotEmpty) {
           final toolsArr = <Map<String, dynamic>>[];
           if (builtIns.contains('search')) {
             toolsArr.add({'google_search': {}});
@@ -815,8 +816,14 @@ class ChatApiService {
     final result = Map<String, dynamic>.from(schema);
 
     // Recursively fix 'properties' if present
+    Map<String, dynamic> props = const <String, dynamic>{};
     if (result['properties'] is Map) {
-      final props = Map<String, dynamic>.from(result['properties'] as Map);
+      props = Map<String, dynamic>.from(result['properties'] as Map);
+    } else if ((result['type'] ?? '').toString() == 'object') {
+      // Ensure objects always have a properties map for Gemini validation
+      props = <String, dynamic>{};
+    }
+    if (props.isNotEmpty || result['type'] == 'object') {
       props.forEach((key, value) {
         if (value is Map) {
           final propMap = Map<String, dynamic>.from(value as Map);
@@ -833,6 +840,17 @@ class ChatApiService {
           props[key] = propMap;
         }
       });
+
+      // Gemini requires every entry in `required` to exist in `properties`
+      final req = result['required'];
+      if (req is List) {
+        for (final r in req) {
+          final name = r.toString();
+          if (!props.containsKey(name)) {
+            props[name] = {'type': 'string'}; // Fallback to a simple string field
+          }
+        }
+      }
       result['properties'] = props;
     }
 
@@ -920,6 +938,11 @@ class ChatApiService {
 
     final effort = _effortForBudget(thinkingBudget);
     final host = Uri.tryParse(config.baseUrl)?.host.toLowerCase() ?? '';
+    final bool isAzureOpenAI = host.contains('openai.azure.com');
+    final String completionTokensKey = isAzureOpenAI ? 'max_completion_tokens' : 'max_tokens';
+    void _setMaxTokens(Map<String, dynamic> map) {
+      if (maxTokens != null) map[completionTokensKey] = maxTokens;
+    }
     Map<String, dynamic> body;
     // Keep initial Responses request context so we can perform follow-up requests when tools are called
     List<Map<String, dynamic>> responsesInitialInput = const <Map<String, dynamic>>[];
@@ -1152,11 +1175,11 @@ class ChatApiService {
         'stream': stream,
         if (temperature != null) 'temperature': temperature,
         if (topP != null) 'top_p': topP,
-        if (maxTokens != null) 'max_tokens': maxTokens,
         if (isReasoning && effort != 'off' && effort != 'auto') 'reasoning_effort': effort,
         if (tools != null && tools.isNotEmpty) 'tools': _cleanToolsForCompatibility(tools),
         if (tools != null && tools.isNotEmpty) 'tool_choice': 'auto',
       };
+      _setMaxTokens(body);
     }
 
     // Vendor-specific reasoning knobs for chat-completions compatible hosts
@@ -1556,17 +1579,17 @@ class ChatApiService {
             // Follow-up request(s) with multi-round tool calls
             var currentMessages = mm2;
             while (true) {
-              final body2 = {
+              final Map<String, dynamic> body2 = {
                 'model': upstreamModelId,
                 'messages': currentMessages,
                 'stream': true,
                 if (temperature != null) 'temperature': temperature,
                 if (topP != null) 'top_p': topP,
-                if (maxTokens != null) 'max_tokens': maxTokens,
                 if (isReasoning && effort != 'off' && effort != 'auto') 'reasoning_effort': effort,
                 if (tools != null && tools.isNotEmpty) 'tools': _cleanToolsForCompatibility(tools),
                 if (tools != null && tools.isNotEmpty) 'tool_choice': 'auto',
               };
+              _setMaxTokens(body2);
 
               // Apply the same vendor-specific reasoning settings as the original request
               final off = _isOff(thinkingBudget);
@@ -1654,6 +1677,9 @@ class ChatApiService {
               }
 
               // Apply custom body overrides
+              if (extraBodyCfg.isNotEmpty) {
+                body2.addAll(extraBodyCfg);
+              }
               if (extraBody != null && extraBody.isNotEmpty) {
                 extraBody.forEach((k, v) {
                   body2[k] = (v is String) ? _parseOverrideValue(v) : v;
@@ -2490,17 +2516,17 @@ class ChatApiService {
             // Continue streaming with follow-up request
             var currentMessages = mm2;
             while (true) {
-              final body2 = {
+              final Map<String, dynamic> body2 = {
                 'model': upstreamModelId,
                 'messages': currentMessages,
                 'stream': true,
                 if (temperature != null) 'temperature': temperature,
                 if (topP != null) 'top_p': topP,
-                if (maxTokens != null) 'max_tokens': maxTokens,
                 if (isReasoning && effort != 'off' && effort != 'auto') 'reasoning_effort': effort,
                 if (tools != null && tools.isNotEmpty) 'tools': _cleanToolsForCompatibility(tools),
                 if (tools != null && tools.isNotEmpty) 'tool_choice': 'auto',
               };
+              _setMaxTokens(body2);
               final off = _isOff(thinkingBudget);
               if (host.contains('openrouter.ai')) {
                 if (isReasoning) {
@@ -2581,6 +2607,9 @@ class ChatApiService {
               }
               if (!host.contains('mistral.ai')) {
                 body2['stream_options'] = {'include_usage': true};
+              }
+              if (extraBodyCfg.isNotEmpty) {
+                body2.addAll(extraBodyCfg);
               }
               if (extraBody != null && extraBody.isNotEmpty) {
                 extraBody.forEach((k, v) {
@@ -2858,17 +2887,17 @@ class ChatApiService {
                 // Continue streaming with follow-up request - reuse existing multi-round logic from [DONE] handler
                 var currentMessages = mm2;
                 while (true) {
-                  final body2 = {
+                  final Map<String, dynamic> body2 = {
                     'model': upstreamModelId,
                     'messages': currentMessages,
                     'stream': true,
                     if (temperature != null) 'temperature': temperature,
                     if (topP != null) 'top_p': topP,
-                    if (maxTokens != null) 'max_tokens': maxTokens,
                     if (isReasoning && effort != 'off' && effort != 'auto') 'reasoning_effort': effort,
                     if (tools != null && tools.isNotEmpty) 'tools': _cleanToolsForCompatibility(tools),
                     if (tools != null && tools.isNotEmpty) 'tool_choice': 'auto',
                   };
+                  _setMaxTokens(body2);
                   final off = _isOff(thinkingBudget);
                   if (host.contains('openrouter.ai')) {
                     if (isReasoning) {
@@ -2942,6 +2971,9 @@ class ChatApiService {
                   }
                   if (!host.contains('mistral.ai')) {
                     body2['stream_options'] = {'include_usage': true};
+                  }
+                  if (extraBodyCfg.isNotEmpty) {
+                    body2.addAll(extraBodyCfg);
                   }
                   if (extraBody != null && extraBody.isNotEmpty) {
                     extraBody.forEach((k, v) {
@@ -3215,7 +3247,7 @@ class ChatApiService {
               mm2.add({'role': 'tool', 'tool_call_id': id, 'name': name, 'content': r['content']});
             }
 
-            final body2 = {
+            final Map<String, dynamic> body2 = {
               'model': upstreamModelId,
               'messages': mm2,
               'stream': true,
@@ -3859,9 +3891,8 @@ class ChatApiService {
       final effective = _effectiveModelInfo(config, modelId);
       final isReasoning = effective.abilities.contains(ModelAbility.reasoning);
       final builtIns = _builtInTools(config, modelId);
-      final isOfficialGemini = config.vertexAI != true;
       final builtInToolEntries = <Map<String, dynamic>>[];
-      if (isOfficialGemini && builtIns.isNotEmpty) {
+      if (builtIns.isNotEmpty) {
         if (builtIns.contains('search')) builtInToolEntries.add({'google_search': {}});
         if (builtIns.contains('url_context')) builtInToolEntries.add({'url_context': {}});
       }
@@ -4065,11 +4096,10 @@ class ChatApiService {
     bool _expectImage = wantsImageOutput;
     bool _receivedImage = false;
     final off = _isOff(thinkingBudget);
-    // Built-in Gemini tools (only for official Gemini API)
+    // Built-in Gemini tools (supported for both official Gemini API and Vertex)
     final builtIns = _builtInTools(config, modelId);
-    final isOfficialGemini = config.vertexAI != true; // requirement: only Gemini official API
     final builtInToolEntries = <Map<String, dynamic>>[];
-    if (isOfficialGemini && builtIns.isNotEmpty) {
+    if (builtIns.isNotEmpty) {
       if (builtIns.contains('search')) {
         builtInToolEntries.add({'google_search': {}});
       }
@@ -4231,6 +4261,56 @@ class ChatApiService {
         return false;
       }
 
+      String _extFromMime(String mime) {
+        switch (mime.toLowerCase()) {
+          case 'image/jpeg':
+          case 'image/jpg':
+            return 'jpg';
+          case 'image/webp':
+            return 'webp';
+          case 'image/gif':
+            return 'gif';
+          case 'image/png':
+          default:
+            return 'png';
+        }
+      }
+
+      Future<String?> _saveInlineImageToFile(String mime, String data) async {
+        try {
+          final dir = await AppDirectories.getImagesDirectory();
+          if (!await dir.exists()) {
+            await dir.create(recursive: true);
+          }
+          final cleaned = data.replaceAll(RegExp(r'\s'), '');
+          List<int> bytes;
+          try {
+            bytes = base64Decode(cleaned);
+          } catch (_) {
+            bytes = base64Url.decode(cleaned);
+          }
+          final ext = _extFromMime(mime);
+          final path = '${dir.path}/img_${DateTime.now().microsecondsSinceEpoch}.$ext';
+          final f = File(path);
+          await f.writeAsBytes(bytes, flush: true);
+          return path;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      Future<String> _sanitizeTextIfNeeded(String input) async {
+        if (input.isEmpty) return input;
+        if (input.contains('data:image') && input.contains('base64,')) {
+          try {
+            return await MarkdownMediaSanitizer.replaceInlineBase64Images(input);
+          } catch (_) {
+            return input;
+          }
+        }
+        return input;
+      }
+
       void _bufferInlineImageChunk(String mime, String data) {
         _imageMime = mime.isNotEmpty ? mime : 'image/png';
         final hasExisting = _pendingImageData.isNotEmpty;
@@ -4247,18 +4327,18 @@ class ChatApiService {
         _receivedImage = true;
       }
 
-      String _takeBufferedImageMarkdown() {
+      Future<String> _takeBufferedImageMarkdown() async {
         if (!_bufferingInlineImage || _pendingImageData.isEmpty) return '';
-        final sb = StringBuffer()
-          ..write('\n\n![image](data:${_imageMime};base64,')
-          ..write(_pendingImageData)
-          ..write(')');
-        if (_pendingImageTrailingText.isNotEmpty) {
-          sb.write(_pendingImageTrailingText);
-        }
+        final trailing = _pendingImageTrailingText;
+        final path = await _saveInlineImageToFile(_imageMime, _pendingImageData);
         _bufferingInlineImage = false;
         _pendingImageData = '';
         _pendingImageTrailingText = '';
+        if (path == null || path.isEmpty) return '';
+        final sb = StringBuffer()..write('\n\n![image](')..write(path)..write(')');
+        if (trailing.isNotEmpty) {
+          sb.write(trailing);
+        }
         return sb.toString();
       }
 
@@ -4440,7 +4520,7 @@ class ChatApiService {
 
               // When finishing, emit any buffered inline image (and trailing text) in one batch to avoid partial base64 during streaming.
               if (finishReason != null) {
-                final pendingImage = _takeBufferedImageMarkdown();
+                final pendingImage = await _takeBufferedImageMarkdown();
                 if (pendingImage.isNotEmpty) {
                   textDelta += pendingImage;
                 }
@@ -4450,6 +4530,7 @@ class ChatApiService {
                 yield ChatStreamChunk(content: '', reasoning: reasoningDelta, isDone: false, totalTokens: totalTokens, usage: usage);
               }
               if (textDelta.isNotEmpty) {
+                textDelta = await _sanitizeTextIfNeeded(textDelta);
                 yield ChatStreamChunk(content: textDelta, isDone: false, totalTokens: totalTokens, usage: usage);
               }
 
@@ -4481,9 +4562,10 @@ class ChatApiService {
       }
 
       // Flush any buffered inline image (e.g., when stream ends without explicit finishReason)
-      final pendingImage = _takeBufferedImageMarkdown();
+      final pendingImage = await _takeBufferedImageMarkdown();
       if (pendingImage.isNotEmpty) {
-        yield ChatStreamChunk(content: pendingImage, isDone: false, totalTokens: totalTokens, usage: usage);
+        final sanitized = await _sanitizeTextIfNeeded(pendingImage);
+        yield ChatStreamChunk(content: sanitized, isDone: false, totalTokens: totalTokens, usage: usage);
       }
 
       if (calls.isEmpty) {

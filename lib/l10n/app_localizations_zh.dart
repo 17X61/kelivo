@@ -369,6 +369,63 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantEditPageCustomTab => '自定义请求';
 
   @override
+  String get assistantEditPageRegexTab => '正则替换';
+
+  @override
+  String get assistantEditRegexDescription => '为用户/助手消息配置正则规则，可修改或仅调整显示效果。';
+
+  @override
+  String get assistantEditAddRegexButton => '添加正则规则';
+
+  @override
+  String get assistantRegexAddTitle => '添加正则规则';
+
+  @override
+  String get assistantRegexEditTitle => '编辑正则规则';
+
+  @override
+  String get assistantRegexNameLabel => '规则名称';
+
+  @override
+  String get assistantRegexPatternLabel => '正则表达式';
+
+  @override
+  String get assistantRegexReplacementLabel => '替换字符串';
+
+  @override
+  String get assistantRegexScopeLabel => '影响范围';
+
+  @override
+  String get assistantRegexScopeUser => '用户';
+
+  @override
+  String get assistantRegexScopeAssistant => '助手';
+
+  @override
+  String get assistantRegexScopeVisualOnly => '仅视觉';
+
+  @override
+  String get assistantRegexAddAction => '添加';
+
+  @override
+  String get assistantRegexSaveAction => '保存';
+
+  @override
+  String get assistantRegexDeleteButton => '删除';
+
+  @override
+  String get assistantRegexValidationError => '请填写名称、正则表达式，并至少选择一个范围。';
+
+  @override
+  String get assistantRegexInvalidPattern => '正则表达式无效';
+
+  @override
+  String get assistantRegexCancelButton => '取消';
+
+  @override
+  String get assistantRegexUntitled => '未命名规则';
+
+  @override
   String get assistantEditCustomHeadersTitle => '自定义 Header';
 
   @override
@@ -707,6 +764,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantEditSystemPromptHint => '输入系统提示词…';
 
   @override
+  String get assistantEditSystemPromptImportButton => '从文件导入';
+
+  @override
+  String get assistantEditSystemPromptImportSuccess => '已从文件更新系统提示词';
+
+  @override
+  String get assistantEditSystemPromptImportFailed => '导入失败';
+
+  @override
+  String get assistantEditSystemPromptImportEmpty => '文件内容为空';
+
+  @override
   String get assistantEditAvailableVariables => '可用变量：';
 
   @override
@@ -791,6 +860,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get assistantSettingsDefaultTag => '默认';
+
+  @override
+  String get assistantSettingsCopyButton => '复制';
+
+  @override
+  String get assistantSettingsCopySuccess => '已复制助手';
+
+  @override
+  String get assistantSettingsCopySuffix => '副本';
 
   @override
   String get assistantSettingsDeleteButton => '删除';
@@ -1021,13 +1099,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatHistoryPageSearchTooltip => '搜索';
 
   @override
-  String get chatHistoryPageDeleteAllTooltip => '删除全部';
+  String get chatHistoryPageDeleteAllTooltip => '删除未置顶';
 
   @override
-  String get chatHistoryPageDeleteAllDialogTitle => '删除全部对话';
+  String get chatHistoryPageDeleteAllDialogTitle => '删除未置顶对话';
 
   @override
-  String get chatHistoryPageDeleteAllDialogContent => '确定要删除全部对话吗？此操作不可撤销。';
+  String get chatHistoryPageDeleteAllDialogContent =>
+      '确定要删除所有未置顶的对话吗？已置顶的将会保留。';
 
   @override
   String get chatHistoryPageCancel => '取消';
@@ -1036,7 +1115,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatHistoryPageDelete => '删除';
 
   @override
-  String get chatHistoryPageDeletedAllSnackbar => '已删除全部对话';
+  String get chatHistoryPageDeletedAllSnackbar => '已删除未置顶的对话';
 
   @override
   String get chatHistoryPageSearchHint => '搜索对话';
@@ -1058,6 +1137,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get messageEditPageSave => '保存';
+
+  @override
+  String get messageEditPageSaveAndSend => '保存并发送';
 
   @override
   String get messageEditPageHint => '输入消息内容…';
@@ -1338,6 +1420,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageExportSheetBatchMarkdownSubtitle => '将选中的消息导出为 Markdown 文件';
 
   @override
+  String get messageExportSheetPlainText => '纯文本';
+
+  @override
+  String get messageExportSheetSingleTxtSubtitle => '将该消息导出为 TXT 文件';
+
+  @override
+  String get messageExportSheetBatchTxtSubtitle => '将选中的消息导出为 TXT 文件';
+
+  @override
   String get messageExportSheetExportImage => '导出为图片';
 
   @override
@@ -1538,6 +1629,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatInputBarInsertNewline => '换行';
+
+  @override
+  String get chatInputBarExpand => '展开';
+
+  @override
+  String get chatInputBarCollapse => '收起';
 
   @override
   String get mcpPageBackTooltip => '返回';
@@ -2175,6 +2272,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get shareProviderSheetShareButton => '分享';
+
+  @override
+  String get desktopProviderContextMenuShare => '分享';
+
+  @override
+  String get desktopProviderShareCopyText => '复制文字';
+
+  @override
+  String get desktopProviderShareCopyQr => '复制二维码';
 
   @override
   String get providerDetailPageApiBaseUrlLabel => 'API Base URL';
@@ -2881,6 +2987,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get instructionInjectionAddTooltip => '添加指令注入';
 
   @override
+  String get instructionInjectionImportTooltip => '从文件导入';
+
+  @override
   String get instructionInjectionEmptyMessage => '暂无指令注入卡片';
 
   @override
@@ -2897,6 +3006,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get instructionInjectionPromptLabel => '提示词';
+
+  @override
+  String instructionInjectionImportSuccess(int count) {
+    return '已导入 $count 个指令注入';
+  }
 
   @override
   String get instructionInjectionSheetSubtitle => '为当前对话选择并应用一条指令提示词';
@@ -3148,6 +3262,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatInputBarOcrTooltip => 'OCR 文字识别';
+
+  @override
+  String get providerDetailPageBatchDetectButton => '检测';
+
+  @override
+  String get providerDetailPageBatchDetecting => '检测中...';
+
+  @override
+  String get providerDetailPageBatchDetectStart => '开始检测';
+
+  @override
+  String get providerDetailPageDetectSuccess => '检测成功';
+
+  @override
+  String get providerDetailPageDetectFailed => '检测失败';
+
+  @override
+  String get providerDetailPageDeleteAllModelsWarning => '此操作不可撤回';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -3515,6 +3647,63 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get assistantEditPageCustomTab => '自定义请求';
 
   @override
+  String get assistantEditPageRegexTab => '正则替换';
+
+  @override
+  String get assistantEditRegexDescription => '为用户/助手消息配置正则规则，可修改或仅调整显示效果。';
+
+  @override
+  String get assistantEditAddRegexButton => '添加正则规则';
+
+  @override
+  String get assistantRegexAddTitle => '添加正则规则';
+
+  @override
+  String get assistantRegexEditTitle => '编辑正则规则';
+
+  @override
+  String get assistantRegexNameLabel => '规则名称';
+
+  @override
+  String get assistantRegexPatternLabel => '正则表达式';
+
+  @override
+  String get assistantRegexReplacementLabel => '替换字符串';
+
+  @override
+  String get assistantRegexScopeLabel => '影响范围';
+
+  @override
+  String get assistantRegexScopeUser => '用户';
+
+  @override
+  String get assistantRegexScopeAssistant => '助手';
+
+  @override
+  String get assistantRegexScopeVisualOnly => '仅视觉';
+
+  @override
+  String get assistantRegexAddAction => '添加';
+
+  @override
+  String get assistantRegexSaveAction => '保存';
+
+  @override
+  String get assistantRegexDeleteButton => '删除';
+
+  @override
+  String get assistantRegexValidationError => '请填写名称、正则表达式，并至少选择一个范围。';
+
+  @override
+  String get assistantRegexInvalidPattern => '正则表达式无效';
+
+  @override
+  String get assistantRegexCancelButton => '取消';
+
+  @override
+  String get assistantRegexUntitled => '未命名规则';
+
+  @override
   String get assistantEditCustomHeadersTitle => '自定义 Header';
 
   @override
@@ -3853,6 +4042,18 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get assistantEditSystemPromptHint => '输入系统提示词…';
 
   @override
+  String get assistantEditSystemPromptImportButton => '从文件导入';
+
+  @override
+  String get assistantEditSystemPromptImportSuccess => '已从文件更新系统提示词';
+
+  @override
+  String get assistantEditSystemPromptImportFailed => '导入失败';
+
+  @override
+  String get assistantEditSystemPromptImportEmpty => '文件内容为空';
+
+  @override
   String get assistantEditAvailableVariables => '可用变量：';
 
   @override
@@ -3937,6 +4138,15 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get assistantSettingsDefaultTag => '默认';
+
+  @override
+  String get assistantSettingsCopyButton => '复制';
+
+  @override
+  String get assistantSettingsCopySuccess => '已复制助手';
+
+  @override
+  String get assistantSettingsCopySuffix => '副本';
 
   @override
   String get assistantSettingsDeleteButton => '删除';
@@ -4167,13 +4377,14 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get chatHistoryPageSearchTooltip => '搜索';
 
   @override
-  String get chatHistoryPageDeleteAllTooltip => '删除全部';
+  String get chatHistoryPageDeleteAllTooltip => '删除未置顶';
 
   @override
-  String get chatHistoryPageDeleteAllDialogTitle => '删除全部对话';
+  String get chatHistoryPageDeleteAllDialogTitle => '删除未置顶对话';
 
   @override
-  String get chatHistoryPageDeleteAllDialogContent => '确定要删除全部对话吗？此操作不可撤销。';
+  String get chatHistoryPageDeleteAllDialogContent =>
+      '确定要删除所有未置顶的对话吗？已置顶的将会保留。';
 
   @override
   String get chatHistoryPageCancel => '取消';
@@ -4182,7 +4393,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get chatHistoryPageDelete => '删除';
 
   @override
-  String get chatHistoryPageDeletedAllSnackbar => '已删除全部对话';
+  String get chatHistoryPageDeletedAllSnackbar => '已删除未置顶的对话';
 
   @override
   String get chatHistoryPageSearchHint => '搜索对话';
@@ -4204,6 +4415,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get messageEditPageSave => '保存';
+
+  @override
+  String get messageEditPageSaveAndSend => '保存并发送';
 
   @override
   String get messageEditPageHint => '输入消息内容…';
@@ -4484,6 +4698,15 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get messageExportSheetBatchMarkdownSubtitle => '将选中的消息导出为 Markdown 文件';
 
   @override
+  String get messageExportSheetPlainText => '纯文本';
+
+  @override
+  String get messageExportSheetSingleTxtSubtitle => '将该消息导出为 TXT 文件';
+
+  @override
+  String get messageExportSheetBatchTxtSubtitle => '将选中的消息导出为 TXT 文件';
+
+  @override
   String get messageExportSheetExportImage => '导出为图片';
 
   @override
@@ -4684,6 +4907,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get chatInputBarInsertNewline => '换行';
+
+  @override
+  String get chatInputBarExpand => '展开';
+
+  @override
+  String get chatInputBarCollapse => '收起';
 
   @override
   String get mcpPageBackTooltip => '返回';
@@ -5321,6 +5550,15 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get shareProviderSheetShareButton => '分享';
+
+  @override
+  String get desktopProviderContextMenuShare => '分享';
+
+  @override
+  String get desktopProviderShareCopyText => '复制文字';
+
+  @override
+  String get desktopProviderShareCopyQr => '复制二维码';
 
   @override
   String get providerDetailPageApiBaseUrlLabel => 'API Base URL';
@@ -6027,6 +6265,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get instructionInjectionAddTooltip => '添加指令注入';
 
   @override
+  String get instructionInjectionImportTooltip => '从文件导入';
+
+  @override
   String get instructionInjectionEmptyMessage => '暂无指令注入卡片';
 
   @override
@@ -6043,6 +6284,11 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get instructionInjectionPromptLabel => '提示词';
+
+  @override
+  String instructionInjectionImportSuccess(int count) {
+    return '已导入 $count 个指令注入';
+  }
 
   @override
   String get instructionInjectionSheetSubtitle => '为当前对话选择并应用一条指令提示词';
@@ -6294,6 +6540,24 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get chatInputBarOcrTooltip => 'OCR 文字识别';
+
+  @override
+  String get providerDetailPageBatchDetectButton => '检测';
+
+  @override
+  String get providerDetailPageBatchDetecting => '检测中...';
+
+  @override
+  String get providerDetailPageBatchDetectStart => '开始检测';
+
+  @override
+  String get providerDetailPageDetectSuccess => '检测成功';
+
+  @override
+  String get providerDetailPageDetectFailed => '检测失败';
+
+  @override
+  String get providerDetailPageDeleteAllModelsWarning => '此操作不可撤回';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -6661,6 +6925,63 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get assistantEditPageCustomTab => '自訂請求';
 
   @override
+  String get assistantEditPageRegexTab => '正則替換';
+
+  @override
+  String get assistantEditRegexDescription => '為使用者/助理訊息配置正則規則，可修改或僅調整顯示效果。';
+
+  @override
+  String get assistantEditAddRegexButton => '新增正則規則';
+
+  @override
+  String get assistantRegexAddTitle => '新增正則規則';
+
+  @override
+  String get assistantRegexEditTitle => '編輯正則規則';
+
+  @override
+  String get assistantRegexNameLabel => '規則名稱';
+
+  @override
+  String get assistantRegexPatternLabel => '正則表達式';
+
+  @override
+  String get assistantRegexReplacementLabel => '替換字串';
+
+  @override
+  String get assistantRegexScopeLabel => '影響範圍';
+
+  @override
+  String get assistantRegexScopeUser => '使用者';
+
+  @override
+  String get assistantRegexScopeAssistant => '助理';
+
+  @override
+  String get assistantRegexScopeVisualOnly => '僅視覺';
+
+  @override
+  String get assistantRegexAddAction => '新增';
+
+  @override
+  String get assistantRegexSaveAction => '儲存';
+
+  @override
+  String get assistantRegexDeleteButton => '刪除';
+
+  @override
+  String get assistantRegexValidationError => '請填寫名稱、正則表達式，並至少選擇一個範圍。';
+
+  @override
+  String get assistantRegexInvalidPattern => '正則表達式無效';
+
+  @override
+  String get assistantRegexCancelButton => '取消';
+
+  @override
+  String get assistantRegexUntitled => '未命名規則';
+
+  @override
   String get assistantEditCustomHeadersTitle => '自訂 Header';
 
   @override
@@ -6999,6 +7320,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get assistantEditSystemPromptHint => '輸入系統提示詞…';
 
   @override
+  String get assistantEditSystemPromptImportButton => '從檔案匯入';
+
+  @override
+  String get assistantEditSystemPromptImportSuccess => '已從檔案更新系統提示詞';
+
+  @override
+  String get assistantEditSystemPromptImportFailed => '匯入失敗';
+
+  @override
+  String get assistantEditSystemPromptImportEmpty => '檔案內容為空';
+
+  @override
   String get assistantEditAvailableVariables => '可用變數：';
 
   @override
@@ -7083,6 +7416,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get assistantSettingsDefaultTag => '預設';
+
+  @override
+  String get assistantSettingsCopyButton => '複製';
+
+  @override
+  String get assistantSettingsCopySuccess => '已複製助理';
+
+  @override
+  String get assistantSettingsCopySuffix => '副本';
 
   @override
   String get assistantSettingsDeleteButton => '刪除';
@@ -7313,13 +7655,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatHistoryPageSearchTooltip => '搜尋';
 
   @override
-  String get chatHistoryPageDeleteAllTooltip => '刪除全部';
+  String get chatHistoryPageDeleteAllTooltip => '刪除未置頂';
 
   @override
-  String get chatHistoryPageDeleteAllDialogTitle => '刪除全部對話';
+  String get chatHistoryPageDeleteAllDialogTitle => '刪除未置頂對話';
 
   @override
-  String get chatHistoryPageDeleteAllDialogContent => '確定要刪除全部對話嗎？此操作不可撤銷。';
+  String get chatHistoryPageDeleteAllDialogContent => '確認要刪除所有未置頂的對話嗎？已置頂的會保留。';
 
   @override
   String get chatHistoryPageCancel => '取消';
@@ -7328,7 +7670,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatHistoryPageDelete => '刪除';
 
   @override
-  String get chatHistoryPageDeletedAllSnackbar => '已刪除全部對話';
+  String get chatHistoryPageDeletedAllSnackbar => '已刪除未置頂的對話';
 
   @override
   String get chatHistoryPageSearchHint => '搜尋對話';
@@ -7350,6 +7692,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get messageEditPageSave => '儲存';
+
+  @override
+  String get messageEditPageSaveAndSend => '儲存並發送';
 
   @override
   String get messageEditPageHint => '輸入訊息內容…';
@@ -7630,6 +7975,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get messageExportSheetBatchMarkdownSubtitle => '將選中的訊息匯出為 Markdown 檔案';
 
   @override
+  String get messageExportSheetPlainText => '純文字';
+
+  @override
+  String get messageExportSheetSingleTxtSubtitle => '將該訊息匯出為 TXT 檔案';
+
+  @override
+  String get messageExportSheetBatchTxtSubtitle => '將選中的訊息匯出為 TXT 檔案';
+
+  @override
   String get messageExportSheetExportImage => '匯出為圖片';
 
   @override
@@ -7830,6 +8184,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatInputBarInsertNewline => '換行';
+
+  @override
+  String get chatInputBarExpand => '展開';
+
+  @override
+  String get chatInputBarCollapse => '收起';
 
   @override
   String get mcpPageBackTooltip => '返回';
@@ -8466,6 +8826,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get shareProviderSheetShareButton => '分享';
+
+  @override
+  String get desktopProviderContextMenuShare => '分享';
+
+  @override
+  String get desktopProviderShareCopyText => '複製文字';
+
+  @override
+  String get desktopProviderShareCopyQr => '複製 QR 碼';
 
   @override
   String get providerDetailPageApiBaseUrlLabel => 'API Base URL';
@@ -9173,6 +9542,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get instructionInjectionAddTooltip => '新增指令注入';
 
   @override
+  String get instructionInjectionImportTooltip => '從檔案匯入';
+
+  @override
   String get instructionInjectionEmptyMessage => '暫無指令注入卡片';
 
   @override
@@ -9189,6 +9561,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get instructionInjectionPromptLabel => '提示詞';
+
+  @override
+  String instructionInjectionImportSuccess(int count) {
+    return '已匯入 $count 個指令注入';
+  }
 
   @override
   String get instructionInjectionSheetSubtitle => '為目前對話選擇並套用一條指令提示詞';
@@ -9441,4 +9818,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatInputBarOcrTooltip => 'OCR 文字辨識';
+
+  @override
+  String get providerDetailPageBatchDetectButton => '檢測';
+
+  @override
+  String get providerDetailPageBatchDetecting => '檢測中...';
+
+  @override
+  String get providerDetailPageBatchDetectStart => '開始檢測';
+
+  @override
+  String get providerDetailPageDetectSuccess => '檢測成功';
+
+  @override
+  String get providerDetailPageDetectFailed => '檢測失敗';
+
+  @override
+  String get providerDetailPageDeleteAllModelsWarning => '此操作不可撤回';
 }

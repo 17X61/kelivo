@@ -140,4 +140,12 @@ class Lucide {
   static const IconData RefreshCcwDot = lucide.LucideIcons.refreshCcwDot;
   static const IconData Layers = lucide.LucideIcons.layers2;
   static const IconData Shapes = lucide.LucideIcons.shapes;
+  static const IconData CheckCircle = lucide.LucideIcons.circleCheck;
+  static const IconData XCircle = lucide.LucideIcons.circleX;
+  static const IconData AudioWaveform = lucide.LucideIcons.audioWaveform;
+  static const IconData SquareEqual = lucide.LucideIcons.squareEqual;
+  static const IconData UnfoldVertical = lucide.LucideIcons.unfoldVertical;
+  static const IconData FoldVertical = lucide.LucideIcons.foldVertical;
+  static const IconData ChevronsUpDown = lucide.LucideIcons.chevronsUpDown;
+  static const IconData ChevronsDownUp = lucide.LucideIcons.chevronsDownUp;
 }

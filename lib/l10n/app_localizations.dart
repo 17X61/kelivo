@@ -797,6 +797,120 @@ abstract class AppLocalizations {
   /// **'Custom'**
   String get assistantEditPageCustomTab;
 
+  /// No description provided for @assistantEditPageRegexTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Regex Replace'**
+  String get assistantEditPageRegexTab;
+
+  /// No description provided for @assistantEditRegexDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create regex rules to rewrite or visually adjust user/assistant messages.'**
+  String get assistantEditRegexDescription;
+
+  /// No description provided for @assistantEditAddRegexButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Regex Rule'**
+  String get assistantEditAddRegexButton;
+
+  /// No description provided for @assistantRegexAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Regex Rule'**
+  String get assistantRegexAddTitle;
+
+  /// No description provided for @assistantRegexEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Regex Rule'**
+  String get assistantRegexEditTitle;
+
+  /// No description provided for @assistantRegexNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule Name'**
+  String get assistantRegexNameLabel;
+
+  /// No description provided for @assistantRegexPatternLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular Expression'**
+  String get assistantRegexPatternLabel;
+
+  /// No description provided for @assistantRegexReplacementLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacement String'**
+  String get assistantRegexReplacementLabel;
+
+  /// No description provided for @assistantRegexScopeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Affecting Scope'**
+  String get assistantRegexScopeLabel;
+
+  /// No description provided for @assistantRegexScopeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get assistantRegexScopeUser;
+
+  /// No description provided for @assistantRegexScopeAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant'**
+  String get assistantRegexScopeAssistant;
+
+  /// No description provided for @assistantRegexScopeVisualOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual Only'**
+  String get assistantRegexScopeVisualOnly;
+
+  /// No description provided for @assistantRegexAddAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get assistantRegexAddAction;
+
+  /// No description provided for @assistantRegexSaveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get assistantRegexSaveAction;
+
+  /// No description provided for @assistantRegexDeleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get assistantRegexDeleteButton;
+
+  /// No description provided for @assistantRegexValidationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill in the name, regex, and select at least one scope.'**
+  String get assistantRegexValidationError;
+
+  /// No description provided for @assistantRegexInvalidPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid regular expression'**
+  String get assistantRegexInvalidPattern;
+
+  /// No description provided for @assistantRegexCancelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get assistantRegexCancelButton;
+
+  /// No description provided for @assistantRegexUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled Rule'**
+  String get assistantRegexUntitled;
+
   /// No description provided for @assistantEditCustomHeadersTitle.
   ///
   /// In en, this message translates to:
@@ -1463,6 +1577,30 @@ abstract class AppLocalizations {
   /// **'Enter system prompt…'**
   String get assistantEditSystemPromptHint;
 
+  /// No description provided for @assistantEditSystemPromptImportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Import file'**
+  String get assistantEditSystemPromptImportButton;
+
+  /// No description provided for @assistantEditSystemPromptImportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'System prompt updated from file'**
+  String get assistantEditSystemPromptImportSuccess;
+
+  /// No description provided for @assistantEditSystemPromptImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to import file'**
+  String get assistantEditSystemPromptImportFailed;
+
+  /// No description provided for @assistantEditSystemPromptImportEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'File is empty'**
+  String get assistantEditSystemPromptImportEmpty;
+
   /// No description provided for @assistantEditAvailableVariables.
   ///
   /// In en, this message translates to:
@@ -1630,6 +1768,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Default'**
   String get assistantSettingsDefaultTag;
+
+  /// No description provided for @assistantSettingsCopyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get assistantSettingsCopyButton;
+
+  /// No description provided for @assistantSettingsCopySuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant copied'**
+  String get assistantSettingsCopySuccess;
+
+  /// No description provided for @assistantSettingsCopySuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get assistantSettingsCopySuffix;
 
   /// No description provided for @assistantSettingsDeleteButton.
   ///
@@ -2090,19 +2246,19 @@ abstract class AppLocalizations {
   /// No description provided for @chatHistoryPageDeleteAllTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Delete All'**
+  /// **'Delete Unpinned'**
   String get chatHistoryPageDeleteAllTooltip;
 
   /// No description provided for @chatHistoryPageDeleteAllDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete All Conversations'**
+  /// **'Delete Unpinned Conversations'**
   String get chatHistoryPageDeleteAllDialogTitle;
 
   /// No description provided for @chatHistoryPageDeleteAllDialogContent.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete all conversations? This cannot be undone.'**
+  /// **'Delete every non-pinned conversation for this assistant? Pinned chats stay in place.'**
   String get chatHistoryPageDeleteAllDialogContent;
 
   /// No description provided for @chatHistoryPageCancel.
@@ -2120,7 +2276,7 @@ abstract class AppLocalizations {
   /// No description provided for @chatHistoryPageDeletedAllSnackbar.
   ///
   /// In en, this message translates to:
-  /// **'All conversations deleted'**
+  /// **'Unpinned conversations deleted'**
   String get chatHistoryPageDeletedAllSnackbar;
 
   /// No description provided for @chatHistoryPageSearchHint.
@@ -2164,6 +2320,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get messageEditPageSave;
+
+  /// No description provided for @messageEditPageSaveAndSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Send'**
+  String get messageEditPageSaveAndSend;
 
   /// No description provided for @messageEditPageHint.
   ///
@@ -2669,6 +2831,24 @@ abstract class AppLocalizations {
   /// **'Export selected messages as a Markdown file'**
   String get messageExportSheetBatchMarkdownSubtitle;
 
+  /// No description provided for @messageExportSheetPlainText.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain Text'**
+  String get messageExportSheetPlainText;
+
+  /// No description provided for @messageExportSheetSingleTxtSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export this message as a TXT file'**
+  String get messageExportSheetSingleTxtSubtitle;
+
+  /// No description provided for @messageExportSheetBatchTxtSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export selected messages as a TXT file'**
+  String get messageExportSheetBatchTxtSubtitle;
+
   /// No description provided for @messageExportSheetExportImage.
   ///
   /// In en, this message translates to:
@@ -3052,6 +3232,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Newline'**
   String get chatInputBarInsertNewline;
+
+  /// No description provided for @chatInputBarExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get chatInputBarExpand;
+
+  /// No description provided for @chatInputBarCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get chatInputBarCollapse;
 
   /// No description provided for @mcpPageBackTooltip.
   ///
@@ -4288,6 +4480,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share'**
   String get shareProviderSheetShareButton;
+
+  /// No description provided for @desktopProviderContextMenuShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get desktopProviderContextMenuShare;
+
+  /// No description provided for @desktopProviderShareCopyText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get desktopProviderShareCopyText;
+
+  /// No description provided for @desktopProviderShareCopyQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy QR'**
+  String get desktopProviderShareCopyQr;
 
   /// No description provided for @providerDetailPageApiBaseUrlLabel.
   ///
@@ -5657,6 +5867,12 @@ abstract class AppLocalizations {
   /// **'Add Instruction'**
   String get instructionInjectionAddTooltip;
 
+  /// No description provided for @instructionInjectionImportTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from files'**
+  String get instructionInjectionImportTooltip;
+
   /// No description provided for @instructionInjectionEmptyMessage.
   ///
   /// In en, this message translates to:
@@ -5692,6 +5908,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Prompt'**
   String get instructionInjectionPromptLabel;
+
+  /// No description provided for @instructionInjectionImportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} instruction(s)'**
+  String instructionInjectionImportSuccess(int count);
 
   /// No description provided for @instructionInjectionSheetSubtitle.
   ///
@@ -6178,6 +6400,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Image OCR'**
   String get chatInputBarOcrTooltip;
+
+  /// No description provided for @providerDetailPageBatchDetectButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect'**
+  String get providerDetailPageBatchDetectButton;
+
+  /// No description provided for @providerDetailPageBatchDetecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Detecting...'**
+  String get providerDetailPageBatchDetecting;
+
+  /// No description provided for @providerDetailPageBatchDetectStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Detection'**
+  String get providerDetailPageBatchDetectStart;
+
+  /// No description provided for @providerDetailPageDetectSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Detection successful'**
+  String get providerDetailPageDetectSuccess;
+
+  /// No description provided for @providerDetailPageDetectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Detection failed'**
+  String get providerDetailPageDetectFailed;
+
+  /// No description provided for @providerDetailPageDeleteAllModelsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get providerDetailPageDeleteAllModelsWarning;
 }
 
 class _AppLocalizationsDelegate
