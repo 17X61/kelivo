@@ -47,6 +47,7 @@ class SettingsProvider extends ChangeNotifier {
   static const String _displayHapticsOnListItemTapKey = 'display_haptics_on_list_item_tap_v1';
   static const String _displayHapticsOnCardTapKey = 'display_haptics_on_card_tap_v1';
   static const String _displayShowAppUpdatesKey = 'display_show_app_updates_v1';
+  static const String _displayNewChatOnAssistantSwitchKey = 'display_new_chat_on_assistant_switch_v1';
   static const String _displayNewChatOnLaunchKey = 'display_new_chat_on_launch_v1';
   static const String _displayNewChatAfterDeleteKey = 'display_new_chat_after_delete_v1';
   static const String _displayChatFontScaleKey = 'display_chat_font_scale_v1';
@@ -59,6 +60,8 @@ class SettingsProvider extends ChangeNotifier {
   static const String _displayEnableReasoningMarkdownKey = 'display_enable_reasoning_markdown_v1';
   static const String _displayShowChatListDateKey = 'display_show_chat_list_date_v1';
   static const String _displayMobileCodeBlockWrapKey = 'display_mobile_code_block_wrap_v1';
+  static const String _displayAutoCollapseCodeBlockKey = 'display_auto_collapse_code_block_v1';
+  static const String _displayAutoCollapseCodeBlockLinesKey = 'display_auto_collapse_code_block_lines_v1';
   static const String _displayDesktopAutoSwitchTopicsKey = 'display_desktop_auto_switch_topics_v1';
   static const String _displayDesktopShowTrayKey = 'display_desktop_show_tray_v1';
   static const String _displayDesktopMinimizeToTrayOnCloseKey = 'display_desktop_minimize_to_tray_on_close_v1';
@@ -314,6 +317,7 @@ class SettingsProvider extends ChangeNotifier {
     Haptics.setEnabled(_hapticsGlobalEnabled);
     _showAppUpdates = prefs.getBool(_displayShowAppUpdatesKey) ?? true;
     _newChatOnLaunch = prefs.getBool(_displayNewChatOnLaunchKey) ?? true;
+    _newChatOnAssistantSwitch = prefs.getBool(_displayNewChatOnAssistantSwitchKey) ?? false;
     _newChatAfterDelete = prefs.getBool(_displayNewChatAfterDeleteKey) ?? false;
     _chatFontScale = prefs.getDouble(_displayChatFontScaleKey) ?? 1.0;
     _autoScrollEnabled = prefs.getBool(_displayAutoScrollEnabledKey) ?? true;
@@ -334,6 +338,9 @@ class SettingsProvider extends ChangeNotifier {
     _enableReasoningMarkdown = prefs.getBool(_displayEnableReasoningMarkdownKey) ?? true;
     _showChatListDate = prefs.getBool(_displayShowChatListDateKey) ?? false;
     _mobileCodeBlockWrap = prefs.getBool(_displayMobileCodeBlockWrapKey) ?? false;
+    _autoCollapseCodeBlock = prefs.getBool(_displayAutoCollapseCodeBlockKey) ?? false;
+    _autoCollapseCodeBlockLines =
+        (prefs.getInt(_displayAutoCollapseCodeBlockLinesKey) ?? 2).clamp(1, 999);
     _desktopAutoSwitchTopics = prefs.getBool(_displayDesktopAutoSwitchTopicsKey) ?? false;
     // Desktop: tray settings (default enabled on desktop platforms)
     final trayPref = prefs.getBool(_displayDesktopShowTrayKey);
@@ -470,6 +477,7 @@ class SettingsProvider extends ChangeNotifier {
       ensureProviderConfig('KelivoIN', defaultName: 'KelivoIN');
       ensureProviderConfig('Tensdaq', defaultName: 'Tensdaq');
       ensureProviderConfig('SiliconFlow', defaultName: 'SiliconFlow');
+      ensureProviderConfig('AIhubmix', defaultName: 'AIhubmix');
     }
     
     // kick off a one-time connectivity test for services (exclude local Bing)
@@ -1081,6 +1089,81 @@ class SettingsProvider extends ChangeNotifier {
     await setProviderConfig(key, old.copyWith(avatarType: null, avatarValue: null));
   }
 
+  /// Clears all global model selections (current, title, translate, OCR) that reference the given provider.
+  /// Used when a provider is disabled or deleted.
+  Future<void> clearSelectionsForProvider(String providerKey) async {
+    final prefs = await SharedPreferences.getInstance();
+    bool changed = false;
+    if (_currentModelProvider == providerKey) {
+      _currentModelProvider = null;
+      _currentModelId = null;
+      await prefs.remove(_selectedModelKey);
+      changed = true;
+    }
+    if (_titleModelProvider == providerKey) {
+      _titleModelProvider = null;
+      _titleModelId = null;
+      await prefs.remove(_titleModelKey);
+      changed = true;
+    }
+    if (_translateModelProvider == providerKey) {
+      _translateModelProvider = null;
+      _translateModelId = null;
+      await prefs.remove(_translateModelKey);
+      changed = true;
+    }
+    if (_ocrModelProvider == providerKey) {
+      _ocrModelProvider = null;
+      _ocrModelId = null;
+      _ocrEnabled = false;
+      await prefs.remove(_ocrModelKey);
+      await prefs.setBool(_ocrEnabledKey, false);
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
+  /// Clears global model selections that reference a specific model.
+  /// Used when a model is deleted from a provider.
+  Future<void> clearSelectionsForModel(String providerKey, String modelId) async {
+    final prefs = await SharedPreferences.getInstance();
+    bool changed = false;
+    if (_currentModelProvider == providerKey && _currentModelId == modelId) {
+      _currentModelProvider = null;
+      _currentModelId = null;
+      await prefs.remove(_selectedModelKey);
+      changed = true;
+    }
+    if (_titleModelProvider == providerKey && _titleModelId == modelId) {
+      _titleModelProvider = null;
+      _titleModelId = null;
+      await prefs.remove(_titleModelKey);
+      changed = true;
+    }
+    if (_translateModelProvider == providerKey && _translateModelId == modelId) {
+      _translateModelProvider = null;
+      _translateModelId = null;
+      await prefs.remove(_translateModelKey);
+      changed = true;
+    }
+    if (_ocrModelProvider == providerKey && _ocrModelId == modelId) {
+      _ocrModelProvider = null;
+      _ocrModelId = null;
+      _ocrEnabled = false;
+      await prefs.remove(_ocrModelKey);
+      await prefs.setBool(_ocrEnabledKey, false);
+      changed = true;
+    }
+    // Also remove from pinned if applicable
+    final pinKey = '$providerKey::$modelId';
+    if (_pinnedModels.contains(pinKey)) {
+      _pinnedModels.remove(pinKey);
+      await prefs.setStringList(_pinnedModelsKey, _pinnedModels.toList());
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
   Future<void> removeProviderConfig(String key) async {
     if (!_providerConfigs.containsKey(key)) return;
     _providerConfigs.remove(key);
@@ -1103,6 +1186,13 @@ class SettingsProvider extends ChangeNotifier {
       _translateModelProvider = null;
       _translateModelId = null;
       await prefs.remove(_translateModelKey);
+    }
+    if (_ocrModelProvider == key) {
+      _ocrModelProvider = null;
+      _ocrModelId = null;
+      _ocrEnabled = false;
+      await prefs.remove(_ocrModelKey);
+      await prefs.setBool(_ocrEnabledKey, false);
     }
 
     // Remove pinned models for this provider
@@ -1518,6 +1608,17 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     await prefs.setBool(_displayNewChatOnLaunchKey, v);
   }
 
+  // Display: create a new chat when switching assistants
+  bool _newChatOnAssistantSwitch = false;
+  bool get newChatOnAssistantSwitch => _newChatOnAssistantSwitch;
+  Future<void> setNewChatOnAssistantSwitch(bool v) async {
+    if (_newChatOnAssistantSwitch == v) return;
+    _newChatOnAssistantSwitch = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_displayNewChatOnAssistantSwitchKey, v);
+  }
+
   // Display: create a new chat after deleting one
   bool _newChatAfterDelete = false;
   bool get newChatAfterDelete => _newChatAfterDelete;
@@ -1529,11 +1630,11 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     await prefs.setBool(_displayNewChatAfterDeleteKey, v);
   }
 
-  // Display: chat font scale (0.8 - 1.5, default 1.0)
+  // Display: chat font scale (0.5 - 1.5, default 1.0)
   double _chatFontScale = 1.0;
   double get chatFontScale => _chatFontScale;
   Future<void> setChatFontScale(double scale) async {
-    final s = scale.clamp(0.8, 1.5);
+    final s = scale.clamp(0.5, 1.5);
     if (_chatFontScale == s) return;
     _chatFontScale = s;
     notifyListeners();
@@ -1640,6 +1741,29 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_displayMobileCodeBlockWrapKey, v);
+  }
+
+  // Display: auto-collapse code blocks
+  bool _autoCollapseCodeBlock = false;
+  bool get autoCollapseCodeBlock => _autoCollapseCodeBlock;
+  Future<void> setAutoCollapseCodeBlock(bool v) async {
+    if (_autoCollapseCodeBlock == v) return;
+    _autoCollapseCodeBlock = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_displayAutoCollapseCodeBlockKey, v);
+  }
+
+  // Display: code block auto-collapse threshold (lines)
+  int _autoCollapseCodeBlockLines = 2;
+  int get autoCollapseCodeBlockLines => _autoCollapseCodeBlockLines;
+  Future<void> setAutoCollapseCodeBlockLines(int v) async {
+    final next = v.clamp(1, 999);
+    if (_autoCollapseCodeBlockLines == next) return;
+    _autoCollapseCodeBlockLines = next;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_displayAutoCollapseCodeBlockLinesKey, next);
   }
 
   // Desktop-only: auto switch to Topics tab when changing assistant
@@ -1867,6 +1991,7 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     copy._hapticsOnCardTap = _hapticsOnCardTap;
     copy._showAppUpdates = _showAppUpdates;
     copy._newChatOnLaunch = _newChatOnLaunch;
+    copy._newChatOnAssistantSwitch = _newChatOnAssistantSwitch;
     copy._newChatAfterDelete = _newChatAfterDelete;
     copy._chatFontScale = _chatFontScale;
     copy._autoScrollEnabled = _autoScrollEnabled;
@@ -1876,6 +2001,8 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     copy._enableUserMarkdown = _enableUserMarkdown;
     copy._enableReasoningMarkdown = _enableReasoningMarkdown;
     copy._showChatListDate = _showChatListDate;
+    copy._autoCollapseCodeBlock = _autoCollapseCodeBlock;
+    copy._autoCollapseCodeBlockLines = _autoCollapseCodeBlockLines;
     copy._desktopAutoSwitchTopics = _desktopAutoSwitchTopics;
     copy._desktopShowTray = _desktopShowTray;
     copy._desktopMinimizeToTrayOnClose = _desktopMinimizeToTrayOnClose;
@@ -1960,6 +2087,8 @@ class ProviderConfig {
   final bool? multiKeyEnabled; // default false
   final List<ApiKeyConfig>? apiKeys; // when enabled
   final KeyManagementConfig? keyManagement;
+  // AIhubmix promo header opt-in
+  final bool? aihubmixAppCodeEnabled;
 
   ProviderConfig({
     required this.id,
@@ -1986,6 +2115,7 @@ class ProviderConfig {
     this.multiKeyEnabled,
     this.apiKeys,
     this.keyManagement,
+    this.aihubmixAppCodeEnabled,
   });
 
   // Sentinel for copyWith nullability control (allow explicit null set)
@@ -2016,6 +2146,7 @@ class ProviderConfig {
     bool? multiKeyEnabled,
     List<ApiKeyConfig>? apiKeys,
     KeyManagementConfig? keyManagement,
+    bool? aihubmixAppCodeEnabled,
   }) => ProviderConfig(
         id: id ?? this.id,
         enabled: enabled ?? this.enabled,
@@ -2041,6 +2172,7 @@ class ProviderConfig {
         multiKeyEnabled: multiKeyEnabled ?? this.multiKeyEnabled,
         apiKeys: apiKeys ?? this.apiKeys,
         keyManagement: keyManagement ?? this.keyManagement,
+        aihubmixAppCodeEnabled: aihubmixAppCodeEnabled ?? this.aihubmixAppCodeEnabled,
       );
 
   Map<String, dynamic> toJson() => {
@@ -2068,6 +2200,7 @@ class ProviderConfig {
         'multiKeyEnabled': multiKeyEnabled,
         'apiKeys': apiKeys?.map((e) => e.toJson()).toList(),
         'keyManagement': keyManagement?.toJson(),
+        'aihubmixAppCodeEnabled': aihubmixAppCodeEnabled,
       };
 
   factory ProviderConfig.fromJson(Map<String, dynamic> json) => ProviderConfig(
@@ -2105,6 +2238,7 @@ class ProviderConfig {
         keyManagement: KeyManagementConfig.fromJson(
           (json['keyManagement'] as Map?)?.cast<String, dynamic>(),
         ),
+        aihubmixAppCodeEnabled: json['aihubmixAppCodeEnabled'] as bool?,
       );
 
   static ProviderKind classify(String key, {ProviderKind? explicitType}) {
@@ -2123,6 +2257,7 @@ class ProviderConfig {
     if (k.contains('tensdaq')) return 'https://tensdaq-api.x-aio.com/v1';
     if (k.contains('kelivoin')) return 'https://text.pollinations.ai/openai';
     if (k.contains('openrouter')) return 'https://openrouter.ai/api/v1';
+    if (k.contains('aihubmix')) return 'https://aihubmix.com/v1';
     if (RegExp(r'qwen|aliyun|dashscope').hasMatch(k)) return 'https://dashscope.aliyuncs.com/compatible-mode/v1';
     if (RegExp(r'bytedance|doubao|volces|ark').hasMatch(k)) return 'https://ark.cn-beijing.volces.com/api/v3';
     if (k.contains('silicon')) return 'https://api.siliconflow.cn/v1';
@@ -2170,6 +2305,7 @@ class ProviderConfig {
           multiKeyEnabled: false,
           apiKeys: const [],
           keyManagement: const KeyManagementConfig(),
+          aihubmixAppCodeEnabled: false,
         );
       case ProviderKind.claude:
         return ProviderConfig(
@@ -2189,6 +2325,7 @@ class ProviderConfig {
           multiKeyEnabled: false,
           apiKeys: const [],
           keyManagement: const KeyManagementConfig(),
+          aihubmixAppCodeEnabled: false,
         );
       case ProviderKind.openai:
       default:
@@ -2236,6 +2373,7 @@ class ProviderConfig {
             multiKeyEnabled: false,
             apiKeys: const [],
             keyManagement: const KeyManagementConfig(),
+            aihubmixAppCodeEnabled: false,
           );
         }
         // Special-case SiliconFlow: prefill two partnered models
@@ -2274,7 +2412,8 @@ class ProviderConfig {
             proxyPassword: '',
             multiKeyEnabled: false,
             apiKeys: const [],
-          keyManagement: const KeyManagementConfig(),
+            keyManagement: const KeyManagementConfig(),
+            aihubmixAppCodeEnabled: false,
           );
         }
         return ProviderConfig(
@@ -2296,6 +2435,7 @@ class ProviderConfig {
           multiKeyEnabled: false,
           apiKeys: const [],
           keyManagement: const KeyManagementConfig(),
+          aihubmixAppCodeEnabled: lowerKey.contains('aihubmix'),
         );
     }
   }

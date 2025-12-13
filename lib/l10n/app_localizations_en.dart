@@ -855,6 +855,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get codeBlockPreviewButton => 'Preview';
 
   @override
+  String codeBlockCollapsedLines(int n) {
+    return '… $n lines folded';
+  }
+
+  @override
   String get htmlPreviewNotSupportedOnLinux =>
       'HTML preview is not supported on Linux';
 
@@ -933,10 +938,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hotkeyToggleAppVisibility => 'Show/Hide App';
 
   @override
+  String get hotkeyCloseWindow => 'Close Window';
+
+  @override
   String get hotkeyOpenSettings => 'Open Settings';
 
   @override
   String get hotkeyNewTopic => 'New Topic';
+
+  @override
+  String get hotkeySwitchModel => 'Switch Model';
 
   @override
   String get hotkeyToggleAssistantPanel => 'Toggle Assistants';
@@ -1452,6 +1463,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle =>
       'Mobile Code Block Word Wrap';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockTitle =>
+      'Auto-collapse Code Blocks';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockLinesTitle =>
+      'Auto-collapse threshold';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockLinesUnit => 'lines';
 
   @override
   String get messageExportSheetFormatTitle => 'Export Format';
@@ -2121,6 +2143,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerDetailPageResponseApiTitle => 'Response API (/responses)';
 
   @override
+  String get providerDetailPageAihubmixAppCodeLabel => 'APP-Code (10% off)';
+
+  @override
+  String get providerDetailPageAihubmixAppCodeHelp =>
+      'Adds header APP-Code requests to get a 10% discount. Only affects AIhubmix.';
+
+  @override
   String get providerDetailPageVertexAiTitle => 'Vertex AI';
 
   @override
@@ -2697,6 +2726,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'New chat after deleting topic';
 
   @override
+  String get displaySettingsPageNewChatOnAssistantSwitchTitle =>
+      'New chat when switching assistants';
+
+  @override
   String get displaySettingsPageNewChatOnLaunchTitle => 'New Chat on Launch';
 
   @override
@@ -3155,6 +3188,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mcpJsonEditSavedApplied => 'Saved and applied';
+
+  @override
+  String get mcpTimeoutSettingsTooltip => 'Set tool call timeout';
+
+  @override
+  String get mcpTimeoutDialogTitle => 'Tool call timeout';
+
+  @override
+  String get mcpTimeoutSecondsLabel => 'Tool call timeout (seconds)';
+
+  @override
+  String get mcpTimeoutInvalid => 'Enter a positive number of seconds';
 
   @override
   String get quickPhraseEditButton => 'Edit';

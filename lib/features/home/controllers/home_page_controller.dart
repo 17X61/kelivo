@@ -38,6 +38,7 @@ import '../services/ocr_service.dart';
 import '../services/translation_service.dart';
 import '../services/file_upload_service.dart';
 import '../widgets/chat_input_bar.dart';
+import '../../model/widgets/model_select_sheet.dart';
 
 /// Translation data for UI state (expanded/collapsed).
 class TranslationData {
@@ -394,6 +395,9 @@ class HomePageController extends ChangeNotifier {
             });
           }
           break;
+        case ChatAction.switchModel:
+          await showModelSelectSheet(_context);
+          break;
       }
     });
   }
@@ -735,7 +739,16 @@ class HomePageController extends ChangeNotifier {
     final r = reasoning[messageId];
     if (r != null) {
       r.expanded = !r.expanded;
-      notifyListeners();
+      // Check if reasoning is still loading (finishedAt == null means streaming)
+      // This is O(1) - no list traversal needed
+      final isStillStreaming = r.finishedAt == null && r.text.isNotEmpty;
+      if (isStillStreaming && streamingContentNotifier.hasNotifier(messageId)) {
+        // For actively streaming messages, use lightweight notifier update
+        streamingContentNotifier.forceRebuild(messageId);
+      } else {
+        // For non-streaming messages, trigger full page rebuild
+        notifyListeners();
+      }
     }
   }
 
@@ -750,8 +763,18 @@ class HomePageController extends ChangeNotifier {
   void toggleReasoningSegment(String messageId, int segmentIndex) {
     final segments = reasoningSegments[messageId];
     if (segments != null && segmentIndex < segments.length) {
-      segments[segmentIndex].expanded = !segments[segmentIndex].expanded;
-      notifyListeners();
+      final seg = segments[segmentIndex];
+      seg.expanded = !seg.expanded;
+      // Check if this segment is still loading (finishedAt == null means streaming)
+      // This is O(1) - no list traversal needed
+      final isStillStreaming = seg.finishedAt == null && seg.text.isNotEmpty;
+      if (isStillStreaming && streamingContentNotifier.hasNotifier(messageId)) {
+        // For actively streaming messages, use lightweight notifier update
+        streamingContentNotifier.forceRebuild(messageId);
+      } else {
+        // For non-streaming messages, trigger full page rebuild
+        notifyListeners();
+      }
     }
   }
 
@@ -917,6 +940,19 @@ class HomePageController extends ChangeNotifier {
       messageKeys: _messageKeys,
       getViewportBounds: _getViewportBounds,
     );
+  }
+
+  Future<void> jumpToNextQuestion() async {
+    final collapsed = collapseVersions(messages);
+    await _scrollCtrl.jumpToNextQuestion(
+      messages: collapsed,
+      messageKeys: _messageKeys,
+      getViewportBounds: _getViewportBounds,
+    );
+  }
+
+  void scrollToTop({bool animate = true}) {
+    _scrollCtrl.scrollToTop(animate: animate);
   }
 
   // ============================================================================

@@ -830,6 +830,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get codeBlockPreviewButton => '预览';
 
   @override
+  String codeBlockCollapsedLines(int n) {
+    return '… 已折叠 $n 行';
+  }
+
+  @override
   String get htmlPreviewNotSupportedOnLinux => 'Linux 暂不支持 HTML 预览';
 
   @override
@@ -907,10 +912,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hotkeyToggleAppVisibility => '显示/隐藏应用';
 
   @override
+  String get hotkeyCloseWindow => '关闭窗口';
+
+  @override
   String get hotkeyOpenSettings => '打开设置';
 
   @override
   String get hotkeyNewTopic => '新建话题';
+
+  @override
+  String get hotkeySwitchModel => '切换模型';
 
   @override
   String get hotkeyToggleAssistantPanel => '切换助手显示';
@@ -1406,6 +1417,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle => '移动端代码块自动换行';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockTitle => '自动折叠代码块';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockLinesTitle => '超过多少行自动折叠';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockLinesUnit => '行';
 
   @override
   String get messageExportSheetFormatTitle => '导出格式';
@@ -2052,6 +2072,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providerDetailPageResponseApiTitle => 'Response API (/responses)';
 
   @override
+  String get providerDetailPageAihubmixAppCodeLabel => '应用 Code（享 10% 优惠）';
+
+  @override
+  String get providerDetailPageAihubmixAppCodeHelp =>
+      '为请求附加 APP-Code，可享 10% 优惠，仅对 AIhubmix 生效。';
+
+  @override
   String get providerDetailPageVertexAiTitle => 'Vertex AI';
 
   @override
@@ -2596,7 +2623,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get displaySettingsPageHapticsOnGenerateSubtitle => '生成消息时启用触觉反馈';
 
   @override
-  String get displaySettingsPageNewChatAfterDeleteTitle => '删除话题后新建话题';
+  String get displaySettingsPageNewChatAfterDeleteTitle => '删除话题后新建对话';
+
+  @override
+  String get displaySettingsPageNewChatOnAssistantSwitchTitle => '切换助手时新建对话';
 
   @override
   String get displaySettingsPageNewChatOnLaunchTitle => '启动时新建对话';
@@ -3038,6 +3068,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mcpJsonEditSavedApplied => '已保存并应用';
+
+  @override
+  String get mcpTimeoutSettingsTooltip => '设置工具调用超时';
+
+  @override
+  String get mcpTimeoutDialogTitle => '工具调用超时';
+
+  @override
+  String get mcpTimeoutSecondsLabel => '工具调用超时（秒）';
+
+  @override
+  String get mcpTimeoutInvalid => '请输入大于 0 的秒数';
 
   @override
   String get quickPhraseEditButton => '编辑';
@@ -4120,6 +4162,11 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get codeBlockPreviewButton => '预览';
 
   @override
+  String codeBlockCollapsedLines(int n) {
+    return '… 已折叠 $n 行';
+  }
+
+  @override
   String get htmlPreviewNotSupportedOnLinux => 'Linux 暂不支持 HTML 预览';
 
   @override
@@ -4197,10 +4244,16 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get hotkeyToggleAppVisibility => '显示/隐藏应用';
 
   @override
+  String get hotkeyCloseWindow => '关闭窗口';
+
+  @override
   String get hotkeyOpenSettings => '打开设置';
 
   @override
   String get hotkeyNewTopic => '新建话题';
+
+  @override
+  String get hotkeySwitchModel => '切换模型';
 
   @override
   String get hotkeyToggleAssistantPanel => '切换助手显示';
@@ -4696,6 +4749,15 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle => '移动端代码块自动换行';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockTitle => '自动折叠代码块';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockLinesTitle => '超过多少行自动折叠';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockLinesUnit => '行';
 
   @override
   String get messageExportSheetFormatTitle => '导出格式';
@@ -5342,6 +5404,13 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get providerDetailPageResponseApiTitle => 'Response API (/responses)';
 
   @override
+  String get providerDetailPageAihubmixAppCodeLabel => '应用 Code（享 10% 优惠）';
+
+  @override
+  String get providerDetailPageAihubmixAppCodeHelp =>
+      '为请求附加 APP-Code，可享 10% 优惠，仅对 AIhubmix 生效。';
+
+  @override
   String get providerDetailPageVertexAiTitle => 'Vertex AI';
 
   @override
@@ -5886,7 +5955,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get displaySettingsPageHapticsOnGenerateSubtitle => '生成消息时启用触觉反馈';
 
   @override
-  String get displaySettingsPageNewChatAfterDeleteTitle => '删除话题后新建话题';
+  String get displaySettingsPageNewChatAfterDeleteTitle => '删除话题后新建对话';
+
+  @override
+  String get displaySettingsPageNewChatOnAssistantSwitchTitle => '切换助手时新建对话';
 
   @override
   String get displaySettingsPageNewChatOnLaunchTitle => '启动时新建对话';
@@ -6328,6 +6400,18 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get mcpJsonEditSavedApplied => '已保存并应用';
+
+  @override
+  String get mcpTimeoutSettingsTooltip => '设置工具调用超时';
+
+  @override
+  String get mcpTimeoutDialogTitle => '工具调用超时';
+
+  @override
+  String get mcpTimeoutSecondsLabel => '工具调用超时（秒）';
+
+  @override
+  String get mcpTimeoutInvalid => '请输入大于 0 的秒数';
 
   @override
   String get quickPhraseEditButton => '编辑';
@@ -7410,6 +7494,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get codeBlockPreviewButton => '預覽';
 
   @override
+  String codeBlockCollapsedLines(int n) {
+    return '… 已摺疊 $n 行';
+  }
+
+  @override
   String get htmlPreviewNotSupportedOnLinux => 'Linux 暫不支援 HTML 預覽';
 
   @override
@@ -7487,10 +7576,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get hotkeyToggleAppVisibility => '顯示/隱藏應用';
 
   @override
+  String get hotkeyCloseWindow => '關閉視窗';
+
+  @override
   String get hotkeyOpenSettings => '打開設定';
 
   @override
   String get hotkeyNewTopic => '新建話題';
+
+  @override
+  String get hotkeySwitchModel => '切換模型';
 
   @override
   String get hotkeyToggleAssistantPanel => '切換助理顯示';
@@ -7985,6 +8080,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle => '行動端程式碼區塊自動換行';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockTitle => '自動摺疊程式碼區塊';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockLinesTitle => '超過多少行自動摺疊';
+
+  @override
+  String get displaySettingsPageAutoCollapseCodeBlockLinesUnit => '行';
 
   @override
   String get messageExportSheetFormatTitle => '匯出格式';
@@ -8631,6 +8735,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get providerDetailPageResponseApiTitle => 'Response API (/responses)';
 
   @override
+  String get providerDetailPageAihubmixAppCodeLabel => '應用 Code（享 10% 優惠）';
+
+  @override
+  String get providerDetailPageAihubmixAppCodeHelp =>
+      '為請求附加 APP-Code，可享 10% 優惠，僅對 AIhubmix 生效。';
+
+  @override
   String get providerDetailPageVertexAiTitle => 'Vertex AI';
 
   @override
@@ -9174,7 +9285,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get displaySettingsPageHapticsOnGenerateSubtitle => '生成訊息時啟用觸覺回饋';
 
   @override
-  String get displaySettingsPageNewChatAfterDeleteTitle => '刪除話題後新建話題';
+  String get displaySettingsPageNewChatAfterDeleteTitle => '刪除話題後新建對話';
+
+  @override
+  String get displaySettingsPageNewChatOnAssistantSwitchTitle => '切換助理時新建對話';
 
   @override
   String get displaySettingsPageNewChatOnLaunchTitle => '啟動時新建對話';
@@ -9617,6 +9731,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mcpJsonEditSavedApplied => '已儲存並套用';
+
+  @override
+  String get mcpTimeoutSettingsTooltip => '設定工具呼叫逾時';
+
+  @override
+  String get mcpTimeoutDialogTitle => '工具呼叫逾時';
+
+  @override
+  String get mcpTimeoutSecondsLabel => '工具呼叫逾時（秒）';
+
+  @override
+  String get mcpTimeoutInvalid => '請輸入大於 0 的秒數';
 
   @override
   String get quickPhraseEditButton => '編輯';

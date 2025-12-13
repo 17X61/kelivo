@@ -1044,6 +1044,7 @@ class _DesktopProvidersBodyState extends State<_DesktopProvidersBody> {
           (name: 'KelivoIN', key: 'KelivoIN'),
           (name: 'Tensdaq', key: 'Tensdaq'),
           (name: 'DeepSeek', key: 'DeepSeek'),
+          (name: 'AIhubmix', key: 'AIhubmix'),
           (name: l10n.providersPageAliyunName, key: 'Aliyun'),
           (name: l10n.providersPageZhipuName, key: 'Zhipu AI'),
           (name: 'Claude', key: 'Claude'),
@@ -1156,6 +1157,15 @@ class _DesktopProvidersBodyState extends State<_DesktopProvidersBody> {
                                       ),
                                     );
                                     if (ok == true) {
+                                      // Clear assistant-level model selections referencing this provider
+                                      try {
+                                        final ap = context.read<AssistantProvider>();
+                                        for (final a in ap.assistants) {
+                                          if (a.chatModelProvider == item.key) {
+                                            await ap.updateAssistant(a.copyWith(clearChatModel: true));
+                                          }
+                                        }
+                                      } catch (_) {}
                                       await settings.removeProviderConfig(item.key);
                                       if (mounted) setState(() {
                                         if (_selectedKey == item.key) {
@@ -1366,6 +1376,18 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                   onChanged: (v) async {
                     final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
                     await sp.setProviderConfig(widget.providerKey, old.copyWith(enabled: v));
+                    // If provider is now disabled, clear model selections referencing it
+                    if (!v && old.enabled) {
+                      await sp.clearSelectionsForProvider(widget.providerKey);
+                      try {
+                        final ap = context.read<AssistantProvider>();
+                        for (final a in ap.assistants) {
+                          if (a.chatModelProvider == widget.providerKey) {
+                            await ap.updateAssistant(a.copyWith(clearChatModel: true));
+                          }
+                        }
+                      } catch (_) {}
+                    }
                   },
                 ),
               ],
@@ -2061,6 +2083,7 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
               final respNow = cfgNow.useResponseApi ?? false;
               final vertexNow = cfgNow.vertexAI ?? false;
               final proxyEnabledNow = cfgNow.proxyEnabled ?? false;
+              final aihubmixAppCodeEnabled = cfgNow.aihubmixAppCodeEnabled ?? false;
               Widget row(String label, Widget trailing) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(children: [
@@ -2219,10 +2242,32 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                                 await spWatch.setProviderConfig(widget.providerKey, old.copyWith(vertexAI: v));
                               }))),
                             );
-                          }
+                        }
                           return const SizedBox.shrink(key: ValueKey('none'));
                         }(),
                       ),
+                      const SizedBox(height: 4),
+                      if (_isAihubmix(cfgNow))
+                        row(
+                          l10n.providerDetailPageAihubmixAppCodeLabel,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Tooltip(
+                                message: l10n.providerDetailPageAihubmixAppCodeHelp,
+                                child: Icon(Icons.help_outline, size: 16, color: cs.onSurface.withOpacity(0.6)),
+                              ),
+                              const SizedBox(width: 8),
+                              IosSwitch(
+                                value: aihubmixAppCodeEnabled,
+                                onChanged: (v) async {
+                                  final old = spWatch.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
+                                  await spWatch.setProviderConfig(widget.providerKey, old.copyWith(aihubmixAppCodeEnabled: v));
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
                       const SizedBox(height: 4),
                       // 5) Network proxy inline
                       row(l10n.providerDetailPageNetworkTab, Align(alignment: Alignment.centerRight, child: IosSwitch(value: proxyEnabledNow, onChanged: (v) async {
@@ -2366,6 +2411,12 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
         await context.read<SettingsProvider>().setProviderAvatarUrl(providerKey, url);
       }
     }
+  }
+
+  bool _isAihubmix(ProviderConfig cfg) {
+    final base = cfg.baseUrl.toLowerCase();
+    final key = cfg.id.toLowerCase();
+    return key.contains('aihubmix') || base.contains('aihubmix.com');
   }
 
   Future<void> _showNetworkDialog(BuildContext context) async {
@@ -4365,9 +4416,20 @@ class _ModelRow extends StatelessWidget {
               _IconBtn(icon: lucide.Lucide.Settings2, onTap: () async { await showDesktopModelEditDialog(context, providerKey: providerKey, modelId: modelId); }),
               const SizedBox(width: 4),
               _IconBtn(icon: lucide.Lucide.Minus, onTap: () async {
-                final old = context.read<SettingsProvider>().getProviderConfig(providerKey);
+                final sp = context.read<SettingsProvider>();
+                final old = sp.getProviderConfig(providerKey);
                 final list = List<String>.from(old.models)..removeWhere((e) => e == modelId);
-                await context.read<SettingsProvider>().setProviderConfig(providerKey, old.copyWith(models: list));
+                await sp.setProviderConfig(providerKey, old.copyWith(models: list));
+                // Clear global and assistant-level model selections that reference the deleted model
+                await sp.clearSelectionsForModel(providerKey, modelId);
+                try {
+                  final ap = context.read<AssistantProvider>();
+                  for (final a in ap.assistants) {
+                    if (a.chatModelProvider == providerKey && a.chatModelId == modelId) {
+                      await ap.updateAssistant(a.copyWith(clearChatModel: true));
+                    }
+                  }
+                } catch (_) {}
               }),
             ],
           ],
@@ -4503,6 +4565,8 @@ class _DisplaySettingsBody extends StatelessWidget {
                   _ToggleRowUserMarkdown(),
                   _RowDivider(),
                   _ToggleRowReasoningMarkdown(),
+                  _RowDivider(),
+                  _AutoCollapseCodeBlocksSection(),
                 ],
               ),
               const SizedBox(height: 16),
@@ -4518,6 +4582,8 @@ class _DisplaySettingsBody extends StatelessWidget {
                   _ToggleRowMsgNavButtons(),
                   _RowDivider(),
                   _ToggleRowShowChatListDate(),
+                  _RowDivider(),
+                  _ToggleRowNewChatOnAssistantSwitch(),
                   _RowDivider(),
                   _ToggleRowNewChatAfterDelete(),
                   _RowDivider(),
@@ -5933,7 +5999,7 @@ class _ChatFontSizeRowState extends State<_ChatFontSizeRow> {
     final v = text.trim();
     final n = double.tryParse(v);
     if (n == null) return;
-    final clamped = (n / 100.0).clamp(0.8, 1.5);
+    final clamped = (n / 100.0).clamp(0.5, 1.5);
     context.read<SettingsProvider>().setChatFontScale(clamped);
     _controller.text = '${(clamped * 100).round()}';
   }
@@ -6565,6 +6631,20 @@ class _ToggleRowReasoningMarkdown extends StatelessWidget {
   }
 }
 
+class _ToggleRowAutoCollapseCodeBlocks extends StatelessWidget {
+  const _ToggleRowAutoCollapseCodeBlocks();
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final sp = context.watch<SettingsProvider>();
+    return _ToggleRow(
+      label: l10n.displaySettingsPageAutoCollapseCodeBlockTitle,
+      value: sp.autoCollapseCodeBlock,
+      onChanged: (v) => context.read<SettingsProvider>().setAutoCollapseCodeBlock(v),
+    );
+  }
+}
+
 class _ToggleRowAutoCollapseThinking extends StatelessWidget {
   const _ToggleRowAutoCollapseThinking();
   @override
@@ -6645,6 +6725,20 @@ class _ToggleRowShowChatListDate extends StatelessWidget {
       label: l10n.displaySettingsPageShowChatListDateTitle,
       value: sp.showChatListDate,
       onChanged: (v) => context.read<SettingsProvider>().setShowChatListDate(v),
+    );
+  }
+}
+
+class _ToggleRowNewChatOnAssistantSwitch extends StatelessWidget {
+  const _ToggleRowNewChatOnAssistantSwitch();
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final sp = context.watch<SettingsProvider>();
+    return _ToggleRow(
+      label: l10n.displaySettingsPageNewChatOnAssistantSwitchTitle,
+      value: sp.newChatOnAssistantSwitch,
+      onChanged: (v) => context.read<SettingsProvider>().setNewChatOnAssistantSwitch(v),
     );
   }
 }
@@ -6787,6 +6881,24 @@ class _ToggleRow extends StatelessWidget {
   }
 }
 
+class _AutoCollapseCodeBlocksSection extends StatelessWidget {
+  const _AutoCollapseCodeBlocksSection();
+  @override
+  Widget build(BuildContext context) {
+    final sp = context.watch<SettingsProvider>();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const _ToggleRowAutoCollapseCodeBlocks(),
+        if (sp.autoCollapseCodeBlock) ...[
+          const _RowDivider(),
+          const _AutoCollapseCodeBlockLinesRow(),
+        ],
+      ],
+    );
+  }
+}
+
 // --- Others: inputs ---
 class _AutoScrollDelayRow extends StatefulWidget {
   const _AutoScrollDelayRow();
@@ -6841,6 +6953,61 @@ class _AutoScrollDelayRowState extends State<_AutoScrollDelayRow> {
             's',
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface.withOpacity(enabled ? 0.7 : 0.35),
+              fontSize: 14,
+              decoration: TextDecoration.none,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AutoCollapseCodeBlockLinesRow extends StatefulWidget {
+  const _AutoCollapseCodeBlockLinesRow();
+  @override
+  State<_AutoCollapseCodeBlockLinesRow> createState() => _AutoCollapseCodeBlockLinesRowState();
+}
+
+class _AutoCollapseCodeBlockLinesRowState extends State<_AutoCollapseCodeBlockLinesRow> {
+  late final TextEditingController _controller;
+  @override
+  void initState() {
+    super.initState();
+    final v = context.read<SettingsProvider>().autoCollapseCodeBlockLines;
+    _controller = TextEditingController(text: '${v.round()}');
+  }
+  @override
+  void dispose() { _controller.dispose(); super.dispose(); }
+
+  void _commit(String text) {
+    final v = text.trim();
+    final n = int.tryParse(v);
+    if (n == null) return;
+    final clamped = n.clamp(1, 999);
+    context.read<SettingsProvider>().setAutoCollapseCodeBlockLines(clamped);
+    _controller.text = '$clamped';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return _LabeledRow(
+      label: l10n.displaySettingsPageAutoCollapseCodeBlockLinesTitle,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IntrinsicWidth(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 36, maxWidth: 72),
+              child: _BorderInput(controller: _controller, onSubmitted: _commit, onFocusLost: _commit),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            l10n.displaySettingsPageAutoCollapseCodeBlockLinesUnit,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               fontSize: 14,
               decoration: TextDecoration.none,
             ),

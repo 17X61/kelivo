@@ -322,6 +322,14 @@
   "assistantEditVariableMessage": "Message",
   "assistantEditPreviewTitle": "Preview",
   "codeBlockPreviewButton": "Preview",
+  "codeBlockCollapsedLines": "… {n} lines folded",
+  "@codeBlockCollapsedLines": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "htmlPreviewNotSupportedOnLinux": "HTML preview is not supported on Linux",
   "assistantEditSampleUser": "User",
   "assistantEditSampleMessage": "Hello there",
@@ -357,8 +365,10 @@
   "desktopTrayMenuShowWindow": "Show Window",
   "desktopTrayMenuExit": "Exit",
   "hotkeyToggleAppVisibility": "Show/Hide App",
+  "hotkeyCloseWindow": "Close Window",
   "hotkeyOpenSettings": "Open Settings",
   "hotkeyNewTopic": "New Topic",
+  "hotkeySwitchModel": "Switch Model",
   "hotkeyToggleAssistantPanel": "Toggle Assistants",
   "hotkeyToggleTopicPanel": "Toggle Topics",
   "hotkeysPressShortcut": "Press a shortcut",
@@ -599,6 +609,9 @@
   "displaySettingsPageEnableUserMarkdownTitle": "Render user messages with Markdown",
   "displaySettingsPageEnableReasoningMarkdownTitle": "Render reasoning (thinking) with Markdown",
   "displaySettingsPageMobileCodeBlockWrapTitle": "Mobile Code Block Word Wrap",
+  "displaySettingsPageAutoCollapseCodeBlockTitle": "Auto-collapse Code Blocks",
+  "displaySettingsPageAutoCollapseCodeBlockLinesTitle": "Auto-collapse threshold",
+  "displaySettingsPageAutoCollapseCodeBlockLinesUnit": "lines",
   "messageExportSheetFormatTitle": "Export Format",
   "messageExportSheetMarkdown": "Markdown",
   "messageExportSheetSingleMarkdownSubtitle": "Export this message as a Markdown file",
@@ -884,6 +897,8 @@
   "providerDetailPageShowTooltip": "Show",
   "providerDetailPageApiPathLabel": "API Path",
   "providerDetailPageResponseApiTitle": "Response API (/responses)",
+  "providerDetailPageAihubmixAppCodeLabel": "APP-Code (10% off)",
+  "providerDetailPageAihubmixAppCodeHelp": "Adds header APP-Code requests to get a 10% discount. Only affects AIhubmix.",
   "providerDetailPageVertexAiTitle": "Vertex AI",
   "providerDetailPageLocationLabel": "Location",
   "providerDetailPageProjectIdLabel": "Project ID",
@@ -1077,6 +1092,7 @@
   "displaySettingsPageHapticsOnGenerateTitle": "Haptics on Generate",
   "displaySettingsPageHapticsOnGenerateSubtitle": "Enable haptic feedback during generation",
   "displaySettingsPageNewChatAfterDeleteTitle": "New chat after deleting topic",
+  "displaySettingsPageNewChatOnAssistantSwitchTitle": "New chat when switching assistants",
   "displaySettingsPageNewChatOnLaunchTitle": "New Chat on Launch",
   "displaySettingsPageAutoSwitchTopicsTitle": "Auto switch to Topics",
   "desktopDisplaySettingsTopicPositionTitle": "Topic position",
@@ -1253,6 +1269,10 @@
   "mcpJsonEditTitle": "Edit JSON",
   "mcpJsonEditParseFailed": "JSON parse failed",
   "mcpJsonEditSavedApplied": "Saved and applied",
+  "mcpTimeoutSettingsTooltip": "Set tool call timeout",
+  "mcpTimeoutDialogTitle": "Tool call timeout",
+  "mcpTimeoutSecondsLabel": "Tool call timeout (seconds)",
+  "mcpTimeoutInvalid": "Enter a positive number of seconds",
   "quickPhraseEditButton": "Edit",
   "quickPhraseDeleteButton": "Delete",
   "quickPhraseMenuTitle": "Quick Phrase",

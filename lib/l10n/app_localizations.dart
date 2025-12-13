@@ -1709,6 +1709,12 @@ abstract class AppLocalizations {
   /// **'Preview'**
   String get codeBlockPreviewButton;
 
+  /// No description provided for @codeBlockCollapsedLines.
+  ///
+  /// In en, this message translates to:
+  /// **'… {n} lines folded'**
+  String codeBlockCollapsedLines(int n);
+
   /// No description provided for @htmlPreviewNotSupportedOnLinux.
   ///
   /// In en, this message translates to:
@@ -1859,6 +1865,12 @@ abstract class AppLocalizations {
   /// **'Show/Hide App'**
   String get hotkeyToggleAppVisibility;
 
+  /// No description provided for @hotkeyCloseWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Window'**
+  String get hotkeyCloseWindow;
+
   /// No description provided for @hotkeyOpenSettings.
   ///
   /// In en, this message translates to:
@@ -1870,6 +1882,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Topic'**
   String get hotkeyNewTopic;
+
+  /// No description provided for @hotkeySwitchModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Model'**
+  String get hotkeySwitchModel;
 
   /// No description provided for @hotkeyToggleAssistantPanel.
   ///
@@ -2806,6 +2824,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mobile Code Block Word Wrap'**
   String get displaySettingsPageMobileCodeBlockWrapTitle;
+
+  /// No description provided for @displaySettingsPageAutoCollapseCodeBlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-collapse Code Blocks'**
+  String get displaySettingsPageAutoCollapseCodeBlockTitle;
+
+  /// No description provided for @displaySettingsPageAutoCollapseCodeBlockLinesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-collapse threshold'**
+  String get displaySettingsPageAutoCollapseCodeBlockLinesTitle;
+
+  /// No description provided for @displaySettingsPageAutoCollapseCodeBlockLinesUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'lines'**
+  String get displaySettingsPageAutoCollapseCodeBlockLinesUnit;
 
   /// No description provided for @messageExportSheetFormatTitle.
   ///
@@ -4049,6 +4085,18 @@ abstract class AppLocalizations {
   /// **'Response API (/responses)'**
   String get providerDetailPageResponseApiTitle;
 
+  /// No description provided for @providerDetailPageAihubmixAppCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'APP-Code (10% off)'**
+  String get providerDetailPageAihubmixAppCodeLabel;
+
+  /// No description provided for @providerDetailPageAihubmixAppCodeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds header APP-Code requests to get a 10% discount. Only affects AIhubmix.'**
+  String get providerDetailPageAihubmixAppCodeHelp;
+
   /// No description provided for @providerDetailPageVertexAiTitle.
   ///
   /// In en, this message translates to:
@@ -5123,6 +5171,12 @@ abstract class AppLocalizations {
   /// **'New chat after deleting topic'**
   String get displaySettingsPageNewChatAfterDeleteTitle;
 
+  /// No description provided for @displaySettingsPageNewChatOnAssistantSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat when switching assistants'**
+  String get displaySettingsPageNewChatOnAssistantSwitchTitle;
+
   /// No description provided for @displaySettingsPageNewChatOnLaunchTitle.
   ///
   /// In en, this message translates to:
@@ -5968,6 +6022,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved and applied'**
   String get mcpJsonEditSavedApplied;
+
+  /// No description provided for @mcpTimeoutSettingsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Set tool call timeout'**
+  String get mcpTimeoutSettingsTooltip;
+
+  /// No description provided for @mcpTimeoutDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool call timeout'**
+  String get mcpTimeoutDialogTitle;
+
+  /// No description provided for @mcpTimeoutSecondsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool call timeout (seconds)'**
+  String get mcpTimeoutSecondsLabel;
+
+  /// No description provided for @mcpTimeoutInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a positive number of seconds'**
+  String get mcpTimeoutInvalid;
 
   /// No description provided for @quickPhraseEditButton.
   ///

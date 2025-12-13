@@ -50,6 +50,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
         case HotkeyAction.openSettings:
           if (mounted) setState(() => _tabIndex = 2);
           break;
+        case HotkeyAction.closeWindow:
+          try { await windowManager.close(); } catch (_) {}
+          break;
         case HotkeyAction.toggleAppVisibility:
           try {
             final visible = await windowManager.isVisible();
@@ -80,6 +83,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           break;
         case HotkeyAction.newTopic:
           if (_tabIndex == 0) ChatActionBus.instance.fire(ChatAction.newTopic);
+          break;
+        case HotkeyAction.switchModel:
+          if (_tabIndex == 0) ChatActionBus.instance.fire(ChatAction.switchModel);
           break;
         case HotkeyAction.toggleLeftPanelAssistants:
           if (_tabIndex == 0)
