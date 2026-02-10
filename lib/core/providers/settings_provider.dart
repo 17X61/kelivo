@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:socks5_proxy/socks_client.dart' as socks;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../services/search/search_service.dart';
@@ -12,10 +13,12 @@ import '../services/network/request_logger.dart';
 import '../services/logging/flutter_logger.dart';
 import '../models/api_keys.dart';
 import '../models/backup.dart';
+import '../models/provider_group.dart';
 import '../services/haptics.dart';
 import '../../utils/app_directories.dart';
 import '../../utils/sandbox_path_resolver.dart';
 import '../../utils/avatar_cache.dart';
+import '../../utils/provider_grouping_logic.dart';
 
 // Desktop: topic list position
 enum DesktopTopicPosition { left, right }
@@ -25,6 +28,26 @@ enum DesktopSendShortcut { enter, ctrlEnter }
 
 class SettingsProvider extends ChangeNotifier {
   static const String _providersOrderKey = 'providers_order_v1';
+  static const String _providerGroupsKey = 'provider_groups_v1'; // [{id,name,createdAt}]
+  static const String _providerGroupMapKey = 'provider_group_map_v1'; // providerKey -> groupId
+  static const String _providerGroupCollapsedKey = 'provider_group_collapsed_v1'; // groupId|__ungrouped__ -> bool
+  static const String providerUngroupedGroupKey = '__ungrouped__';
+  static const List<String> _builtInProviderKeysInOrder = [
+    'OpenAI',
+    'SiliconFlow',
+    'Gemini',
+    'OpenRouter',
+    'KelivoIN',
+    'Tensdaq',
+    'DeepSeek',
+    'AIhubmix',
+    'Aliyun',
+    'Zhipu AI',
+    'Claude',
+    'Grok',
+    'ByteDance',
+  ];
+  static const Set<String> _builtInProviderKeys = {..._builtInProviderKeysInOrder};
   static const String _themeModeKey = 'theme_mode_v1';
   static const String _providerConfigsKey = 'provider_configs_v1';
   static const String _pinnedModelsKey = 'pinned_models_v1';
@@ -112,11 +135,14 @@ class SettingsProvider extends ChangeNotifier {
   static const String _webDavConfigKey = 'webdav_config_v1';
   // Global network proxy
   static const String _globalProxyEnabledKey = 'global_proxy_enabled_v1';
-  static const String _globalProxyTypeKey = 'global_proxy_type_v1'; // http|https|socks5 (socks5 not yet supported)
+  static const String _globalProxyTypeKey = 'global_proxy_type_v1'; // http|https|socks5
   static const String _globalProxyHostKey = 'global_proxy_host_v1';
   static const String _globalProxyPortKey = 'global_proxy_port_v1';
   static const String _globalProxyUsernameKey = 'global_proxy_username_v1';
   static const String _globalProxyPasswordKey = 'global_proxy_password_v1';
+  static const String _globalProxyBypassKey = 'global_proxy_bypass_v1';
+  static const String _defaultGlobalProxyBypassRules =
+      'localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1';
   // TTS services (network)
   static const String _ttsServicesKey = 'tts_services_v1';
   static const String _ttsSelectedKey = 'tts_selected_v1';
@@ -137,6 +163,36 @@ class SettingsProvider extends ChangeNotifier {
 
   List<String> _providersOrder = const [];
   List<String> get providersOrder => _providersOrder;
+
+  // ===== Provider grouping =====
+  List<ProviderGroup> _providerGroups = const <ProviderGroup>[];
+  Map<String, String> _providerGroupMap = <String, String>{}; // providerKey -> groupId
+  final Map<String, bool> _providerGroupCollapsed = <String, bool>{}; // groupId|__ungrouped__ -> bool
+
+  List<ProviderGroup> get providerGroups => List.unmodifiable(_providerGroups);
+
+  ProviderGroup? groupById(String id) {
+    for (final g in _providerGroups) {
+      if (g.id == id) return g;
+    }
+    return null;
+  }
+
+  String? groupIdForProvider(String providerKey) {
+    final gid = _providerGroupMap[providerKey];
+    if (gid == null) return null;
+    return groupById(gid) == null ? null : gid;
+  }
+
+  bool get providerGroupingActive {
+    for (final entry in _providerGroupMap.entries) {
+      final gid = entry.value;
+      if (groupById(gid) != null) return true;
+    }
+    return false;
+  }
+
+  bool isGroupCollapsed(String groupIdOrUngrouped) => _providerGroupCollapsed[groupIdOrUngrouped] ?? false;
 
   ThemeMode _themeMode = ThemeMode.system;
   ThemeMode get themeMode => _themeMode;
@@ -211,6 +267,7 @@ class SettingsProvider extends ChangeNotifier {
   String _globalProxyPort = '8080';
   String _globalProxyUsername = '';
   String _globalProxyPassword = '';
+  String _globalProxyBypass = _defaultGlobalProxyBypassRules;
 
   bool get globalProxyEnabled => _globalProxyEnabled;
   String get globalProxyType => _globalProxyType; // http|https|socks5
@@ -218,6 +275,7 @@ class SettingsProvider extends ChangeNotifier {
   String get globalProxyPort => _globalProxyPort;
   String get globalProxyUsername => _globalProxyUsername;
   String get globalProxyPassword => _globalProxyPassword;
+  String get globalProxyBypass => _globalProxyBypass;
 
   SettingsProvider() {
     _load();
@@ -245,6 +303,38 @@ class SettingsProvider extends ChangeNotifier {
         final raw = jsonDecode(cfgStr) as Map<String, dynamic>;
         _providerConfigs = raw.map((k, v) => MapEntry(k, ProviderConfig.fromJson(v as Map<String, dynamic>)));
       } catch (_) {}
+    }
+
+    // load provider grouping
+    try {
+      final groupsStr = prefs.getString(_providerGroupsKey) ?? '';
+      _providerGroups = groupsStr.isEmpty ? const <ProviderGroup>[] : ProviderGroup.decodeList(groupsStr);
+    } catch (_) {
+      _providerGroups = const <ProviderGroup>[];
+    }
+    try {
+      final mapStr = prefs.getString(_providerGroupMapKey) ?? '';
+      if (mapStr.isNotEmpty) {
+        final raw = jsonDecode(mapStr) as Map<String, dynamic>;
+        _providerGroupMap = raw.map((k, v) => MapEntry(k, v.toString()));
+      } else {
+        _providerGroupMap = <String, String>{};
+      }
+    } catch (_) {
+      _providerGroupMap = <String, String>{};
+    }
+    try {
+      final collapsedStr = prefs.getString(_providerGroupCollapsedKey) ?? '';
+      if (collapsedStr.isNotEmpty) {
+        final raw = jsonDecode(collapsedStr) as Map<String, dynamic>;
+        _providerGroupCollapsed
+          ..clear()
+          ..addAll(raw.map((k, v) => MapEntry(k, (v is bool) ? v : (v.toString() == 'true'))));
+      } else {
+        _providerGroupCollapsed.clear();
+      }
+    } catch (_) {
+      _providerGroupCollapsed.clear();
     }
     // load pinned models
     final pinned = prefs.getStringList(_pinnedModelsKey) ?? const <String>[];
@@ -499,6 +589,13 @@ class SettingsProvider extends ChangeNotifier {
     _globalProxyPort = prefs.getString(_globalProxyPortKey) ?? '8080';
     _globalProxyUsername = prefs.getString(_globalProxyUsernameKey) ?? '';
     _globalProxyPassword = prefs.getString(_globalProxyPasswordKey) ?? '';
+    final bypass = prefs.getString(_globalProxyBypassKey);
+    if (bypass == null) {
+      _globalProxyBypass = _defaultGlobalProxyBypassRules;
+      await prefs.setString(_globalProxyBypassKey, _globalProxyBypass);
+    } else {
+      _globalProxyBypass = bypass;
+    }
 
     // load network TTS services
     try {
@@ -541,6 +638,15 @@ class SettingsProvider extends ChangeNotifier {
 
     // Attempt to reload any user-installed local fonts (mobile platforms)
     await _reloadLocalFontsIfAny();
+
+    // Final cleanup pass for provider order + grouping state (best-effort).
+    if (_cleanupProviderOrderAndGrouping()) {
+      try {
+        await prefs.setStringList(_providersOrderKey, _providersOrder);
+        await prefs.setString(_providerGroupMapKey, jsonEncode(_providerGroupMap));
+        await prefs.setString(_providerGroupCollapsedKey, jsonEncode(_providerGroupCollapsed));
+      } catch (_) {}
+    }
 
     notifyListeners();
   }
@@ -587,6 +693,13 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setString(_globalProxyPasswordKey, _globalProxyPassword);
   }
 
+  Future<void> setGlobalProxyBypass(String v) async {
+    _globalProxyBypass = v.trim();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_globalProxyBypassKey, _globalProxyBypass);
+  }
+
   // Apply global proxy to Dart IO layer; provider-level proxies take precedence at call sites.
   String _lastProxySignature = '';
   void applyGlobalProxyOverridesIfNeeded() {
@@ -597,7 +710,8 @@ class SettingsProvider extends ChangeNotifier {
       final user = _globalProxyUsername.trim();
       final pass = _globalProxyPassword;
       final type = _globalProxyType;
-      final sig = [enabled, type, host, portStr, user, pass].join('|');
+      final bypass = _globalProxyBypass;
+      final sig = [enabled, type, host, portStr, user, pass, bypass].join('|');
       if (_lastProxySignature == sig) return;
       _lastProxySignature = sig;
       if (!enabled || host.isEmpty || portStr.isEmpty) {
@@ -606,9 +720,21 @@ class SettingsProvider extends ChangeNotifier {
       }
       final port = int.tryParse(portStr) ?? 8080;
       if (type == 'socks5') {
-        HttpOverrides.global = _SocksProxyHttpOverrides(host: host, port: port, username: user.isEmpty ? null : user, password: pass);
+        HttpOverrides.global = _SocksProxyHttpOverrides(
+          host: host,
+          port: port,
+          username: user.isEmpty ? null : user,
+          password: pass,
+          bypassRules: bypass,
+        );
       } else {
-        HttpOverrides.global = _ProxyHttpOverrides(host: host, port: port, username: user.isEmpty ? null : user, password: pass);
+        HttpOverrides.global = _ProxyHttpOverrides(
+          host: host,
+          port: port,
+          username: user.isEmpty ? null : user,
+          password: pass,
+          bypassRules: bypass,
+        );
       }
     } catch (_) {
       // ignore
@@ -963,9 +1089,274 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> setProvidersOrder(List<String> order) async {
     _providersOrder = List.unmodifiable(order);
+    _cleanupProviderOrderAndGrouping();
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_providersOrderKey, _providersOrder);
+  }
+
+  Set<String> _knownProviderKeys() => <String>{
+        ..._builtInProviderKeys,
+        ..._providerConfigs.keys,
+      };
+
+  bool _cleanupProviderOrderAndGrouping() {
+    bool changed = false;
+    final knownKeys = _knownProviderKeys();
+
+    // Clean providers order: remove non-existing and dedupe, append new at end.
+    final nextOrder = <String>[];
+    final seen = <String>{};
+    for (final k in _providersOrder) {
+      if (!knownKeys.contains(k)) {
+        changed = true;
+        continue;
+      }
+      if (!seen.add(k)) {
+        changed = true;
+        continue;
+      }
+      nextOrder.add(k);
+    }
+    final mergedDefault = <String>[
+      ..._builtInProviderKeysInOrder,
+      ..._providerConfigs.keys.where((k) => !_builtInProviderKeys.contains(k)),
+    ];
+    for (final k in mergedDefault) {
+      if (knownKeys.contains(k) && seen.add(k)) {
+        nextOrder.add(k);
+        changed = true;
+      }
+    }
+    if (!listEquals(_providersOrder, nextOrder)) {
+      _providersOrder = List.unmodifiable(nextOrder);
+      changed = true;
+    }
+
+    // Clean group map: remove invalid groupIds or non-existing provider keys.
+    final validGroupIds = {for (final g in _providerGroups) g.id};
+    final nextMap = <String, String>{};
+    for (final entry in _providerGroupMap.entries) {
+      final providerKey = entry.key;
+      final groupId = entry.value;
+      if (!knownKeys.contains(providerKey)) {
+        changed = true;
+        continue;
+      }
+      if (!validGroupIds.contains(groupId)) {
+        changed = true;
+        continue;
+      }
+      nextMap[providerKey] = groupId;
+    }
+    if (!mapEquals(_providerGroupMap, nextMap)) {
+      _providerGroupMap = nextMap;
+      changed = true;
+    }
+
+    // Clean collapsed state: remove unknown group ids (except ungrouped).
+    final nextCollapsed = <String, bool>{};
+    for (final entry in _providerGroupCollapsed.entries) {
+      final key = entry.key;
+      if (key == providerUngroupedGroupKey || validGroupIds.contains(key)) {
+        nextCollapsed[key] = entry.value;
+      } else {
+        changed = true;
+      }
+    }
+    if (!mapEquals(_providerGroupCollapsed, nextCollapsed)) {
+      _providerGroupCollapsed
+        ..clear()
+        ..addAll(nextCollapsed);
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  Future<void> _persistProviderGrouping(SharedPreferences prefs) async {
+    await prefs.setString(_providerGroupsKey, ProviderGroup.encodeList(_providerGroups));
+    await prefs.setString(_providerGroupMapKey, jsonEncode(_providerGroupMap));
+    await prefs.setString(_providerGroupCollapsedKey, jsonEncode(_providerGroupCollapsed));
+    await prefs.setStringList(_providersOrderKey, _providersOrder);
+  }
+
+  Future<String> createGroup(String name) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '';
+    final key = trimmed.toLowerCase();
+    for (final g in _providerGroups) {
+      if (g.name.trim().toLowerCase() == key) return g.id;
+    }
+    final id = const Uuid().v4();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _providerGroups = List.unmodifiable(<ProviderGroup>[..._providerGroups, ProviderGroup(id: id, name: trimmed, createdAt: now)]);
+    _cleanupProviderOrderAndGrouping();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await _persistProviderGrouping(prefs);
+    return id;
+  }
+
+  Future<void> renameGroup(String groupId, String name) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    final idx = _providerGroups.indexWhere((g) => g.id == groupId);
+    if (idx < 0) return;
+
+    final key = trimmed.toLowerCase();
+    for (final g in _providerGroups) {
+      if (g.id != groupId && g.name.trim().toLowerCase() == key) return;
+    }
+
+    final current = _providerGroups[idx];
+    if (current.name == trimmed) return;
+    final mut = List<ProviderGroup>.of(_providerGroups);
+    mut[idx] = current.copyWith(name: trimmed);
+    _providerGroups = List.unmodifiable(mut);
+    _cleanupProviderOrderAndGrouping();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await _persistProviderGrouping(prefs);
+  }
+
+  Future<void> reorderProviderGroups(int oldIndex, int newIndex) async {
+    if (_providerGroups.isEmpty) return;
+    if (oldIndex < 0 || oldIndex >= _providerGroups.length) return;
+    if (newIndex < 0 || newIndex > _providerGroups.length) return;
+    if (oldIndex == newIndex) return;
+
+    final mut = List<ProviderGroup>.of(_providerGroups);
+    final item = mut.removeAt(oldIndex);
+    final insertIndex = newIndex.clamp(0, mut.length);
+    mut.insert(insertIndex, item);
+    _providerGroups = List.unmodifiable(mut);
+    _cleanupProviderOrderAndGrouping();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await _persistProviderGrouping(prefs);
+  }
+
+  Future<void> deleteGroup(String groupId) async {
+    if (groupById(groupId) == null) return;
+    final res = deleteProviderGroup(
+      groups: _providerGroups,
+      providerGroupMap: _providerGroupMap,
+      collapsed: _providerGroupCollapsed,
+      groupId: groupId,
+    );
+    _providerGroups = res.groups;
+    _providerGroupMap = Map<String, String>.from(res.providerGroupMap);
+    _providerGroupCollapsed
+      ..clear()
+      ..addAll(res.collapsed);
+    _cleanupProviderOrderAndGrouping();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await _persistProviderGrouping(prefs);
+  }
+
+  Future<void> setProviderGroup(String providerKey, String? groupId) async {
+    final known = _knownProviderKeys();
+    if (!known.contains(providerKey)) return;
+    final target = (groupId != null && groupById(groupId) != null) ? groupId : null;
+    final current = groupIdForProvider(providerKey);
+    if (current == target) return;
+
+    if (target == null) {
+      _providerGroupMap.remove(providerKey);
+    } else {
+      _providerGroupMap[providerKey] = target;
+    }
+    _cleanupProviderOrderAndGrouping();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await _persistProviderGrouping(prefs);
+  }
+
+  Future<void> moveProvidersToGroup(Iterable<String> providerKeys, String? targetGroupId) async {
+    final known = _knownProviderKeys();
+    final validGroupIds = {for (final g in _providerGroups) g.id};
+    final normalizedTargetGroupId = (targetGroupId != null && validGroupIds.contains(targetGroupId)) ? targetGroupId : null;
+
+    final keysSet = providerKeys.where(known.contains).toSet();
+    if (keysSet.isEmpty) return;
+
+    // Preserve current visible order when appending into the target group.
+    final orderedKeys = <String>[];
+    for (final k in _providersOrder) {
+      if (keysSet.remove(k)) orderedKeys.add(k);
+    }
+    orderedKeys.addAll(keysSet);
+
+    List<String> order = _providersOrder;
+    Map<String, String> groupMap = _providerGroupMap;
+
+    String? groupIdFor(String key) {
+      final gid = groupMap[key];
+      return (gid != null && validGroupIds.contains(gid)) ? gid : null;
+    }
+
+    bool changed = false;
+    for (final key in orderedKeys) {
+      final current = groupIdFor(key);
+      if (current == normalizedTargetGroupId) continue;
+
+      final res = moveProviderInGroupedOrder(
+        providersOrder: order,
+        providerGroupMap: groupMap,
+        knownProviderKeys: known,
+        validGroupIds: validGroupIds,
+        providerKey: key,
+        targetGroupId: normalizedTargetGroupId,
+        targetPos: 1 << 30, // append
+      );
+      order = res.providersOrder;
+      groupMap = res.providerGroupMap;
+      changed = true;
+    }
+
+    if (!changed) return;
+    _providersOrder = order;
+    _providerGroupMap = Map<String, String>.from(groupMap);
+    _cleanupProviderOrderAndGrouping();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await _persistProviderGrouping(prefs);
+  }
+
+  Future<void> setGroupCollapsed(String groupIdOrUngrouped, bool value) async {
+    if (groupIdOrUngrouped != providerUngroupedGroupKey && groupById(groupIdOrUngrouped) == null) return;
+    _providerGroupCollapsed[groupIdOrUngrouped] = value;
+    _cleanupProviderOrderAndGrouping();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await _persistProviderGrouping(prefs);
+  }
+
+  Future<void> toggleGroupCollapsed(String groupIdOrUngrouped) async =>
+      setGroupCollapsed(groupIdOrUngrouped, !isGroupCollapsed(groupIdOrUngrouped));
+
+  Future<void> moveProvider(String providerKey, String? targetGroupId, int targetPos) async {
+    final known = _knownProviderKeys();
+    if (!known.contains(providerKey)) return;
+
+    final validGroupIds = {for (final g in _providerGroups) g.id};
+    final res = moveProviderInGroupedOrder(
+      providersOrder: _providersOrder,
+      providerGroupMap: _providerGroupMap,
+      knownProviderKeys: known,
+      validGroupIds: validGroupIds,
+      providerKey: providerKey,
+      targetGroupId: targetGroupId,
+      targetPos: targetPos,
+    );
+    _providersOrder = res.providersOrder;
+    _providerGroupMap = Map<String, String>.from(res.providerGroupMap);
+    _cleanupProviderOrderAndGrouping();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await _persistProviderGrouping(prefs);
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
@@ -1235,6 +1626,9 @@ class SettingsProvider extends ChangeNotifier {
     _providerConfigs.remove(key);
     // Remove from order
     _providersOrder = List<String>.from(_providersOrder.where((k) => k != key));
+    // Also remove from grouping map
+    _providerGroupMap.remove(key);
+    _cleanupProviderOrderAndGrouping();
 
     // Clear selections referencing this provider to avoid re-creating defaults
     final prefs = await SharedPreferences.getInstance();
@@ -1277,6 +1671,7 @@ class SettingsProvider extends ChangeNotifier {
     final map = _providerConfigs.map((k, v) => MapEntry(k, v.toJson()));
     await prefs.setString(_providerConfigsKey, jsonEncode(map));
     await prefs.setStringList(_providersOrderKey, _providersOrder);
+    await prefs.setString(_providerGroupMapKey, jsonEncode(_providerGroupMap));
     notifyListeners();
   }
 
@@ -2225,16 +2620,94 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
   }
 }
 
+String _normalizeProxyHost(String host) {
+  var h = host.trim().toLowerCase();
+  if (h.startsWith('[') && h.endsWith(']') && h.length > 2) {
+    h = h.substring(1, h.length - 1);
+  }
+  final zoneIndex = h.indexOf('%');
+  if (zoneIndex > 0) {
+    h = h.substring(0, zoneIndex);
+  }
+  if (h.endsWith('.')) {
+    h = h.substring(0, h.length - 1);
+  }
+  return h;
+}
+
+bool _shouldBypassProxy(String host, String bypassRules) {
+  final h = _normalizeProxyHost(host);
+  if (h.isEmpty) return false;
+
+  final rules = bypassRules.split(RegExp(r'[,;\s]+'));
+  for (final rawRule in rules) {
+    final rule = rawRule.trim();
+    if (rule.isEmpty) continue;
+    final r = rule.toLowerCase();
+
+    if (r == '*') return true;
+
+    if (r.startsWith('*.') || r.startsWith('*')) {
+      final suffix = r.substring(1);
+      if (suffix.isNotEmpty && h.endsWith(suffix)) return true;
+      continue;
+    }
+
+    if (r.contains('/')) {
+      final addr = InternetAddress.tryParse(h);
+      if (addr != null && _matchesCidr(addr, r)) return true;
+      continue;
+    }
+
+    if (h == r) return true;
+  }
+
+  return false;
+}
+
+BigInt _bytesToBigInt(List<int> bytes) {
+  var n = BigInt.zero;
+  for (final b in bytes) {
+    n = (n << 8) | BigInt.from(b);
+  }
+  return n;
+}
+
+BigInt _internetAddressToBigInt(InternetAddress addr) => _bytesToBigInt(addr.rawAddress);
+
+bool _matchesCidr(InternetAddress addr, String cidr) {
+  final parts = cidr.split('/');
+  if (parts.length != 2) return false;
+  final networkStr = parts[0].trim();
+  final prefixLen = int.tryParse(parts[1].trim());
+  if (prefixLen == null) return false;
+  final network = InternetAddress.tryParse(networkStr);
+  if (network == null) return false;
+
+  if (addr.type != network.type) return false;
+  final totalBits = addr.type == InternetAddressType.IPv4 ? 32 : 128;
+  if (prefixLen < 0 || prefixLen > totalBits) return false;
+
+  final mask = prefixLen == 0
+      ? BigInt.zero
+      : ((BigInt.one << prefixLen) - BigInt.one) << (totalBits - prefixLen);
+
+  final a = _internetAddressToBigInt(addr);
+  final n = _internetAddressToBigInt(network);
+  return (a & mask) == (n & mask);
+}
+
 class _ProxyHttpOverrides extends HttpOverrides {
   final String host;
   final int port;
   final String? username;
   final String? password;
-  _ProxyHttpOverrides({required this.host, required this.port, this.username, this.password});
+  final String bypassRules;
+  _ProxyHttpOverrides({required this.host, required this.port, this.username, this.password, required this.bypassRules});
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
-    client.findProxy = (_) => 'PROXY $host:$port';
+    client.findProxy = (uri) => _shouldBypassProxy(uri.host, bypassRules) ? 'DIRECT' : 'PROXY $host:$port';
     if (username != null && username!.isNotEmpty) {
       client.addProxyCredentials(host, port, '', HttpClientBasicCredentials(username!, password ?? ''));
     }
@@ -2246,17 +2719,71 @@ class _SocksProxyHttpOverrides extends HttpOverrides {
   final int port;
   final String? username;
   final String? password;
-  _SocksProxyHttpOverrides({required this.host, required this.port, this.username, this.password});
+  final String bypassRules;
+  _SocksProxyHttpOverrides({required this.host, required this.port, this.username, this.password, required this.bypassRules});
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
+    Future<InternetAddress?>? proxyAddrFuture;
+
+    ConnectionTask<Socket> directConnection(Uri uri) {
+      if (uri.scheme == 'https') {
+        final Future<SecureSocket> socket = SecureSocket.connect(uri.host, uri.port, context: context);
+        return ConnectionTask.fromSocket(socket, () async => (await socket).close());
+      }
+      final Future<Socket> socket = Socket.connect(uri.host, uri.port);
+      return ConnectionTask.fromSocket(socket, () async => (await socket).close());
+    }
+
+    Future<InternetAddress?> resolveProxyAddress() async {
+      final parsed = InternetAddress.tryParse(host);
+      if (parsed != null) return parsed;
+      proxyAddrFuture ??= InternetAddress.lookup(host).then((list) => list.isNotEmpty ? list.first : null);
+      try {
+        return await proxyAddrFuture;
+      } catch (_) {
+        return null;
+      }
+    }
+
     try {
-      final List<socks.ProxySettings> proxies = [
-        socks.ProxySettings(InternetAddress(host), port,
-            username: username, password: password),
-      ];
-      socks.SocksTCPClient.assignToHttpClient(client, proxies);
-    } catch (_) {}
+      client.connectionFactory = (uri, proxyHost, proxyPort) async {
+        if (_shouldBypassProxy(uri.host, bypassRules)) {
+          return directConnection(uri);
+        }
+
+        final proxyAddr = await resolveProxyAddress();
+        if (proxyAddr == null) {
+          // Preserve previous behavior: if proxy cannot be configured, fall back to direct.
+          return directConnection(uri);
+        }
+
+        final proxies = <socks.ProxySettings>[
+          socks.ProxySettings(proxyAddr, port, username: username, password: password),
+        ];
+
+        final socket = socks.SocksTCPClient.connect(
+          proxies,
+          InternetAddress(uri.host, type: InternetAddressType.unix),
+          uri.port,
+        );
+
+        if (uri.scheme == 'https') {
+          final Future<SecureSocket> secureSocket;
+          return ConnectionTask.fromSocket(
+            secureSocket = (await socket).secure(uri.host, context: context),
+            () async => (await secureSocket).close(),
+          );
+        }
+
+        return ConnectionTask.fromSocket(
+          socket,
+          () async => (await socket).close(),
+        );
+      };
+    } catch (_) {
+      // ignore
+    }
     return client;
   }
 }

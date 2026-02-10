@@ -209,46 +209,6 @@ class ChatApiService {
     dotAll: true,
   );
 
-  // Get file extension from MIME type
-  static String _extFromMime(String mime) {
-    switch (mime.toLowerCase()) {
-      case 'image/jpeg':
-      case 'image/jpg':
-        return 'jpg';
-      case 'image/webp':
-        return 'webp';
-      case 'image/gif':
-        return 'gif';
-      case 'image/png':
-      default:
-        return 'png';
-    }
-  }
-
-  // Save base64 image data to file and return the path
-  static Future<String?> _saveInlineImageToFile(String mime, String data) async {
-    try {
-      final dir = await AppDirectories.getImagesDirectory();
-      if (!await dir.exists()) {
-        await dir.create(recursive: true);
-      }
-      final cleaned = data.replaceAll(RegExp(r'\s'), '');
-      List<int> bytes;
-      try {
-        bytes = base64Decode(cleaned);
-      } catch (_) {
-        bytes = base64Url.decode(cleaned);
-      }
-      final ext = _extFromMime(mime);
-      final path = '${dir.path}/img_${DateTime.now().microsecondsSinceEpoch}.$ext';
-      final f = File(path);
-      await f.writeAsBytes(bytes, flush: true);
-      return path;
-    } catch (_) {
-      return null;
-    }
-  }
-
   // YouTube URL regex: watch, shorts, embed, youtu.be (with optional timestamps)
   static final RegExp _youtubeUrlRegex = RegExp(
     r'(https?://(?:www\.)?(?:youtube\.com/(?:watch\?v=|shorts/|embed/)|youtu\.be/)[a-zA-Z0-9_-]+(?:[?&][^\s<>()]*)?)',
@@ -944,6 +904,56 @@ class ChatApiService {
     return out ?? messages;
   }
 
+  // Build a follow-up transcript for OpenAI-style Chat Completions tool-calls.
+  //
+  // Important: tool messages must preserve `tool_call_id`, and assistant messages must
+  // preserve `tool_calls`, otherwise OpenRouter->Anthropic translation will fail with
+  // `tool_result.tool_use_id: Field required` on subsequent tool rounds.
+  static Map<String, dynamic> _copyChatCompletionMessage(Map<String, dynamic> m) {
+    final role = (m['role'] ?? 'user').toString();
+    final out = <String, dynamic>{
+      'role': role,
+      'content': m.containsKey('content') ? (m['content'] ?? '') : '',
+    };
+
+    // Preserve optional name (some providers support it on non-tool roles).
+    final name = m['name'];
+    if (role != 'tool' && name != null && name.toString().isNotEmpty) {
+      out['name'] = name;
+    }
+
+    // Preserve assistant tool_calls + vendor reasoning echoes (when present).
+    if (role == 'assistant') {
+      final toolCalls = m['tool_calls'];
+      if (toolCalls is List && toolCalls.isNotEmpty) {
+        out['tool_calls'] = toolCalls;
+      }
+      final functionCall = m['function_call'];
+      if (functionCall != null) {
+        out['function_call'] = functionCall;
+      }
+      if (m['reasoning_content'] != null) {
+        out['reasoning_content'] = m['reasoning_content'];
+      }
+      if (m['reasoning_details'] != null) {
+        out['reasoning_details'] = m['reasoning_details'];
+      }
+    }
+
+    // Preserve tool linkage fields.
+    if (role == 'tool') {
+      final toolCallId = m['tool_call_id'];
+      if (toolCallId != null && toolCallId.toString().isNotEmpty) {
+        out['tool_call_id'] = toolCallId;
+      }
+      if (name != null && name.toString().isNotEmpty) {
+        out['name'] = name;
+      }
+    }
+
+    return out;
+  }
+
   static bool _isOff(int? budget) => (budget != null && budget != -1 && budget < 1024);
   static String _effortForBudget(int? budget) {
     if (budget == null || budget == -1) return 'auto';
@@ -1191,7 +1201,44 @@ class ChatApiService {
           continue;
         }
 
+        // Handle tool result messages (role: 'tool') - convert to function_call_output format
+        if (roleRaw == 'tool') {
+          final toolCallId = (m['tool_call_id'] ?? '').toString();
+          final content = (m['content'] ?? '').toString();
+          if (toolCallId.isNotEmpty) {
+            input.add({
+              'type': 'function_call_output',
+              'call_id': toolCallId,
+              'output': content,
+            });
+          }
+          continue;
+        }
+
         final isAssistant = roleRaw == 'assistant';
+
+        // Handle assistant messages with tool_calls - convert to function_call format
+        if (isAssistant && m['tool_calls'] is List) {
+          final toolCalls = m['tool_calls'] as List;
+          for (final tc in toolCalls) {
+            if (tc is! Map) continue;
+            final callId = (tc['id'] ?? '').toString();
+            final fn = tc['function'];
+            if (fn is! Map) continue;
+            final name = (fn['name'] ?? '').toString();
+            final arguments = (fn['arguments'] ?? '{}').toString();
+            if (callId.isNotEmpty && name.isNotEmpty) {
+              input.add({
+                'type': 'function_call',
+                'call_id': callId,
+                'name': name,
+                'arguments': arguments,
+              });
+            }
+          }
+          // Skip adding the assistant message content if it only contains tool calls
+          if (raw.trim().isEmpty || raw.trim() == '\n\n') continue;
+        }
 
         // Only parse images if there are images to process
         final hasMarkdownImages = raw.contains('![') && raw.contains('](');
@@ -1335,10 +1382,21 @@ class ChatApiService {
         final isLast = i == messages.length - 1;
         final raw = (m['content'] ?? '').toString();
         final role = (m['role'] ?? 'user').toString();
+        final outMsg = Map<String, dynamic>.from(m);
+        outMsg['role'] = role;
 
         // System 消息保持为纯文本，不解析为图片
         if (role == 'system') {
-          mm.add({'role': role, 'content': raw});
+          outMsg['content'] = raw;
+          mm.add(outMsg);
+          continue;
+        }
+
+        // Tool / tool_calls messages must preserve tool-specific fields (tool_call_id / tool_calls / name).
+        // Also do not convert tool output to multimodal parts, as many OpenAI-compatible backends require tool content to be a string.
+        if (role == 'tool' || (role == 'assistant' && outMsg['tool_calls'] is List && (outMsg['tool_calls'] as List).isNotEmpty)) {
+          outMsg['content'] = raw;
+          mm.add(outMsg);
           continue;
         }
 
@@ -1409,10 +1467,12 @@ class ChatApiService {
               }
             }
           }
-          mm.add({'role': role, 'content': parts});
+          outMsg['content'] = parts;
+          mm.add(outMsg);
         } else {
           // No images, use simple string content
-          mm.add({'role': role, 'content': raw});
+          outMsg['content'] = raw;
+          mm.add(outMsg);
         }
       }
       body = {
@@ -1684,7 +1744,7 @@ class ChatApiService {
             req.headers.addAll(headers2);
             final next = <Map<String, dynamic>>[];
             for (final m in messages) {
-              next.add({'role': m['role'] ?? 'user', 'content': m['content'] ?? ''});
+              next.add(_copyChatCompletionMessage(m));
             }
             final assistantToolCallMsg = <String, dynamic>{'role': 'assistant', 'content': '\n\n', 'tool_calls': calls};
             if (needsReasoningEcho) {
@@ -1824,7 +1884,7 @@ class ChatApiService {
             // Build follow-up messages
             final mm2 = <Map<String, dynamic>>[];
             for (final m in messages) {
-              mm2.add({'role': m['role'] ?? 'user', 'content': m['content'] ?? ''});
+              mm2.add(_copyChatCompletionMessage(m));
             }
             final assistantToolCallMsg = <String, dynamic>{'role': 'assistant', 'content': '\n\n', 'tool_calls': calls};
             if (needsReasoningEcho) {
@@ -2297,7 +2357,7 @@ class ChatApiService {
                       // it['result'] is directly the base64 image data
                       final b64 = (it['result'] ?? '').toString();
                       if (b64.isNotEmpty) {
-                        final savedPath = await _saveInlineImageToFile('image/png', b64);
+                        final savedPath = await AppDirectories.saveBase64Image('image/png', b64);
                         if (savedPath != null && savedPath.isNotEmpty) {
                           final mdImg = '\n![Generated Image]($savedPath)\n';
                           yield ChatStreamChunk(
@@ -2828,7 +2888,7 @@ class ChatApiService {
             // Build follow-up messages
             final mm2 = <Map<String, dynamic>>[];
             for (final m in messages) {
-              mm2.add({'role': m['role'] ?? 'user', 'content': m['content'] ?? ''});
+              mm2.add(_copyChatCompletionMessage(m));
             }
             final assistantToolCallMsg = <String, dynamic>{'role': 'assistant', 'content': '\n\n', 'tool_calls': calls};
             if (needsReasoningEcho) {
@@ -3228,7 +3288,7 @@ class ChatApiService {
                 // Build follow-up messages
                 final mm2 = <Map<String, dynamic>>[];
                 for (final m in messages) {
-                  mm2.add({'role': m['role'] ?? 'user', 'content': m['content'] ?? ''});
+                  mm2.add(_copyChatCompletionMessage(m));
                 }
                 final assistantToolCallMsg = <String, dynamic>{'role': 'assistant', 'content': '\n\n', 'tool_calls': calls};
                 if (needsReasoningEcho) {
@@ -3619,7 +3679,7 @@ class ChatApiService {
             // Follow-up request with assistant tool_calls + tool messages
             final mm2 = <Map<String, dynamic>>[];
             for (final m in messages) {
-              mm2.add({'role': m['role'] ?? 'user', 'content': m['content'] ?? ''});
+              mm2.add(_copyChatCompletionMessage(m));
             }
             final assistantToolCallMsg = <String, dynamic>{'role': 'assistant', 'content': '\n\n', 'tool_calls': calls};
             if (needsReasoningEcho) {
@@ -3831,7 +3891,7 @@ class ChatApiService {
       // Prepare request body per round
       final body = <String, dynamic>{
         'model': upstreamModelId,
-        'max_tokens': maxTokens ?? 4096,
+        'max_tokens': maxTokens ?? 64000,
         'messages': convo,
         'stream': stream,
         if (systemPrompt.isNotEmpty) 'system': systemPrompt,
@@ -4836,7 +4896,7 @@ class ChatApiService {
       Future<String> _takeBufferedImageMarkdown() async {
         if (!_bufferingInlineImage || _pendingImageData.isEmpty) return '';
         final trailing = _pendingImageTrailingText;
-        final path = await _saveInlineImageToFile(_imageMime, _pendingImageData);
+        final path = await AppDirectories.saveBase64Image(_imageMime, _pendingImageData);
         _bufferingInlineImage = false;
         _pendingImageData = '';
         _pendingImageTrailingText = '';

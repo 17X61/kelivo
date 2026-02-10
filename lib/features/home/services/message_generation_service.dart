@@ -14,7 +14,8 @@ import 'message_builder_service.dart';
 
 /// Callback types for UI updates from MessageGenerationService
 typedef OnMessagesChanged = void Function();
-typedef OnConversationLoadingChanged = void Function(String conversationId, bool loading);
+typedef OnConversationLoadingChanged =
+    void Function(String conversationId, bool loading);
 typedef OnScrollToBottom = void Function();
 typedef OnShowError = void Function(String message);
 typedef OnShowWarning = void Function(String message);
@@ -69,6 +70,12 @@ class MessageGenerationService {
   OnShowWarning? onShowWarning;
   OnHapticFeedback? onHapticFeedback;
 
+  /// Called when file processing starts.
+  VoidCallback? onFileProcessingStarted;
+
+  /// Called when file processing finishes.
+  VoidCallback? onFileProcessingFinished;
+
   /// Check if reasoning is enabled for given budget
   bool isReasoningEnabled(int? budget) {
     if (budget == null) return true;
@@ -88,8 +95,13 @@ class MessageGenerationService {
     required String modelId,
   }) async {
     final cfg = settings.getProviderConfig(providerKey);
-    final kind = ProviderConfig.classify(providerKey, explicitType: cfg.providerType);
+    final kind = ProviderConfig.classify(
+      providerKey,
+      explicitType: cfg.providerType,
+    );
     final includeOpenAIToolMessages = kind == ProviderKind.openai;
+
+    onFileProcessingStarted?.call();
 
     // Build API messages
     final apiMessages = messageBuilderService.buildApiMessages(
@@ -99,12 +111,28 @@ class MessageGenerationService {
       includeOpenAIToolMessages: includeOpenAIToolMessages,
     );
 
+    // Apply assistant replace-only regexes at send-time (visual stays unchanged).
+    if (assistant != null && assistant.regexRules.isNotEmpty) {
+      for (int i = 0; i < apiMessages.length; i++) {
+        final role = (apiMessages[i]['role'] ?? '').toString();
+        if (role != 'assistant') continue;
+        final raw = (apiMessages[i]['content'] ?? '').toString();
+        if (raw.isEmpty) continue;
+        apiMessages[i]['content'] = applyAssistantRegexes(
+          raw,
+          assistant: assistant,
+          scope: AssistantRegexScope.assistant,
+          target: AssistantRegexTransformTarget.send,
+        );
+      }
+    }
+
     // Process user messages (documents, OCR, templates)
-    final lastUserImagePaths = await messageBuilderService.processUserMessagesForApi(
-      apiMessages,
-      settings,
-      assistant,
-    );
+    final lastUserImagePaths = await messageBuilderService
+        .processUserMessagesForApi(apiMessages, settings, assistant);
+
+    // Signal processing finished
+    onFileProcessingFinished?.call();
 
     // Inject prompts
     messageBuilderService.injectSystemPrompt(apiMessages, assistant, modelId);
@@ -114,9 +142,24 @@ class MessageGenerationService {
       currentConversationId: currentConversation?.id,
     );
 
-    final hasBuiltInSearch = messageBuilderService.hasBuiltInGeminiSearch(settings, providerKey, modelId);
-    messageBuilderService.injectSearchPrompt(apiMessages, settings, hasBuiltInSearch);
-    await messageBuilderService.injectInstructionPrompts(apiMessages, assistantId);
+    final hasBuiltInSearch = messageBuilderService.hasBuiltInGeminiSearch(
+      settings,
+      providerKey,
+      modelId,
+    );
+    messageBuilderService.injectSearchPrompt(
+      apiMessages,
+      settings,
+      hasBuiltInSearch,
+    );
+    await messageBuilderService.injectInstructionPrompts(
+      apiMessages,
+      assistantId,
+    );
+    await messageBuilderService.injectWorldBookPrompts(
+      apiMessages,
+      assistantId,
+    );
 
     // Apply context limit and inline images
     messageBuilderService.applyContextLimit(apiMessages, assistant);
@@ -151,13 +194,15 @@ class MessageGenerationService {
   }) async {
     final content = input.text.trim();
     final imageMarkers = input.imagePaths.map((p) => '\n[image:$p]').join();
-    final docMarkers = input.documents.map((d) => '\n[file:${d.path}|${d.fileName}|${d.mime}]').join();
+    final docMarkers = input.documents
+        .map((d) => '\n[file:${d.path}|${d.fileName}|${d.mime}]')
+        .join();
 
     final processedUserText = applyAssistantRegexes(
       content,
       assistant: assistant,
       scope: AssistantRegexScope.user,
-      visual: false,
+      target: AssistantRegexTransformTarget.persist,
     );
 
     return chatService.addMessage(
@@ -241,13 +286,15 @@ class MessageGenerationService {
     Assistant? assistant,
   ) {
     return (
-      providerKey: assistant?.chatModelProvider ?? settings.currentModelProvider,
+      providerKey:
+          assistant?.chatModelProvider ?? settings.currentModelProvider,
       modelId: assistant?.chatModelId ?? settings.currentModelId,
     );
   }
 
   /// Calculate version info for regeneration.
-  ({String? targetGroupId, int nextVersion, int lastKeep}) calculateRegenerationVersioning({
+  ({String? targetGroupId, int nextVersion, int lastKeep})
+  calculateRegenerationVersioning({
     required ChatMessage message,
     required List<ChatMessage> messages,
     required bool assistantAsNewReply,
@@ -316,7 +363,11 @@ class MessageGenerationService {
       }
     }
 
-    return (targetGroupId: targetGroupId, nextVersion: nextVersion, lastKeep: lastKeep);
+    return (
+      targetGroupId: targetGroupId,
+      nextVersion: nextVersion,
+      lastKeep: lastKeep,
+    );
   }
 
   /// Remove trailing messages after regeneration cut point.
@@ -363,7 +414,8 @@ class MessageGenerationService {
     required List<String> lastUserImagePaths,
     required SettingsProvider settings,
   }) {
-    final bool ocrActive = settings.ocrEnabled &&
+    final bool ocrActive =
+        settings.ocrEnabled &&
         settings.ocrModelProvider != null &&
         settings.ocrModelId != null;
 
@@ -376,10 +428,7 @@ class MessageGenerationService {
         for (final d in input.documents)
           if (d.mime.toLowerCase().startsWith('video/')) d.path,
       ];
-      return <String>[
-        ...input.imagePaths,
-        ...currentVideoPaths,
-      ];
+      return <String>[...input.imagePaths, ...currentVideoPaths];
     }
 
     return lastUserImagePaths;

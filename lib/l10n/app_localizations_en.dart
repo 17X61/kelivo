@@ -215,6 +215,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageSpaceClearLogsButton => 'Clear Logs';
 
   @override
+  String get storageSpaceViewLogsButton => 'View Logs';
+
+  @override
   String get storageSpaceDeleteConfirmTitle => 'Confirm deletion';
 
   @override
@@ -254,6 +257,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPageDocs => 'Docs';
+
+  @override
+  String get settingsPageLogs => 'Logs';
 
   @override
   String get settingsPageSponsor => 'Sponsor';
@@ -565,6 +571,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantRegexScopeVisualOnly => 'Visual Only';
+
+  @override
+  String get assistantRegexScopeReplaceOnly => 'Replace Only';
 
   @override
   String get assistantRegexAddAction => 'Add';
@@ -1272,6 +1281,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupPageDeleteTooltip => 'Delete';
 
   @override
+  String get backupPageDeleteConfirmTitle => 'Confirm Deletion';
+
+  @override
+  String backupPageDeleteConfirmContent(Object name) {
+    return 'Are you sure you want to delete remote backup \"$name\"? This action cannot be undone.';
+  }
+
+  @override
   String get backupPageBackupManagement => 'Backup Management';
 
   @override
@@ -1574,9 +1591,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMessageWidgetResult => 'Result';
 
   @override
+  String get chatMessageWidgetImages => 'Images';
+
+  @override
   String chatMessageWidgetCitationsCount(int count) {
     return 'Citations ($count)';
   }
+
+  @override
+  String chatSelectionSelectedCountTitle(int count) {
+    return 'Selected $count message(s)';
+  }
+
+  @override
+  String get chatSelectionExportTxt => 'TXT';
+
+  @override
+  String get chatSelectionExportMd => 'MD';
+
+  @override
+  String get chatSelectionExportImage => 'Image';
+
+  @override
+  String get chatSelectionThinkingTools => 'Thinking tools';
+
+  @override
+  String get chatSelectionThinkingContent => 'Thinking content';
 
   @override
   String get messageExportSheetAssistant => 'Assistant';
@@ -1677,6 +1717,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageExportSheetShowThinkingContent => 'Show thinking content';
+
+  @override
+  String get messageExportThinkingContentLabel => 'Thinking content';
 
   @override
   String get messageExportSheetDateTimeWithSecondsPattern =>
@@ -2492,7 +2535,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providersPageAddTooltip => 'Add';
 
   @override
+  String get providersPageSearchHint => 'Search providers or groups';
+
+  @override
   String get providersPageProviderAddedSnackbar => 'Provider added';
+
+  @override
+  String get providerGroupsGroupLabel => 'Group';
+
+  @override
+  String get providerGroupsOther => 'Other';
+
+  @override
+  String get providerGroupsOtherUngroupedOption => 'Other (Ungrouped)';
+
+  @override
+  String get providerGroupsPickerTitle => 'Select group';
+
+  @override
+  String get providerGroupsManageTitle => 'Manage groups';
+
+  @override
+  String get providerGroupsManageAction => 'Manage groups';
+
+  @override
+  String get providerGroupsCreateNewGroupAction => 'New group…';
+
+  @override
+  String get providerGroupsCreateDialogTitle => 'New group';
+
+  @override
+  String get providerGroupsNameHint => 'Group name';
+
+  @override
+  String get providerGroupsCreateDialogCancel => 'Cancel';
+
+  @override
+  String get providerGroupsCreateDialogOk => 'Create';
+
+  @override
+  String get providerGroupsCreateFailedToast => 'Failed to create group';
+
+  @override
+  String get providerGroupsDeleteConfirmTitle => 'Delete group?';
+
+  @override
+  String get providerGroupsDeleteConfirmContent =>
+      'Providers in this group will be moved to “Other”.';
+
+  @override
+  String get providerGroupsDeleteConfirmCancel => 'Cancel';
+
+  @override
+  String get providerGroupsDeleteConfirmOk => 'Delete';
+
+  @override
+  String get providerGroupsDeletedToast => 'Group deleted';
+
+  @override
+  String get providerGroupsEmptyState => 'No groups yet.';
+
+  @override
+  String get providerGroupsExpandToMoveToast =>
+      'Please expand the group first.';
 
   @override
   String get providersPageSiliconFlowName => 'SiliconFlow';
@@ -3412,6 +3517,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get instructionInjectionPromptLabel => 'Prompt';
 
   @override
+  String get instructionInjectionUngroupedGroup => 'Ungrouped';
+
+  @override
+  String get instructionInjectionGroupLabel => 'Group';
+
+  @override
+  String get instructionInjectionGroupHint => 'Optional';
+
+  @override
   String instructionInjectionImportSuccess(int count) {
     return 'Imported $count instruction(s)';
   }
@@ -3636,6 +3750,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get networkProxyPassword => 'Password';
 
   @override
+  String get networkProxyBypassLabel => 'Proxy bypass';
+
+  @override
+  String get networkProxyBypassHint =>
+      'Comma-separated hosts/CIDR, e.g. localhost,127.0.0.1,192.168.0.0/16,*.local';
+
+  @override
   String get networkProxyOptionalHint => 'Optional';
 
   @override
@@ -3736,6 +3857,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logViewerOpenFolder => 'Open Logs Folder';
 
   @override
+  String logViewerRequestsCount(int count) {
+    return '$count requests';
+  }
+
+  @override
+  String get logViewerFieldId => 'ID';
+
+  @override
+  String get logViewerFieldMethod => 'Method';
+
+  @override
+  String get logViewerFieldStatus => 'Status';
+
+  @override
+  String get logViewerFieldStarted => 'Started';
+
+  @override
+  String get logViewerFieldEnded => 'Ended';
+
+  @override
+  String get logViewerFieldDuration => 'Duration';
+
+  @override
+  String get logViewerSectionSummary => 'Summary';
+
+  @override
+  String get logViewerSectionParameters => 'Parameters';
+
+  @override
+  String get logViewerSectionRequestHeaders => 'Request Headers';
+
+  @override
+  String get logViewerSectionRequestBody => 'Request Body';
+
+  @override
+  String get logViewerSectionResponseHeaders => 'Response Headers';
+
+  @override
+  String get logViewerSectionResponseBody => 'Response Body';
+
+  @override
+  String get logViewerSectionWarnings => 'Warnings';
+
+  @override
+  String get logViewerErrorTitle => 'Error';
+
+  @override
+  String logViewerMoreCount(int count) {
+    return '+$count more';
+  }
+
+  @override
   String get assistantEditManageSummariesTitle => 'Manage Summaries';
 
   @override
@@ -3753,4 +3926,172 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get assistantEditDeleteSummaryContent =>
       'Are you sure you want to clear this summary?';
+
+  @override
+  String get homePageProcessingFiles => 'Processing files...';
+
+  @override
+  String get fileUploadDuplicateTitle => 'File already exists';
+
+  @override
+  String fileUploadDuplicateContent(String fileName) {
+    return 'A file named $fileName already exists. Use the existing file?';
+  }
+
+  @override
+  String get fileUploadDuplicateUseExisting => 'Use existing';
+
+  @override
+  String get fileUploadDuplicateUploadNew => 'Upload new';
+
+  @override
+  String get settingsPageWorldBook => 'World Book';
+
+  @override
+  String get worldBookTitle => 'World Book';
+
+  @override
+  String get worldBookAdd => 'Add World Book';
+
+  @override
+  String get worldBookEmptyMessage => 'No world books yet';
+
+  @override
+  String get worldBookUnnamed => 'Unnamed World Book';
+
+  @override
+  String get worldBookDisabledTag => 'Disabled';
+
+  @override
+  String get worldBookAlwaysOnTag => 'Always On';
+
+  @override
+  String get worldBookAddEntry => 'Add Entry';
+
+  @override
+  String get worldBookExport => 'Share / Export';
+
+  @override
+  String get worldBookConfig => 'Configure';
+
+  @override
+  String get worldBookDeleteTitle => 'Delete World Book';
+
+  @override
+  String worldBookDeleteMessage(String name) {
+    return 'Delete “$name”? This cannot be undone.';
+  }
+
+  @override
+  String get worldBookCancel => 'Cancel';
+
+  @override
+  String get worldBookDelete => 'Delete';
+
+  @override
+  String worldBookExportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get worldBookNoEntriesHint => 'No entries';
+
+  @override
+  String get worldBookUnnamedEntry => 'Unnamed Entry';
+
+  @override
+  String worldBookKeywordsLine(String keywords) {
+    return 'Keywords: $keywords';
+  }
+
+  @override
+  String get worldBookEditEntry => 'Edit Entry';
+
+  @override
+  String get worldBookDeleteEntry => 'Delete Entry';
+
+  @override
+  String get worldBookNameLabel => 'Name';
+
+  @override
+  String get worldBookDescriptionLabel => 'Description';
+
+  @override
+  String get worldBookEnabledLabel => 'Enabled';
+
+  @override
+  String get worldBookSave => 'Save';
+
+  @override
+  String get worldBookEntryNameLabel => 'Entry name';
+
+  @override
+  String get worldBookEntryEnabledLabel => 'Entry enabled';
+
+  @override
+  String get worldBookEntryPriorityLabel => 'Priority';
+
+  @override
+  String get worldBookEntryKeywordsLabel => 'Keywords';
+
+  @override
+  String get worldBookEntryKeywordsHint =>
+      'Type a keyword and tap +. You can paste multiple, separated by commas or new lines.';
+
+  @override
+  String get worldBookEntryKeywordInputHint => 'Type a keyword';
+
+  @override
+  String get worldBookEntryKeywordAddTooltip => 'Add keyword';
+
+  @override
+  String get worldBookEntryUseRegexLabel => 'Use regex';
+
+  @override
+  String get worldBookEntryCaseSensitiveLabel => 'Case sensitive';
+
+  @override
+  String get worldBookEntryAlwaysOnLabel => 'Always active';
+
+  @override
+  String get worldBookEntryAlwaysOnHint =>
+      'Always inject without keyword matching';
+
+  @override
+  String get worldBookEntryScanDepthLabel => 'Scan depth';
+
+  @override
+  String get worldBookEntryContentLabel => 'Content';
+
+  @override
+  String get worldBookEntryInjectionPositionLabel => 'Injection position';
+
+  @override
+  String get worldBookEntryInjectionRoleLabel => 'Injection role';
+
+  @override
+  String get worldBookEntryInjectDepthLabel => 'Injection depth';
+
+  @override
+  String get worldBookInjectionPositionBeforeSystemPrompt =>
+      'Before system prompt';
+
+  @override
+  String get worldBookInjectionPositionAfterSystemPrompt =>
+      'After system prompt';
+
+  @override
+  String get worldBookInjectionPositionTopOfChat => 'Top of chat';
+
+  @override
+  String get worldBookInjectionPositionBottomOfChat => 'Bottom of chat';
+
+  @override
+  String get worldBookInjectionPositionAtDepth => 'At depth';
+
+  @override
+  String get worldBookInjectionRoleUser => 'User';
+
+  @override
+  String get worldBookInjectionRoleAssistant => 'Assistant';
 }

@@ -212,6 +212,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get storageSpaceClearLogsButton => '清理日志';
 
   @override
+  String get storageSpaceViewLogsButton => '查看日志';
+
+  @override
   String get storageSpaceDeleteConfirmTitle => '确认删除';
 
   @override
@@ -251,6 +254,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsPageDocs => '使用文档';
+
+  @override
+  String get settingsPageLogs => '日志';
 
   @override
   String get settingsPageSponsor => '赞助';
@@ -555,6 +561,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get assistantRegexScopeVisualOnly => '仅视觉';
+
+  @override
+  String get assistantRegexScopeReplaceOnly => '仅替换';
 
   @override
   String get assistantRegexAddAction => '添加';
@@ -1238,6 +1247,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupPageDeleteTooltip => '删除';
 
   @override
+  String get backupPageDeleteConfirmTitle => '确认删除';
+
+  @override
+  String backupPageDeleteConfirmContent(Object name) {
+    return '确定要删除远程备份“$name”吗？此操作不可撤销。';
+  }
+
+  @override
   String get backupPageBackupManagement => '备份管理';
 
   @override
@@ -1530,9 +1547,32 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatMessageWidgetResult => '结果';
 
   @override
+  String get chatMessageWidgetImages => '图片';
+
+  @override
   String chatMessageWidgetCitationsCount(int count) {
     return '共$count条引用';
   }
+
+  @override
+  String chatSelectionSelectedCountTitle(int count) {
+    return '已选择$count条消息';
+  }
+
+  @override
+  String get chatSelectionExportTxt => 'TXT';
+
+  @override
+  String get chatSelectionExportMd => 'MD';
+
+  @override
+  String get chatSelectionExportImage => '图片';
+
+  @override
+  String get chatSelectionThinkingTools => '思考工具';
+
+  @override
+  String get chatSelectionThinkingContent => '思考内容';
 
   @override
   String get messageExportSheetAssistant => '助手';
@@ -1620,6 +1660,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get messageExportSheetShowThinkingContent => '显示思考内容';
+
+  @override
+  String get messageExportThinkingContentLabel => '思考内容';
 
   @override
   String get messageExportSheetDateTimeWithSecondsPattern =>
@@ -2410,7 +2453,67 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providersPageAddTooltip => '新增';
 
   @override
+  String get providersPageSearchHint => '搜索供应商或分组';
+
+  @override
   String get providersPageProviderAddedSnackbar => '已添加供应商';
+
+  @override
+  String get providerGroupsGroupLabel => '分组';
+
+  @override
+  String get providerGroupsOther => '其他';
+
+  @override
+  String get providerGroupsOtherUngroupedOption => '其他（未分组）';
+
+  @override
+  String get providerGroupsPickerTitle => '选择分组';
+
+  @override
+  String get providerGroupsManageTitle => '分组管理';
+
+  @override
+  String get providerGroupsManageAction => '管理分组';
+
+  @override
+  String get providerGroupsCreateNewGroupAction => '新建分组…';
+
+  @override
+  String get providerGroupsCreateDialogTitle => '新建分组';
+
+  @override
+  String get providerGroupsNameHint => '输入分组名称';
+
+  @override
+  String get providerGroupsCreateDialogCancel => '取消';
+
+  @override
+  String get providerGroupsCreateDialogOk => '创建';
+
+  @override
+  String get providerGroupsCreateFailedToast => '创建分组失败';
+
+  @override
+  String get providerGroupsDeleteConfirmTitle => '删除分组';
+
+  @override
+  String get providerGroupsDeleteConfirmContent => '该组内供应商将移动到「其他」';
+
+  @override
+  String get providerGroupsDeleteConfirmCancel => '取消';
+
+  @override
+  String get providerGroupsDeleteConfirmOk => '删除';
+
+  @override
+  String get providerGroupsDeletedToast => '已删除分组';
+
+  @override
+  String get providerGroupsEmptyState => '暂无分组';
+
+  @override
+  String get providerGroupsExpandToMoveToast => '请先展开分组';
 
   @override
   String get providersPageSiliconFlowName => '硅基流动';
@@ -3285,6 +3388,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get instructionInjectionPromptLabel => '提示词';
 
   @override
+  String get instructionInjectionUngroupedGroup => '未分组';
+
+  @override
+  String get instructionInjectionGroupLabel => '分组';
+
+  @override
+  String get instructionInjectionGroupHint => '可选';
+
+  @override
   String instructionInjectionImportSuccess(int count) {
     return '已导入 $count 个指令注入';
   }
@@ -3503,6 +3615,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get networkProxyPassword => '密码';
 
   @override
+  String get networkProxyBypassLabel => '代理绕过';
+
+  @override
+  String get networkProxyBypassHint =>
+      '用逗号分隔的主机或 CIDR，例如：localhost,127.0.0.1,192.168.0.0/16,*.local';
+
+  @override
   String get networkProxyOptionalHint => '可选';
 
   @override
@@ -3599,6 +3718,58 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logViewerOpenFolder => '打开日志目录';
 
   @override
+  String logViewerRequestsCount(int count) {
+    return '$count 条请求';
+  }
+
+  @override
+  String get logViewerFieldId => 'ID';
+
+  @override
+  String get logViewerFieldMethod => '方法';
+
+  @override
+  String get logViewerFieldStatus => '状态';
+
+  @override
+  String get logViewerFieldStarted => '开始';
+
+  @override
+  String get logViewerFieldEnded => '结束';
+
+  @override
+  String get logViewerFieldDuration => '耗时';
+
+  @override
+  String get logViewerSectionSummary => '概览';
+
+  @override
+  String get logViewerSectionParameters => '参数';
+
+  @override
+  String get logViewerSectionRequestHeaders => '请求头';
+
+  @override
+  String get logViewerSectionRequestBody => '请求体';
+
+  @override
+  String get logViewerSectionResponseHeaders => '响应头';
+
+  @override
+  String get logViewerSectionResponseBody => '响应体';
+
+  @override
+  String get logViewerSectionWarnings => '警告';
+
+  @override
+  String get logViewerErrorTitle => '错误';
+
+  @override
+  String logViewerMoreCount(int count) {
+    return '+$count 条更多';
+  }
+
+  @override
   String get assistantEditManageSummariesTitle => '管理摘要';
 
   @override
@@ -3615,6 +3786,170 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get assistantEditDeleteSummaryContent => '确定要清除此摘要吗？';
+
+  @override
+  String get homePageProcessingFiles => '正在解析文件……';
+
+  @override
+  String get fileUploadDuplicateTitle => '文件已存在';
+
+  @override
+  String fileUploadDuplicateContent(String fileName) {
+    return '检测到同名文件 $fileName，是否使用已有文件？';
+  }
+
+  @override
+  String get fileUploadDuplicateUseExisting => '使用已有';
+
+  @override
+  String get fileUploadDuplicateUploadNew => '重新上传';
+
+  @override
+  String get settingsPageWorldBook => '世界书';
+
+  @override
+  String get worldBookTitle => '世界书';
+
+  @override
+  String get worldBookAdd => '添加世界书';
+
+  @override
+  String get worldBookEmptyMessage => '暂无世界书';
+
+  @override
+  String get worldBookUnnamed => '未命名世界书';
+
+  @override
+  String get worldBookDisabledTag => '已停用';
+
+  @override
+  String get worldBookAlwaysOnTag => '常驻';
+
+  @override
+  String get worldBookAddEntry => '添加条目';
+
+  @override
+  String get worldBookExport => '分享/导出';
+
+  @override
+  String get worldBookConfig => '配置';
+
+  @override
+  String get worldBookDeleteTitle => '删除世界书';
+
+  @override
+  String worldBookDeleteMessage(String name) {
+    return '确定删除「$name」？此操作无法撤销。';
+  }
+
+  @override
+  String get worldBookCancel => '取消';
+
+  @override
+  String get worldBookDelete => '删除';
+
+  @override
+  String worldBookExportFailed(String error) {
+    return '导出失败：$error';
+  }
+
+  @override
+  String get worldBookNoEntriesHint => '暂无条目';
+
+  @override
+  String get worldBookUnnamedEntry => '未命名条目';
+
+  @override
+  String worldBookKeywordsLine(String keywords) {
+    return '关键词：$keywords';
+  }
+
+  @override
+  String get worldBookEditEntry => '编辑条目';
+
+  @override
+  String get worldBookDeleteEntry => '删除条目';
+
+  @override
+  String get worldBookNameLabel => '名称';
+
+  @override
+  String get worldBookDescriptionLabel => '简介';
+
+  @override
+  String get worldBookEnabledLabel => '启用';
+
+  @override
+  String get worldBookSave => '保存';
+
+  @override
+  String get worldBookEntryNameLabel => '条目名称';
+
+  @override
+  String get worldBookEntryEnabledLabel => '启用条目';
+
+  @override
+  String get worldBookEntryPriorityLabel => '优先级';
+
+  @override
+  String get worldBookEntryKeywordsLabel => '关键词';
+
+  @override
+  String get worldBookEntryKeywordsHint => '输入关键词后点 + 添加；也可粘贴多个，用逗号/换行分隔。';
+
+  @override
+  String get worldBookEntryKeywordInputHint => '输入关键词';
+
+  @override
+  String get worldBookEntryKeywordAddTooltip => '添加关键词';
+
+  @override
+  String get worldBookEntryUseRegexLabel => '使用正则';
+
+  @override
+  String get worldBookEntryCaseSensitiveLabel => '区分大小写';
+
+  @override
+  String get worldBookEntryAlwaysOnLabel => '常驻激活';
+
+  @override
+  String get worldBookEntryAlwaysOnHint => '无需匹配也会注入';
+
+  @override
+  String get worldBookEntryScanDepthLabel => '扫描深度';
+
+  @override
+  String get worldBookEntryContentLabel => '内容';
+
+  @override
+  String get worldBookEntryInjectionPositionLabel => '注入位置';
+
+  @override
+  String get worldBookEntryInjectionRoleLabel => '注入角色';
+
+  @override
+  String get worldBookEntryInjectDepthLabel => '注入深度';
+
+  @override
+  String get worldBookInjectionPositionBeforeSystemPrompt => '系统提示前';
+
+  @override
+  String get worldBookInjectionPositionAfterSystemPrompt => '系统提示后';
+
+  @override
+  String get worldBookInjectionPositionTopOfChat => '对话顶部';
+
+  @override
+  String get worldBookInjectionPositionBottomOfChat => '对话底部';
+
+  @override
+  String get worldBookInjectionPositionAtDepth => '指定深度';
+
+  @override
+  String get worldBookInjectionRoleUser => '用户';
+
+  @override
+  String get worldBookInjectionRoleAssistant => '助手';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -3825,6 +4160,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get storageSpaceClearLogsButton => '清理日志';
 
   @override
+  String get storageSpaceViewLogsButton => '查看日志';
+
+  @override
   String get storageSpaceDeleteConfirmTitle => '确认删除';
 
   @override
@@ -3864,6 +4202,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get settingsPageDocs => '使用文档';
+
+  @override
+  String get settingsPageLogs => '日志';
 
   @override
   String get settingsPageSponsor => '赞助';
@@ -4168,6 +4509,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get assistantRegexScopeVisualOnly => '仅视觉';
+
+  @override
+  String get assistantRegexScopeReplaceOnly => '仅替换';
 
   @override
   String get assistantRegexAddAction => '添加';
@@ -4851,6 +5195,14 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get backupPageDeleteTooltip => '删除';
 
   @override
+  String get backupPageDeleteConfirmTitle => '确认删除';
+
+  @override
+  String backupPageDeleteConfirmContent(Object name) {
+    return '确定要删除远程备份“$name”吗？此操作不可撤销。';
+  }
+
+  @override
   String get backupPageBackupManagement => '备份管理';
 
   @override
@@ -5143,9 +5495,32 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get chatMessageWidgetResult => '结果';
 
   @override
+  String get chatMessageWidgetImages => '图片';
+
+  @override
   String chatMessageWidgetCitationsCount(int count) {
     return '共$count条引用';
   }
+
+  @override
+  String chatSelectionSelectedCountTitle(int count) {
+    return '已选择$count条消息';
+  }
+
+  @override
+  String get chatSelectionExportTxt => 'TXT';
+
+  @override
+  String get chatSelectionExportMd => 'MD';
+
+  @override
+  String get chatSelectionExportImage => '图片';
+
+  @override
+  String get chatSelectionThinkingTools => '思考工具';
+
+  @override
+  String get chatSelectionThinkingContent => '思考内容';
 
   @override
   String get messageExportSheetAssistant => '助手';
@@ -5233,6 +5608,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get messageExportSheetShowThinkingContent => '显示思考内容';
+
+  @override
+  String get messageExportThinkingContentLabel => '思考内容';
 
   @override
   String get messageExportSheetDateTimeWithSecondsPattern =>
@@ -6006,7 +6384,67 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get providersPageAddTooltip => '新增';
 
   @override
+  String get providersPageSearchHint => '搜索供应商或分组';
+
+  @override
   String get providersPageProviderAddedSnackbar => '已添加供应商';
+
+  @override
+  String get providerGroupsGroupLabel => '分组';
+
+  @override
+  String get providerGroupsOther => '其他';
+
+  @override
+  String get providerGroupsOtherUngroupedOption => '其他（未分组）';
+
+  @override
+  String get providerGroupsPickerTitle => '选择分组';
+
+  @override
+  String get providerGroupsManageTitle => '分组管理';
+
+  @override
+  String get providerGroupsManageAction => '管理分组';
+
+  @override
+  String get providerGroupsCreateNewGroupAction => '新建分组…';
+
+  @override
+  String get providerGroupsCreateDialogTitle => '新建分组';
+
+  @override
+  String get providerGroupsNameHint => '输入分组名称';
+
+  @override
+  String get providerGroupsCreateDialogCancel => '取消';
+
+  @override
+  String get providerGroupsCreateDialogOk => '创建';
+
+  @override
+  String get providerGroupsCreateFailedToast => '创建分组失败';
+
+  @override
+  String get providerGroupsDeleteConfirmTitle => '删除分组';
+
+  @override
+  String get providerGroupsDeleteConfirmContent => '该组内供应商将移动到「其他」';
+
+  @override
+  String get providerGroupsDeleteConfirmCancel => '取消';
+
+  @override
+  String get providerGroupsDeleteConfirmOk => '删除';
+
+  @override
+  String get providerGroupsDeletedToast => '已删除分组';
+
+  @override
+  String get providerGroupsEmptyState => '暂无分组';
+
+  @override
+  String get providerGroupsExpandToMoveToast => '请先展开分组';
 
   @override
   String get providersPageSiliconFlowName => '硅基流动';
@@ -6881,6 +7319,15 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get instructionInjectionPromptLabel => '提示词';
 
   @override
+  String get instructionInjectionUngroupedGroup => '未分组';
+
+  @override
+  String get instructionInjectionGroupLabel => '分组';
+
+  @override
+  String get instructionInjectionGroupHint => '可选';
+
+  @override
   String instructionInjectionImportSuccess(int count) {
     return '已导入 $count 个指令注入';
   }
@@ -7099,6 +7546,13 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get networkProxyPassword => '密码';
 
   @override
+  String get networkProxyBypassLabel => '代理绕过';
+
+  @override
+  String get networkProxyBypassHint =>
+      '用逗号分隔的主机或 CIDR，例如：localhost,127.0.0.1,192.168.0.0/16,*.local';
+
+  @override
   String get networkProxyOptionalHint => '可选';
 
   @override
@@ -7193,6 +7647,219 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get logViewerOpenFolder => '打开日志目录';
+
+  @override
+  String logViewerRequestsCount(int count) {
+    return '$count 条请求';
+  }
+
+  @override
+  String get logViewerFieldId => 'ID';
+
+  @override
+  String get logViewerFieldMethod => '方法';
+
+  @override
+  String get logViewerFieldStatus => '状态';
+
+  @override
+  String get logViewerFieldStarted => '开始';
+
+  @override
+  String get logViewerFieldEnded => '结束';
+
+  @override
+  String get logViewerFieldDuration => '耗时';
+
+  @override
+  String get logViewerSectionSummary => '概览';
+
+  @override
+  String get logViewerSectionParameters => '参数';
+
+  @override
+  String get logViewerSectionRequestHeaders => '请求头';
+
+  @override
+  String get logViewerSectionRequestBody => '请求体';
+
+  @override
+  String get logViewerSectionResponseHeaders => '响应头';
+
+  @override
+  String get logViewerSectionResponseBody => '响应体';
+
+  @override
+  String get logViewerSectionWarnings => '警告';
+
+  @override
+  String get logViewerErrorTitle => '错误';
+
+  @override
+  String logViewerMoreCount(int count) {
+    return '+$count 条更多';
+  }
+
+  @override
+  String get fileUploadDuplicateTitle => '文件已存在';
+
+  @override
+  String fileUploadDuplicateContent(String fileName) {
+    return '检测到同名文件 $fileName，是否使用现有文件？';
+  }
+
+  @override
+  String get fileUploadDuplicateUseExisting => '使用现有';
+
+  @override
+  String get fileUploadDuplicateUploadNew => '重新上传';
+
+  @override
+  String get settingsPageWorldBook => '世界书';
+
+  @override
+  String get worldBookTitle => '世界书';
+
+  @override
+  String get worldBookAdd => '添加世界书';
+
+  @override
+  String get worldBookEmptyMessage => '暂无世界书';
+
+  @override
+  String get worldBookUnnamed => '未命名世界书';
+
+  @override
+  String get worldBookDisabledTag => '已停用';
+
+  @override
+  String get worldBookAlwaysOnTag => '常驻';
+
+  @override
+  String get worldBookAddEntry => '添加条目';
+
+  @override
+  String get worldBookExport => '分享/导出';
+
+  @override
+  String get worldBookConfig => '配置';
+
+  @override
+  String get worldBookDeleteTitle => '删除世界书';
+
+  @override
+  String worldBookDeleteMessage(String name) {
+    return '确定删除「$name」？此操作无法撤销。';
+  }
+
+  @override
+  String get worldBookCancel => '取消';
+
+  @override
+  String get worldBookDelete => '删除';
+
+  @override
+  String worldBookExportFailed(String error) {
+    return '导出失败：$error';
+  }
+
+  @override
+  String get worldBookNoEntriesHint => '暂无条目';
+
+  @override
+  String get worldBookUnnamedEntry => '未命名条目';
+
+  @override
+  String worldBookKeywordsLine(String keywords) {
+    return '关键词：$keywords';
+  }
+
+  @override
+  String get worldBookEditEntry => '编辑条目';
+
+  @override
+  String get worldBookDeleteEntry => '删除条目';
+
+  @override
+  String get worldBookNameLabel => '名称';
+
+  @override
+  String get worldBookDescriptionLabel => '简介';
+
+  @override
+  String get worldBookEnabledLabel => '启用';
+
+  @override
+  String get worldBookSave => '保存';
+
+  @override
+  String get worldBookEntryNameLabel => '条目名称';
+
+  @override
+  String get worldBookEntryEnabledLabel => '启用条目';
+
+  @override
+  String get worldBookEntryPriorityLabel => '优先级';
+
+  @override
+  String get worldBookEntryKeywordsLabel => '关键词';
+
+  @override
+  String get worldBookEntryKeywordsHint => '输入关键词后点 + 添加；也可粘贴多个，用逗号/换行分隔。';
+
+  @override
+  String get worldBookEntryKeywordInputHint => '输入关键词';
+
+  @override
+  String get worldBookEntryKeywordAddTooltip => '添加关键词';
+
+  @override
+  String get worldBookEntryUseRegexLabel => '使用正则';
+
+  @override
+  String get worldBookEntryCaseSensitiveLabel => '区分大小写';
+
+  @override
+  String get worldBookEntryAlwaysOnLabel => '常驻激活';
+
+  @override
+  String get worldBookEntryAlwaysOnHint => '无需匹配也会注入';
+
+  @override
+  String get worldBookEntryScanDepthLabel => '扫描深度';
+
+  @override
+  String get worldBookEntryContentLabel => '内容';
+
+  @override
+  String get worldBookEntryInjectionPositionLabel => '注入位置';
+
+  @override
+  String get worldBookEntryInjectionRoleLabel => '注入角色';
+
+  @override
+  String get worldBookEntryInjectDepthLabel => '注入深度';
+
+  @override
+  String get worldBookInjectionPositionBeforeSystemPrompt => '系统提示前';
+
+  @override
+  String get worldBookInjectionPositionAfterSystemPrompt => '系统提示后';
+
+  @override
+  String get worldBookInjectionPositionTopOfChat => '对话顶部';
+
+  @override
+  String get worldBookInjectionPositionBottomOfChat => '对话底部';
+
+  @override
+  String get worldBookInjectionPositionAtDepth => '指定深度';
+
+  @override
+  String get worldBookInjectionRoleUser => '用户';
+
+  @override
+  String get worldBookInjectionRoleAssistant => '助手';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -7403,6 +8070,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get storageSpaceClearLogsButton => '清理日誌';
 
   @override
+  String get storageSpaceViewLogsButton => '查看日誌';
+
+  @override
   String get storageSpaceDeleteConfirmTitle => '確認刪除';
 
   @override
@@ -7442,6 +8112,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsPageDocs => '使用文件';
+
+  @override
+  String get settingsPageLogs => '日誌';
 
   @override
   String get settingsPageSponsor => '贊助';
@@ -7746,6 +8419,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get assistantRegexScopeVisualOnly => '僅視覺';
+
+  @override
+  String get assistantRegexScopeReplaceOnly => '僅替換';
 
   @override
   String get assistantRegexAddAction => '新增';
@@ -8429,6 +9105,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupPageDeleteTooltip => '刪除';
 
   @override
+  String get backupPageDeleteConfirmTitle => '確認刪除';
+
+  @override
+  String backupPageDeleteConfirmContent(Object name) {
+    return '確定要刪除遠端備份「$name」嗎？此操作不可撤銷。';
+  }
+
+  @override
   String get backupPageBackupManagement => '備份管理';
 
   @override
@@ -8720,9 +9404,32 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatMessageWidgetResult => '結果';
 
   @override
+  String get chatMessageWidgetImages => '圖片';
+
+  @override
   String chatMessageWidgetCitationsCount(int count) {
     return '共$count條引用';
   }
+
+  @override
+  String chatSelectionSelectedCountTitle(int count) {
+    return '已選擇$count條訊息';
+  }
+
+  @override
+  String get chatSelectionExportTxt => 'TXT';
+
+  @override
+  String get chatSelectionExportMd => 'MD';
+
+  @override
+  String get chatSelectionExportImage => '圖片';
+
+  @override
+  String get chatSelectionThinkingTools => '思考工具';
+
+  @override
+  String get chatSelectionThinkingContent => '思考內容';
 
   @override
   String get messageExportSheetAssistant => '助理';
@@ -8810,6 +9517,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get messageExportSheetShowThinkingContent => '顯示思考內容';
+
+  @override
+  String get messageExportThinkingContentLabel => '思考內容';
 
   @override
   String get messageExportSheetDateTimeWithSecondsPattern =>
@@ -9601,6 +10311,63 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get providersPageProviderAddedSnackbar => '已新增供應商';
+
+  @override
+  String get providerGroupsGroupLabel => '分組';
+
+  @override
+  String get providerGroupsOther => '其他';
+
+  @override
+  String get providerGroupsOtherUngroupedOption => '其他（未分組）';
+
+  @override
+  String get providerGroupsPickerTitle => '選擇分組';
+
+  @override
+  String get providerGroupsManageTitle => '分組管理';
+
+  @override
+  String get providerGroupsManageAction => '管理分組';
+
+  @override
+  String get providerGroupsCreateNewGroupAction => '新增分組…';
+
+  @override
+  String get providerGroupsCreateDialogTitle => '新增分組';
+
+  @override
+  String get providerGroupsNameHint => '輸入分組名稱';
+
+  @override
+  String get providerGroupsCreateDialogCancel => '取消';
+
+  @override
+  String get providerGroupsCreateDialogOk => '建立';
+
+  @override
+  String get providerGroupsCreateFailedToast => '建立分組失敗';
+
+  @override
+  String get providerGroupsDeleteConfirmTitle => '刪除分組';
+
+  @override
+  String get providerGroupsDeleteConfirmContent => '該組內供應商將移動到「其他」';
+
+  @override
+  String get providerGroupsDeleteConfirmCancel => '取消';
+
+  @override
+  String get providerGroupsDeleteConfirmOk => '刪除';
+
+  @override
+  String get providerGroupsDeletedToast => '已刪除分組';
+
+  @override
+  String get providerGroupsEmptyState => '暫無分組';
+
+  @override
+  String get providerGroupsExpandToMoveToast => '請先展開分組';
 
   @override
   String get providersPageSiliconFlowName => '矽基流動';
@@ -10475,6 +11242,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get instructionInjectionPromptLabel => '提示詞';
 
   @override
+  String get instructionInjectionUngroupedGroup => '未分組';
+
+  @override
+  String get instructionInjectionGroupLabel => '分組';
+
+  @override
+  String get instructionInjectionGroupHint => '可選';
+
+  @override
   String instructionInjectionImportSuccess(int count) {
     return '已匯入 $count 個指令注入';
   }
@@ -10694,6 +11470,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get networkProxyPassword => '密碼';
 
   @override
+  String get networkProxyBypassLabel => '代理繞過';
+
+  @override
+  String get networkProxyBypassHint =>
+      '以逗號分隔的主機或 CIDR，例如：localhost,127.0.0.1,192.168.0.0/16,*.local';
+
+  @override
   String get networkProxyOptionalHint => '可選';
 
   @override
@@ -10790,6 +11573,58 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get logViewerOpenFolder => '開啟日誌目錄';
 
   @override
+  String logViewerRequestsCount(int count) {
+    return '$count 個請求';
+  }
+
+  @override
+  String get logViewerFieldId => 'ID';
+
+  @override
+  String get logViewerFieldMethod => '方法';
+
+  @override
+  String get logViewerFieldStatus => '狀態';
+
+  @override
+  String get logViewerFieldStarted => '開始';
+
+  @override
+  String get logViewerFieldEnded => '結束';
+
+  @override
+  String get logViewerFieldDuration => '耗時';
+
+  @override
+  String get logViewerSectionSummary => '概覽';
+
+  @override
+  String get logViewerSectionParameters => '參數';
+
+  @override
+  String get logViewerSectionRequestHeaders => '請求標頭';
+
+  @override
+  String get logViewerSectionRequestBody => '請求本文';
+
+  @override
+  String get logViewerSectionResponseHeaders => '回應標頭';
+
+  @override
+  String get logViewerSectionResponseBody => '回應本文';
+
+  @override
+  String get logViewerSectionWarnings => '警告';
+
+  @override
+  String get logViewerErrorTitle => '錯誤';
+
+  @override
+  String logViewerMoreCount(int count) {
+    return '+$count 條更多';
+  }
+
+  @override
   String get assistantEditManageSummariesTitle => '管理摘要';
 
   @override
@@ -10806,4 +11641,165 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get assistantEditDeleteSummaryContent => '確定要清除此摘要嗎？';
+
+  @override
+  String get fileUploadDuplicateTitle => '檔案已存在';
+
+  @override
+  String fileUploadDuplicateContent(String fileName) {
+    return '偵測到同名檔案 $fileName，是否使用現有檔案？';
+  }
+
+  @override
+  String get fileUploadDuplicateUseExisting => '使用現有';
+
+  @override
+  String get fileUploadDuplicateUploadNew => '重新上傳';
+
+  @override
+  String get settingsPageWorldBook => '世界書';
+
+  @override
+  String get worldBookTitle => '世界書';
+
+  @override
+  String get worldBookAdd => '新增世界書';
+
+  @override
+  String get worldBookEmptyMessage => '暫無世界書';
+
+  @override
+  String get worldBookUnnamed => '未命名世界書';
+
+  @override
+  String get worldBookDisabledTag => '已停用';
+
+  @override
+  String get worldBookAlwaysOnTag => '常駐';
+
+  @override
+  String get worldBookAddEntry => '新增條目';
+
+  @override
+  String get worldBookExport => '分享/匯出';
+
+  @override
+  String get worldBookConfig => '設定';
+
+  @override
+  String get worldBookDeleteTitle => '刪除世界書';
+
+  @override
+  String worldBookDeleteMessage(String name) {
+    return '確定刪除「$name」？此操作無法復原。';
+  }
+
+  @override
+  String get worldBookCancel => '取消';
+
+  @override
+  String get worldBookDelete => '刪除';
+
+  @override
+  String worldBookExportFailed(String error) {
+    return '匯出失敗：$error';
+  }
+
+  @override
+  String get worldBookNoEntriesHint => '暫無條目';
+
+  @override
+  String get worldBookUnnamedEntry => '未命名條目';
+
+  @override
+  String worldBookKeywordsLine(String keywords) {
+    return '關鍵詞：$keywords';
+  }
+
+  @override
+  String get worldBookEditEntry => '編輯條目';
+
+  @override
+  String get worldBookDeleteEntry => '刪除條目';
+
+  @override
+  String get worldBookNameLabel => '名稱';
+
+  @override
+  String get worldBookDescriptionLabel => '簡介';
+
+  @override
+  String get worldBookEnabledLabel => '啟用';
+
+  @override
+  String get worldBookSave => '儲存';
+
+  @override
+  String get worldBookEntryNameLabel => '條目名稱';
+
+  @override
+  String get worldBookEntryEnabledLabel => '啟用條目';
+
+  @override
+  String get worldBookEntryPriorityLabel => '優先級';
+
+  @override
+  String get worldBookEntryKeywordsLabel => '關鍵詞';
+
+  @override
+  String get worldBookEntryKeywordsHint => '輸入關鍵詞後點 + 新增；也可貼上多個，用逗號/換行分隔。';
+
+  @override
+  String get worldBookEntryKeywordInputHint => '輸入關鍵詞';
+
+  @override
+  String get worldBookEntryKeywordAddTooltip => '新增關鍵詞';
+
+  @override
+  String get worldBookEntryUseRegexLabel => '使用正則';
+
+  @override
+  String get worldBookEntryCaseSensitiveLabel => '區分大小寫';
+
+  @override
+  String get worldBookEntryAlwaysOnLabel => '常駐啟用';
+
+  @override
+  String get worldBookEntryAlwaysOnHint => '無需匹配也會注入';
+
+  @override
+  String get worldBookEntryScanDepthLabel => '掃描深度';
+
+  @override
+  String get worldBookEntryContentLabel => '內容';
+
+  @override
+  String get worldBookEntryInjectionPositionLabel => '注入位置';
+
+  @override
+  String get worldBookEntryInjectionRoleLabel => '注入角色';
+
+  @override
+  String get worldBookEntryInjectDepthLabel => '注入深度';
+
+  @override
+  String get worldBookInjectionPositionBeforeSystemPrompt => '系統提示前';
+
+  @override
+  String get worldBookInjectionPositionAfterSystemPrompt => '系統提示後';
+
+  @override
+  String get worldBookInjectionPositionTopOfChat => '對話頂部';
+
+  @override
+  String get worldBookInjectionPositionBottomOfChat => '對話底部';
+
+  @override
+  String get worldBookInjectionPositionAtDepth => '指定深度';
+
+  @override
+  String get worldBookInjectionRoleUser => '使用者';
+
+  @override
+  String get worldBookInjectionRoleAssistant => '助手';
 }

@@ -478,6 +478,12 @@ abstract class AppLocalizations {
   /// **'Clear Logs'**
   String get storageSpaceClearLogsButton;
 
+  /// No description provided for @storageSpaceViewLogsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'View Logs'**
+  String get storageSpaceViewLogsButton;
+
   /// No description provided for @storageSpaceDeleteConfirmTitle.
   ///
   /// In en, this message translates to:
@@ -543,6 +549,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Docs'**
   String get settingsPageDocs;
+
+  /// No description provided for @settingsPageLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs'**
+  String get settingsPageLogs;
 
   /// No description provided for @settingsPageSponsor.
   ///
@@ -1132,6 +1144,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Visual Only'**
   String get assistantRegexScopeVisualOnly;
+
+  /// No description provided for @assistantRegexScopeReplaceOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace Only'**
+  String get assistantRegexScopeReplaceOnly;
 
   /// No description provided for @assistantRegexAddAction.
   ///
@@ -2477,6 +2495,18 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get backupPageDeleteTooltip;
 
+  /// No description provided for @backupPageDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Deletion'**
+  String get backupPageDeleteConfirmTitle;
+
+  /// No description provided for @backupPageDeleteConfirmContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete remote backup \"{name}\"? This action cannot be undone.'**
+  String backupPageDeleteConfirmContent(Object name);
+
   /// No description provided for @backupPageBackupManagement.
   ///
   /// In en, this message translates to:
@@ -3023,11 +3053,53 @@ abstract class AppLocalizations {
   /// **'Result'**
   String get chatMessageWidgetResult;
 
+  /// No description provided for @chatMessageWidgetImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get chatMessageWidgetImages;
+
   /// No description provided for @chatMessageWidgetCitationsCount.
   ///
   /// In en, this message translates to:
   /// **'Citations ({count})'**
   String chatMessageWidgetCitationsCount(int count);
+
+  /// No description provided for @chatSelectionSelectedCountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected {count} message(s)'**
+  String chatSelectionSelectedCountTitle(int count);
+
+  /// No description provided for @chatSelectionExportTxt.
+  ///
+  /// In en, this message translates to:
+  /// **'TXT'**
+  String get chatSelectionExportTxt;
+
+  /// No description provided for @chatSelectionExportMd.
+  ///
+  /// In en, this message translates to:
+  /// **'MD'**
+  String get chatSelectionExportMd;
+
+  /// No description provided for @chatSelectionExportImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get chatSelectionExportImage;
+
+  /// No description provided for @chatSelectionThinkingTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking tools'**
+  String get chatSelectionThinkingTools;
+
+  /// No description provided for @chatSelectionThinkingContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking content'**
+  String get chatSelectionThinkingContent;
 
   /// No description provided for @messageExportSheetAssistant.
   ///
@@ -3190,6 +3262,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show thinking content'**
   String get messageExportSheetShowThinkingContent;
+
+  /// No description provided for @messageExportThinkingContentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking content'**
+  String get messageExportThinkingContentLabel;
 
   /// No description provided for @messageExportSheetDateTimeWithSecondsPattern.
   ///
@@ -4706,11 +4784,131 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get providersPageAddTooltip;
 
+  /// No description provided for @providersPageSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search providers or groups'**
+  String get providersPageSearchHint;
+
   /// No description provided for @providersPageProviderAddedSnackbar.
   ///
   /// In en, this message translates to:
   /// **'Provider added'**
   String get providersPageProviderAddedSnackbar;
+
+  /// No description provided for @providerGroupsGroupLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get providerGroupsGroupLabel;
+
+  /// No description provided for @providerGroupsOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get providerGroupsOther;
+
+  /// No description provided for @providerGroupsOtherUngroupedOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Other (Ungrouped)'**
+  String get providerGroupsOtherUngroupedOption;
+
+  /// No description provided for @providerGroupsPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select group'**
+  String get providerGroupsPickerTitle;
+
+  /// No description provided for @providerGroupsManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage groups'**
+  String get providerGroupsManageTitle;
+
+  /// No description provided for @providerGroupsManageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage groups'**
+  String get providerGroupsManageAction;
+
+  /// No description provided for @providerGroupsCreateNewGroupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'New group…'**
+  String get providerGroupsCreateNewGroupAction;
+
+  /// No description provided for @providerGroupsCreateDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get providerGroupsCreateDialogTitle;
+
+  /// No description provided for @providerGroupsNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get providerGroupsNameHint;
+
+  /// No description provided for @providerGroupsCreateDialogCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get providerGroupsCreateDialogCancel;
+
+  /// No description provided for @providerGroupsCreateDialogOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get providerGroupsCreateDialogOk;
+
+  /// No description provided for @providerGroupsCreateFailedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create group'**
+  String get providerGroupsCreateFailedToast;
+
+  /// No description provided for @providerGroupsDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group?'**
+  String get providerGroupsDeleteConfirmTitle;
+
+  /// No description provided for @providerGroupsDeleteConfirmContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Providers in this group will be moved to “Other”.'**
+  String get providerGroupsDeleteConfirmContent;
+
+  /// No description provided for @providerGroupsDeleteConfirmCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get providerGroupsDeleteConfirmCancel;
+
+  /// No description provided for @providerGroupsDeleteConfirmOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get providerGroupsDeleteConfirmOk;
+
+  /// No description provided for @providerGroupsDeletedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get providerGroupsDeletedToast;
+
+  /// No description provided for @providerGroupsEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups yet.'**
+  String get providerGroupsEmptyState;
+
+  /// No description provided for @providerGroupsExpandToMoveToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Please expand the group first.'**
+  String get providerGroupsExpandToMoveToast;
 
   /// No description provided for @providersPageSiliconFlowName.
   ///
@@ -6398,6 +6596,24 @@ abstract class AppLocalizations {
   /// **'Prompt'**
   String get instructionInjectionPromptLabel;
 
+  /// No description provided for @instructionInjectionUngroupedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Ungrouped'**
+  String get instructionInjectionUngroupedGroup;
+
+  /// No description provided for @instructionInjectionGroupLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get instructionInjectionGroupLabel;
+
+  /// No description provided for @instructionInjectionGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get instructionInjectionGroupHint;
+
   /// No description provided for @instructionInjectionImportSuccess.
   ///
   /// In en, this message translates to:
@@ -6818,6 +7034,18 @@ abstract class AppLocalizations {
   /// **'Password'**
   String get networkProxyPassword;
 
+  /// No description provided for @networkProxyBypassLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy bypass'**
+  String get networkProxyBypassLabel;
+
+  /// No description provided for @networkProxyBypassHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma-separated hosts/CIDR, e.g. localhost,127.0.0.1,192.168.0.0/16,*.local'**
+  String get networkProxyBypassHint;
+
   /// No description provided for @networkProxyOptionalHint.
   ///
   /// In en, this message translates to:
@@ -7004,6 +7232,102 @@ abstract class AppLocalizations {
   /// **'Open Logs Folder'**
   String get logViewerOpenFolder;
 
+  /// No description provided for @logViewerRequestsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} requests'**
+  String logViewerRequestsCount(int count);
+
+  /// No description provided for @logViewerFieldId.
+  ///
+  /// In en, this message translates to:
+  /// **'ID'**
+  String get logViewerFieldId;
+
+  /// No description provided for @logViewerFieldMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get logViewerFieldMethod;
+
+  /// No description provided for @logViewerFieldStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get logViewerFieldStatus;
+
+  /// No description provided for @logViewerFieldStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get logViewerFieldStarted;
+
+  /// No description provided for @logViewerFieldEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get logViewerFieldEnded;
+
+  /// No description provided for @logViewerFieldDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get logViewerFieldDuration;
+
+  /// No description provided for @logViewerSectionSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get logViewerSectionSummary;
+
+  /// No description provided for @logViewerSectionParameters.
+  ///
+  /// In en, this message translates to:
+  /// **'Parameters'**
+  String get logViewerSectionParameters;
+
+  /// No description provided for @logViewerSectionRequestHeaders.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Headers'**
+  String get logViewerSectionRequestHeaders;
+
+  /// No description provided for @logViewerSectionRequestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Body'**
+  String get logViewerSectionRequestBody;
+
+  /// No description provided for @logViewerSectionResponseHeaders.
+  ///
+  /// In en, this message translates to:
+  /// **'Response Headers'**
+  String get logViewerSectionResponseHeaders;
+
+  /// No description provided for @logViewerSectionResponseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Response Body'**
+  String get logViewerSectionResponseBody;
+
+  /// No description provided for @logViewerSectionWarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Warnings'**
+  String get logViewerSectionWarnings;
+
+  /// No description provided for @logViewerErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get logViewerErrorTitle;
+
+  /// No description provided for @logViewerMoreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String logViewerMoreCount(int count);
+
   /// No description provided for @assistantEditManageSummariesTitle.
   ///
   /// In en, this message translates to:
@@ -7039,6 +7363,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to clear this summary?'**
   String get assistantEditDeleteSummaryContent;
+
+  /// No description provided for @homePageProcessingFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing files...'**
+  String get homePageProcessingFiles;
+
+  /// No description provided for @fileUploadDuplicateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'File already exists'**
+  String get fileUploadDuplicateTitle;
+
+  /// No description provided for @fileUploadDuplicateContent.
+  ///
+  /// In en, this message translates to:
+  /// **'A file named {fileName} already exists. Use the existing file?'**
+  String fileUploadDuplicateContent(String fileName);
+
+  /// No description provided for @fileUploadDuplicateUseExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Use existing'**
+  String get fileUploadDuplicateUseExisting;
+
+  /// No description provided for @fileUploadDuplicateUploadNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload new'**
+  String get fileUploadDuplicateUploadNew;
+
+  /// No description provided for @settingsPageWorldBook.
+  ///
+  /// In en, this message translates to:
+  /// **'World Book'**
+  String get settingsPageWorldBook;
+
+  /// No description provided for @worldBookTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'World Book'**
+  String get worldBookTitle;
+
+  /// No description provided for @worldBookAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add World Book'**
+  String get worldBookAdd;
+
+  /// No description provided for @worldBookEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No world books yet'**
+  String get worldBookEmptyMessage;
+
+  /// No description provided for @worldBookUnnamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed World Book'**
+  String get worldBookUnnamed;
+
+  /// No description provided for @worldBookDisabledTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get worldBookDisabledTag;
+
+  /// No description provided for @worldBookAlwaysOnTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Always On'**
+  String get worldBookAlwaysOnTag;
+
+  /// No description provided for @worldBookAddEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Entry'**
+  String get worldBookAddEntry;
+
+  /// No description provided for @worldBookExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Share / Export'**
+  String get worldBookExport;
+
+  /// No description provided for @worldBookConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure'**
+  String get worldBookConfig;
+
+  /// No description provided for @worldBookDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete World Book'**
+  String get worldBookDeleteTitle;
+
+  /// No description provided for @worldBookDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”? This cannot be undone.'**
+  String worldBookDeleteMessage(String name);
+
+  /// No description provided for @worldBookCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get worldBookCancel;
+
+  /// No description provided for @worldBookDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get worldBookDelete;
+
+  /// No description provided for @worldBookExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String worldBookExportFailed(String error);
+
+  /// No description provided for @worldBookNoEntriesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries'**
+  String get worldBookNoEntriesHint;
+
+  /// No description provided for @worldBookUnnamedEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed Entry'**
+  String get worldBookUnnamedEntry;
+
+  /// No description provided for @worldBookKeywordsLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Keywords: {keywords}'**
+  String worldBookKeywordsLine(String keywords);
+
+  /// No description provided for @worldBookEditEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Entry'**
+  String get worldBookEditEntry;
+
+  /// No description provided for @worldBookDeleteEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Entry'**
+  String get worldBookDeleteEntry;
+
+  /// No description provided for @worldBookNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get worldBookNameLabel;
+
+  /// No description provided for @worldBookDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get worldBookDescriptionLabel;
+
+  /// No description provided for @worldBookEnabledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get worldBookEnabledLabel;
+
+  /// No description provided for @worldBookSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get worldBookSave;
+
+  /// No description provided for @worldBookEntryNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry name'**
+  String get worldBookEntryNameLabel;
+
+  /// No description provided for @worldBookEntryEnabledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry enabled'**
+  String get worldBookEntryEnabledLabel;
+
+  /// No description provided for @worldBookEntryPriorityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get worldBookEntryPriorityLabel;
+
+  /// No description provided for @worldBookEntryKeywordsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Keywords'**
+  String get worldBookEntryKeywordsLabel;
+
+  /// No description provided for @worldBookEntryKeywordsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a keyword and tap +. You can paste multiple, separated by commas or new lines.'**
+  String get worldBookEntryKeywordsHint;
+
+  /// No description provided for @worldBookEntryKeywordInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a keyword'**
+  String get worldBookEntryKeywordInputHint;
+
+  /// No description provided for @worldBookEntryKeywordAddTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add keyword'**
+  String get worldBookEntryKeywordAddTooltip;
+
+  /// No description provided for @worldBookEntryUseRegexLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Use regex'**
+  String get worldBookEntryUseRegexLabel;
+
+  /// No description provided for @worldBookEntryCaseSensitiveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Case sensitive'**
+  String get worldBookEntryCaseSensitiveLabel;
+
+  /// No description provided for @worldBookEntryAlwaysOnLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Always active'**
+  String get worldBookEntryAlwaysOnLabel;
+
+  /// No description provided for @worldBookEntryAlwaysOnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Always inject without keyword matching'**
+  String get worldBookEntryAlwaysOnHint;
+
+  /// No description provided for @worldBookEntryScanDepthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan depth'**
+  String get worldBookEntryScanDepthLabel;
+
+  /// No description provided for @worldBookEntryContentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get worldBookEntryContentLabel;
+
+  /// No description provided for @worldBookEntryInjectionPositionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Injection position'**
+  String get worldBookEntryInjectionPositionLabel;
+
+  /// No description provided for @worldBookEntryInjectionRoleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Injection role'**
+  String get worldBookEntryInjectionRoleLabel;
+
+  /// No description provided for @worldBookEntryInjectDepthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Injection depth'**
+  String get worldBookEntryInjectDepthLabel;
+
+  /// No description provided for @worldBookInjectionPositionBeforeSystemPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Before system prompt'**
+  String get worldBookInjectionPositionBeforeSystemPrompt;
+
+  /// No description provided for @worldBookInjectionPositionAfterSystemPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'After system prompt'**
+  String get worldBookInjectionPositionAfterSystemPrompt;
+
+  /// No description provided for @worldBookInjectionPositionTopOfChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Top of chat'**
+  String get worldBookInjectionPositionTopOfChat;
+
+  /// No description provided for @worldBookInjectionPositionBottomOfChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottom of chat'**
+  String get worldBookInjectionPositionBottomOfChat;
+
+  /// No description provided for @worldBookInjectionPositionAtDepth.
+  ///
+  /// In en, this message translates to:
+  /// **'At depth'**
+  String get worldBookInjectionPositionAtDepth;
+
+  /// No description provided for @worldBookInjectionRoleUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get worldBookInjectionRoleUser;
+
+  /// No description provided for @worldBookInjectionRoleAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant'**
+  String get worldBookInjectionRoleAssistant;
 }
 
 class _AppLocalizationsDelegate

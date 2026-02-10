@@ -2,13 +2,10 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/cupertino.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/snackbar.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../icons/lucide_adapter.dart';
 import '../../../shared/animations/widgets.dart';
@@ -20,6 +17,7 @@ import '../../../core/services/chat/chat_service.dart';
 import '../../../shared/widgets/ios_switch.dart';
 import '../../../core/services/backup/cherry_importer.dart';
 import '../../../core/services/backup/chatbox_importer.dart';
+import '../../../utils/platform_utils.dart';
 
 // File size formatter (B, KB, MB, GB)
 String _fmtBytes(int bytes) {
@@ -387,31 +385,152 @@ class _BackupPageState extends State<BackupPage> {
                         items: _remote,
                         loading: _loadingRemote,
                         onDelete: (item) async {
-                          final list = await vm.deleteAndReload(item);
-                          // 按时间倒序排列（最新的在前）
-                          list.sort((a, b) {
-                            // 优先使用 lastModified
-                            if (a.lastModified != null && b.lastModified != null) {
-                              return b.lastModified!.compareTo(a.lastModified!);
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (dctx) => AlertDialog(
+                              title: Text(l10n.backupPageDeleteConfirmTitle),
+                              content: Text(l10n.backupPageDeleteConfirmContent(item.displayName)),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.of(dctx).pop(false), child: Text(l10n.backupPageCancel)),
+                                TextButton(
+                                  onPressed: () => Navigator.of(dctx).pop(true),
+                                  style: TextButton.styleFrom(foregroundColor: cs.error),
+                                  child: Text(l10n.backupPageDeleteTooltip),
+                                ),
+                              ],
+                            ),
+                          );
+                          
+                          if (confirm != true) return;
+                          
+                          // 1. Close current sheet
+                          if (context.mounted) Navigator.of(context).pop();
+
+                          // 2. Show loading dialog
+                          if (context.mounted) {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (ctx) => const Center(child: CupertinoActivityIndicator(radius: 16)),
+                            );
+                          }
+                          
+                          try {
+                            final list = await vm.deleteAndReload(item);
+                            
+                            // Close loading dialog
+                            if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+
+                            // Sort list
+                            list.sort((a, b) {
+                              if (a.lastModified != null && b.lastModified != null) {
+                                return b.lastModified!.compareTo(a.lastModified!);
+                              }
+                              if (a.lastModified == null && b.lastModified == null) {
+                                return b.displayName.compareTo(a.displayName);
+                              }
+                              if (a.lastModified == null) return 1;
+                              return -1;
+                            });
+                            
+                            if (mounted) setState(() => _remote = list);
+
+                            if (!mounted) return;
+                            
+                            // Re-open the sheet by calling the same logic again.
+                            await showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: cs.surface,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                              ),
+                              builder: (ctx) => _RemoteListSheet(
+                                items: _remote,
+                                loading: false,
+                                onDelete: (item) async {
+                                  // Simplified recursive delete logic for subsequent deletions
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (dctx) => AlertDialog(
+                                      title: Text(l10n.backupPageDeleteConfirmTitle),
+                                      content: Text(l10n.backupPageDeleteConfirmContent(item.displayName)),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.of(dctx).pop(false), child: Text(l10n.backupPageCancel)),
+                                        TextButton(
+                                          onPressed: () => Navigator.of(dctx).pop(true),
+                                          style: TextButton.styleFrom(foregroundColor: cs.error),
+                                          child: Text(l10n.backupPageDeleteTooltip),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    Navigator.of(ctx).pop();
+                                    if (context.mounted) {
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (ctx) => const Center(child: CupertinoActivityIndicator(radius: 16)),
+                                      );
+                                    }
+                                    try {
+                                      final list = await vm.deleteAndReload(item);
+                                      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+                                      list.sort((a, b) {
+                                        if (a.lastModified != null && b.lastModified != null) return b.lastModified!.compareTo(a.lastModified!);
+                                        if (a.lastModified == null && b.lastModified == null) return b.displayName.compareTo(a.displayName);
+                                        if (a.lastModified == null) return 1;
+                                        return -1;
+                                      });
+                                      if (mounted) setState(() => _remote = list);
+                                    } catch (_) {
+                                      if (context.mounted && Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
+                                    }
+                                  }
+                                },
+                                onRestore: (item) async {
+                                  Navigator.of(ctx).pop();
+                                  if (!mounted) return;
+                                  final mode = await _chooseImportModeDialog(context);
+                                  if (mode == null) return;
+                                  await _runWithImportingOverlay(context, () => vm.restoreFromItem(item, mode: mode));
+                                  if (!mounted) return;
+                                  await showDialog(
+                                    context: context,
+                                    builder: (dctx) => AlertDialog(
+                                      title: Text(l10n.backupPageRestartRequired),
+                                      content: Text(l10n.backupPageRestartContent),
+                                      actions: [TextButton(onPressed: () async {
+                                        Navigator.of(dctx).pop();
+                                        PlatformUtils.restartApp();
+                                      }, child: Text(l10n.backupPageOK))],
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                            
+                          } catch (e) {
+                            // If error, ensure loading dialog is closed
+                            if (mounted && Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
+                            if (mounted) {
+                                showAppSnackBar(
+                                context,
+                                message: e.toString(),
+                                type: NotificationType.error,
+                              );
                             }
-                            // 如果都没有 lastModified，按文件名倒序（文件名通常包含时间戳）
-                            if (a.lastModified == null && b.lastModified == null) {
-                              return b.displayName.compareTo(a.displayName);
-                            }
-                            // 有 lastModified 的排在前面
-                            if (a.lastModified == null) return 1;
-                            return -1;
-                          });
-                          setState(() => _remote = list);
+                          }
                         },
                         onRestore: (item) async {
                           Navigator.of(ctx).pop();
-                          
+
                           if (!mounted) return;
                           final mode = await _chooseImportModeDialog(context);
-                          
+
                           if (mode == null) return;
-                          
+
                           await _runWithImportingOverlay(context, () => vm.restoreFromItem(item, mode: mode));
                           if (!mounted) return;
                           await showDialog(
@@ -420,7 +539,10 @@ class _BackupPageState extends State<BackupPage> {
                               title: Text(l10n.backupPageRestartRequired),
                               content: Text(l10n.backupPageRestartContent),
                               actions: [
-                                TextButton(onPressed: () => Navigator.of(dctx).pop(), child: Text(l10n.backupPageOK)),
+                                TextButton(onPressed: () async {
+                                  Navigator.of(dctx).pop();
+                                  PlatformUtils.restartApp();
+                                }, child: Text(l10n.backupPageOK)),
                               ],
                             ),
                           );
@@ -511,7 +633,10 @@ class _BackupPageState extends State<BackupPage> {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.of(dctx).pop(),
+                                onPressed: () async {
+                                  Navigator.of(dctx).pop();
+                                  PlatformUtils.restartApp();
+                                },
                                 child: Text(l10n.backupPageOK),
                               ),
                             ],
@@ -568,7 +693,10 @@ class _BackupPageState extends State<BackupPage> {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.of(dctx).pop(),
+                                onPressed: () async {
+                                  Navigator.of(dctx).pop();
+                                  PlatformUtils.restartApp();
+                                },
                                 child: Text(l10n.backupPageOK),
                               ),
                             ],
@@ -597,24 +725,13 @@ class _BackupPageState extends State<BackupPage> {
     final l10n = AppLocalizations.of(context)!;
     final file = await _runWithExportingOverlay(context, () => vm.exportToFile());
     if (!mounted) return;
-    
-    // iPad: anchor popover to the overlay's center
-    Rect rect;
-    final overlay = Overlay.of(context);
-    final ro = overlay?.context.findRenderObject();
-    if (ro is RenderBox && ro.hasSize) {
-      final center = ro.size.center(Offset.zero);
-      final global = ro.localToGlobal(center);
-      rect = Rect.fromCenter(center: global, width: 1, height: 1);
-    } else {
-      final size = MediaQuery.of(context).size;
-      rect = Rect.fromCenter(center: Offset(size.width / 2, size.height / 2), width: 1, height: 1);
-    }
-    
-    await Future.delayed(const Duration(milliseconds: 50));
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      sharePositionOrigin: rect,
+
+    await FilePicker.platform.saveFile(
+      dialogTitle: l10n.backupPageExportToFile,
+      fileName: file.uri.pathSegments.last,
+      type: FileType.custom,
+      allowedExtensions: ['zip'],
+      bytes: await file.readAsBytes(),
     );
   }
 
@@ -636,7 +753,10 @@ class _BackupPageState extends State<BackupPage> {
       builder: (dctx) => AlertDialog(
         title: Text(l10n.backupPageRestartRequired),
         content: Text(l10n.backupPageRestartContent),
-        actions: [TextButton(onPressed: () => Navigator.of(dctx).pop(), child: Text(l10n.backupPageOK))],
+        actions: [TextButton(onPressed: () async {
+          Navigator.of(dctx).pop();
+          PlatformUtils.restartApp();
+        }, child: Text(l10n.backupPageOK))],
       ),
     );
   }
@@ -1071,7 +1191,7 @@ class _RemoteListSheet extends StatelessWidget {
                     child: Text(l10n.backupPageRemoteBackups, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
                   if (loading)
-                    Positioned(
+                    const Positioned(
                       right: 0,
                       child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                     ),
@@ -1084,41 +1204,49 @@ class _RemoteListSheet extends StatelessWidget {
                         padding: const EdgeInsets.all(20),
                         child: Text(l10n.backupPageNoBackups, style: TextStyle(color: cs.onSurface.withOpacity(0.6))),
                       )
-                    : ListView.builder(
-                        controller: controller,
-                        itemCount: items.length,
-                        itemBuilder: (ctx, i) {
-                          final it = items[i];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : const Color(0xFFF7F7F9),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: cs.outlineVariant.withOpacity(0.18)),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(it.displayName, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                        const SizedBox(height: 4),
-                                        Text(_fmtBytes(it.size), style: TextStyle(fontSize: 12, color: cs.onSurface.withOpacity(0.7))),
-                                      ],
-                                    ),
+                    : StatefulBuilder(
+                        builder: (context, setListState) {
+                          // We pass the parent loading/items, but in case we want localized refresh...
+                          // Actually, the parent rebuilds this widget when _loadingRemote changes.
+                          // But ListView.builder might not update if only the items list reference changes?
+                          // In our case _BackupPageState calls setState, so _RemoteListSheet is rebuilt with new items.
+                          return ListView.builder(
+                            controller: controller,
+                            itemCount: items.length,
+                            itemBuilder: (ctx, i) {
+                              final it = items[i];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : const Color(0xFFF7F7F9),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: cs.outlineVariant.withOpacity(0.18)),
                                   ),
-                                  _SmallTactileIcon(icon: Lucide.Import, onTap: () => onRestore(it)),
-                                  const SizedBox(width: 6),
-                                  _SmallTactileIcon(icon: Lucide.Trash2, onTap: () => onDelete(it), baseColor: cs.error),
-                                ],
-                              ),
-                            ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(it.displayName, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
+                                            const SizedBox(height: 4),
+                                            Text(_fmtBytes(it.size), style: TextStyle(fontSize: 12, color: cs.onSurface.withOpacity(0.7))),
+                                          ],
+                                        ),
+                                      ),
+                                      _SmallTactileIcon(icon: Lucide.Import, onTap: () => onRestore(it)),
+                                      const SizedBox(width: 6),
+                                      _SmallTactileIcon(icon: Lucide.Trash2, onTap: () => onDelete(it), baseColor: cs.error),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           );
-                        },
+                        }
                       ),
               ),
             ],

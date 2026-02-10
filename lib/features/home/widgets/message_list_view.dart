@@ -76,6 +76,7 @@ class MessageListView extends StatelessWidget {
     required this.dividerPadding,
     this.pinnedStreamingMessageId,
     this.isPinnedIndicatorActive = false,
+    required this.isProcessingFiles,
     this.streamingContentNotifier,
     this.onVersionChange,
     this.onRegenerateMessage,
@@ -107,6 +108,7 @@ class MessageListView extends StatelessWidget {
   final EdgeInsetsGeometry dividerPadding;
   final String? pinnedStreamingMessageId;
   final bool isPinnedIndicatorActive;
+  final ValueNotifier<bool> isProcessingFiles;
 
   /// Lightweight notifier for streaming content updates.
   /// When provided, streaming messages will use ValueListenableBuilder
@@ -209,36 +211,42 @@ class MessageListView extends StatelessWidget {
             ((constraints.maxWidth - ChatLayoutConstants.maxContentWidth) / 2)
                 .clamp(0.0, double.infinity);
 
-        final list = ListView.builder(
-          controller: scrollController,
-          padding: EdgeInsets.fromLTRB(
-            horizontalPad,
-            8,
-            horizontalPad,
-            isPinnedIndicatorActive ? 28 : 16,
-          ),
-          itemCount: collapsedMessages.length,
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          itemBuilder: (context, index) {
-            if (index < 0 || index >= collapsedMessages.length) {
-              return const SizedBox.shrink();
-            }
-            return _buildMessageItem(
-              context,
-              index: index,
-              messages: collapsedMessages,
-              byGroup: byGroup,
-              truncCollapsed: truncCollapsed,
+        return ValueListenableBuilder<bool>(
+          valueListenable: isProcessingFiles,
+          builder: (context, isProcessing, child) {
+            final list = ListView.builder(
+              controller: scrollController,
+              padding: EdgeInsets.fromLTRB(
+                horizontalPad,
+                8,
+                horizontalPad,
+                isPinnedIndicatorActive ? 28 : 16,
+              ),
+              itemCount: collapsedMessages.length,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              itemBuilder: (context, index) {
+                if (index < 0 || index >= collapsedMessages.length) {
+                  return const SizedBox.shrink();
+                }
+                return _buildMessageItem(
+                  context,
+                  index: index,
+                  messages: collapsedMessages,
+                  byGroup: byGroup,
+                  truncCollapsed: truncCollapsed,
+                  isProcessingFiles: isProcessing,
+                );
+              },
+            );
+
+            return Stack(
+              children: [
+                list,
+                if (isPinnedIndicatorActive && buildPinnedStreamingIndicator != null)
+                  buildPinnedStreamingIndicator!(),
+              ],
             );
           },
-        );
-
-        return Stack(
-          children: [
-            list,
-            if (isPinnedIndicatorActive && buildPinnedStreamingIndicator != null)
-              buildPinnedStreamingIndicator!(),
-          ],
         );
       },
     );
@@ -250,6 +258,7 @@ class MessageListView extends StatelessWidget {
     required List<ChatMessage> messages,
     required Map<String, List<ChatMessage>> byGroup,
     required int truncCollapsed,
+    required bool isProcessingFiles,
   }) {
     final message = messages[index];
     final r = reasoning[message.id];
@@ -286,60 +295,78 @@ class MessageListView extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 10, right: 6),
                 child: IosCheckbox(
                   value: selectedItems.contains(message.id),
+                  size: 20,
+                  hitTestSize: 28,
                   onChanged: (v) {
                     onToggleSelection?.call(message.id, v);
                   },
                 ),
               ),
             Expanded(
-              child: Builder(
-                builder: (context) {
-                  final textScale = MediaQuery.textScaleFactorOf(context);
-                  final baseMediaQuery = context.getInheritedWidgetOfExactType<MediaQuery>();
-                  final baseData = baseMediaQuery?.data;
-                  return MediaQuery(
-                    // Keep chat font scaling without rebuilding on keyboard insets.
-                    data: (baseData ?? MediaQuery.of(context)).copyWith(
-                      textScaleFactor: textScale * chatScale,
-                    ),
-                    child: isStreaming
-                        ? _buildStreamingMessageWidget(
-                            context,
-                            message: message,
-                            index: index,
-                            messages: messages,
-                            byGroup: byGroup,
-                            r: r,
-                            t: t,
-                            useAssist: useAssist,
-                            assistant: assistant,
-                            showMsgNav: showMsgNav,
-                            gid: gid,
-                            selectedIdx: selectedIdx,
-                            total: total,
-                            effectiveIndex: effectiveIndex,
-                            effectiveTotal: effectiveTotal,
-                          )
-                        : _buildChatMessageWidget(
-                            context,
-                            message: message,
-                            index: index,
-                            messages: messages,
-                            byGroup: byGroup,
-                            r: r,
-                            t: t,
-                            useAssist: useAssist,
-                            assistant: assistant,
-                            showMsgNav: showMsgNav,
-                            gid: gid,
-                            selectedIdx: selectedIdx,
-                            total: total,
-                            effectiveIndex: effectiveIndex,
-                            effectiveTotal: effectiveTotal,
-                          ),
+              child: (() {
+                Widget content = Builder(
+                  builder: (context) {
+                    final textScale = MediaQuery.textScaleFactorOf(context);
+                    final baseMediaQuery = context.getInheritedWidgetOfExactType<MediaQuery>();
+                    final baseData = baseMediaQuery?.data;
+                    return MediaQuery(
+                      // Keep chat font scaling without rebuilding on keyboard insets.
+                      data: (baseData ?? MediaQuery.of(context)).copyWith(
+                        textScaleFactor: textScale * chatScale,
+                      ),
+                      child: isStreaming
+                          ? _buildStreamingMessageWidget(
+                              context,
+                              message: message,
+                              index: index,
+                              messages: messages,
+                              byGroup: byGroup,
+                              r: r,
+                              t: t,
+                              useAssist: useAssist,
+                              assistant: assistant,
+                              showMsgNav: showMsgNav,
+                              gid: gid,
+                              selectedIdx: selectedIdx,
+                              total: total,
+                              effectiveIndex: effectiveIndex,
+                              effectiveTotal: effectiveTotal,
+                              isProcessingFiles: isProcessingFiles,
+                            )
+                          : _buildChatMessageWidget(
+                              context,
+                              message: message,
+                              index: index,
+                              messages: messages,
+                              byGroup: byGroup,
+                              r: r,
+                              t: t,
+                              useAssist: useAssist,
+                              assistant: assistant,
+                              showMsgNav: showMsgNav,
+                              gid: gid,
+                              selectedIdx: selectedIdx,
+                              total: total,
+                              effectiveIndex: effectiveIndex,
+                              effectiveTotal: effectiveTotal,
+                              isProcessingFiles: isProcessingFiles,
+                            ),
+                    );
+                  },
+                );
+
+                final canSelect = (message.role == 'user' || message.role == 'assistant');
+                if (selecting && canSelect) {
+                  final isSelected = selectedItems.contains(message.id);
+                  content = GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => onToggleSelection?.call(message.id, !isSelected),
+                    child: IgnorePointer(ignoring: true, child: content),
                   );
-                },
-              ),
+                }
+
+                return content;
+              })(),
             ),
           ],
         ),
@@ -370,6 +397,7 @@ class MessageListView extends StatelessWidget {
     required int total,
     required int effectiveIndex,
     required int effectiveTotal,
+    required bool isProcessingFiles,
   }) {
     return ValueListenableBuilder<StreamingContentData>(
       valueListenable: streamingContentNotifier!.getNotifier(message.id),
@@ -425,6 +453,7 @@ class MessageListView extends StatelessWidget {
             total: total,
             effectiveIndex: effectiveIndex,
             effectiveTotal: effectiveTotal,
+            isProcessingFiles: isProcessingFiles,
           ),
         );
       },
@@ -448,6 +477,7 @@ class MessageListView extends StatelessWidget {
     required int total,
     required int effectiveIndex,
     required int effectiveTotal,
+    required bool isProcessingFiles,
   }) {
     return ChatMessageWidget(
       message: message,
@@ -468,7 +498,7 @@ class MessageListView extends StatelessWidget {
       assistantAvatar: useAssist ? (assistant?.avatar ?? '') : null,
       showUserAvatar: context.watch<SettingsProvider>().showUserAvatar,
       showTokenStats: context.watch<SettingsProvider>().showTokenStats,
-      hideStreamingIndicator: isPinnedIndicatorActive && (message.id == pinnedStreamingMessageId),
+      hideStreamingIndicator: isProcessingFiles || (isPinnedIndicatorActive && (message.id == pinnedStreamingMessageId)),
       reasoningText: (message.role == 'assistant') ? (r?.text ?? '') : null,
       reasoningExpanded: (message.role == 'assistant') ? (r?.expanded ?? false) : false,
       reasoningLoading: (message.role == 'assistant') ? (r?.finishedAt == null && (r?.text.isNotEmpty == true)) : false,
@@ -523,6 +553,7 @@ class MessageListView extends StatelessWidget {
                   .toList();
             })()
           : null,
+      isProcessingFiles: isProcessingFiles,
     );
   }
 }

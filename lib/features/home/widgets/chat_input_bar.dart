@@ -6,13 +6,14 @@ import '../../../icons/lucide_adapter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../../l10n/app_localizations.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../utils/file_import_helper.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../../../shared/responsive/breakpoints.dart';
 import 'dart:async';
 import 'dart:typed_data';
-
 import 'dart:io';
 import '../../../core/models/chat_input_data.dart';
 import '../../../utils/clipboard_images.dart';
@@ -70,9 +71,11 @@ class ChatInputBar extends StatefulWidget {
     this.onPickPhotos,
     this.onUploadFiles,
     this.onToggleLearningMode,
+    this.onOpenWorldBook,
     this.onClearContext,
     this.onLongPressLearning,
     this.learningModeActive = false,
+    this.worldBookActive = false,
     this.showMoreButton = true,
     this.showQuickPhraseButton = false,
     this.onQuickPhrase,
@@ -109,9 +112,11 @@ class ChatInputBar extends StatefulWidget {
   final VoidCallback? onPickPhotos;
   final VoidCallback? onUploadFiles;
   final VoidCallback? onToggleLearningMode;
+  final VoidCallback? onOpenWorldBook;
   final VoidCallback? onClearContext;
   final VoidCallback? onLongPressLearning;
   final bool learningModeActive;
+  final bool worldBookActive;
   final bool showMoreButton;
   final bool showQuickPhraseButton;
   final VoidCallback? onQuickPhrase;
@@ -438,8 +443,8 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
           _insertNewlineAtCursor();
         }
       } else {
-        // Enter to send, Shift+Enter to newline (default)
-        if (shift) {
+        // Enter to send, Shift+Enter or Ctrl/Cmd+Enter to newline (default)
+        if (shift || ctrlOrMeta) {
           _insertNewlineAtCursor();
         } else {
           _handleSend();
@@ -687,34 +692,23 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     final docs = <DocumentAttachment>[];
     try {
       final dir = await AppDirectories.getUploadDirectory();
-      if (!await dir.exists()) {
-        await dir.create(recursive: true);
-      }
       for (final raw in srcPaths) {
-        try {
-          final src = raw.startsWith('file://') ? raw.substring(7) : raw;
-          final from = File(src);
-          if (!await from.exists()) continue;
-          final baseName = p.basename(src);
-          String destPath = p.join(dir.path, baseName);
-          // Avoid overwriting existing files
-          if (await File(destPath).exists()) {
-            final name = p.basenameWithoutExtension(baseName);
-            final ext = p.extension(baseName);
-            destPath = p.join(dir.path, '${name}_${DateTime.now().millisecondsSinceEpoch}$ext');
-          }
-          await File(destPath).writeAsBytes(await from.readAsBytes());
-          if (_isImageExtension(baseName)) {
-            images.add(destPath);
+        final src = raw.startsWith('file://') ? raw.substring(7) : raw;
+        final savedPath = await FileImportHelper.copyXFile(XFile(src), dir, context);
+        if (savedPath != null) {
+          final savedName = p.basename(savedPath);
+          if (_isImageExtension(savedName)) {
+            images.add(savedPath);
           } else {
-            final mime = _inferMimeByExtension(baseName);
-            docs.add(DocumentAttachment(path: destPath, fileName: baseName, mime: mime));
+            final mime = _inferMimeByExtension(savedName);
+            docs.add(DocumentAttachment(path: savedPath, fileName: savedName, mime: mime));
           }
-        } catch (_) {}
+        }
       }
     } catch (_) {}
     return (images: images, docs: docs);
   }
+
 
   // Build a responsive left action bar that hides overflowing actions
   // into an anchored "+" menu using DesktopContextMenu style.
@@ -940,6 +934,19 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
               onLongPress: widget.onLongPressLearning,
             ),
             menu: DesktopContextMenuItem(icon: Lucide.Layers, label: l10n.instructionInjectionTitle, onTap: widget.onToggleLearningMode),
+          ));
+        }
+
+        if (widget.onOpenWorldBook != null) {
+          actions.add(_OverflowAction(
+            width: normalButtonW,
+            builder: () => _CompactIconButton(
+              tooltip: l10n.worldBookTitle,
+              icon: Lucide.BookOpen,
+              active: widget.worldBookActive,
+              onTap: widget.onOpenWorldBook,
+            ),
+            menu: DesktopContextMenuItem(icon: Lucide.BookOpen, label: l10n.worldBookTitle, onTap: widget.onOpenWorldBook),
           ));
         }
 

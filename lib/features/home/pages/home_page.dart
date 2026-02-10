@@ -14,6 +14,7 @@ import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/assistant_provider.dart';
 import '../../../core/providers/quick_phrase_provider.dart';
 import '../../../core/providers/instruction_injection_provider.dart';
+import '../../../core/providers/world_book_provider.dart';
 import '../../../core/models/quick_phrase.dart';
 import '../../../core/models/chat_message.dart';
 import '../../../core/services/android_process_text.dart';
@@ -25,6 +26,7 @@ import '../../../desktop/mcp_servers_popover.dart';
 import '../../../desktop/mini_map_popover.dart';
 import '../../../desktop/quick_phrase_popover.dart';
 import '../../../desktop/instruction_injection_popover.dart';
+import '../../../desktop/world_book_popover.dart';
 import '../../chat/widgets/bottom_tools_sheet.dart';
 import '../../chat/widgets/reasoning_budget_sheet.dart';
 import '../../search/widgets/search_settings_sheet.dart';
@@ -37,11 +39,13 @@ import '../../quick_phrase/widgets/quick_phrase_menu.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/mini_map_sheet.dart';
 import '../widgets/instruction_injection_sheet.dart';
+import '../widgets/world_book_sheet.dart';
 import '../widgets/learning_prompt_sheet.dart';
 import '../widgets/scroll_nav_buttons.dart';
-import '../widgets/selection_toolbar.dart';
 import '../widgets/message_list_view.dart';
 import '../widgets/chat_input_section.dart';
+import '../widgets/chat_selection_app_bar.dart';
+import '../widgets/chat_selection_export_bar.dart';
 import '../utils/model_display_helper.dart';
 import '../utils/chat_layout_constants.dart';
 import '../controllers/home_page_controller.dart';
@@ -69,6 +73,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   final ChatInputBarController _mediaController = ChatInputBarController();
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _inputBarKey = GlobalKey();
+  final GlobalKey _selectionMiniMapKey = GlobalKey();
+  final GlobalKey _selectionExportBarKey = GlobalKey();
   StreamSubscription<String>? _processTextSub;
 
   // ============================================================================
@@ -103,7 +109,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _controller.initChat();
     _initProcessText();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _controller.measureInputBar());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.measureInputBar();
+      if (!mounted) return;
+      context.read<WorldBookProvider>().initialize();
+    });
   }
 
   @override
@@ -238,6 +248,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     required String? modelDisplay,
     required ColorScheme cs,
   }) {
+    final collapsed = _controller.collapseVersions(_controller.messages);
+    final selectable = collapsed.where((m) => m.role == 'user' || m.role == 'assistant').toList();
+    final allSelected = selectable.isNotEmpty && selectable.every((m) => _controller.selectedItems.contains(m.id));
+
     return HomeMobileScaffold(
       scaffoldKey: _scaffoldKey,
       drawerController: _drawerController,
@@ -274,6 +288,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         }
       },
       onSelectModel: () => showModelSelectSheet(context),
+      appBarOverride: _controller.selecting
+          ? ChatSelectionAppBar(
+              selectedCount: _controller.selectedCount,
+              allSelected: allSelected,
+              onClose: _controller.cancelSelection,
+              onOpenMiniMap: () {
+                unawaited(_openSelectionMiniMap());
+              },
+              miniMapKey: _selectionMiniMapKey,
+              onToggleSelectAll: _controller.toggleSelectAll,
+              onInvertSelection: _controller.invertSelection,
+            )
+          : null,
       body: _wrapWithDropTarget(_buildMobileBody(context, cs)),
     );
   }
@@ -310,23 +337,33 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   },
                 ),
               ),
-              // Input bar
-              NotificationListener<SizeChangedLayoutNotification>(
-                onNotification: (n) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) => _controller.measureInputBar());
-                  return false;
-                },
-                child: SizeChangedLayoutNotifier(
-                  child: Builder(
-                    builder: (context) => _buildChatInputBar(context, isTablet: false),
+              if (_controller.selecting)
+                ChatSelectionExportBar(
+                  key: _selectionExportBarKey,
+                  onExportMarkdown: _controller.exportSelectedAsMarkdown,
+                  onExportTxt: _controller.exportSelectedAsTxt,
+                  onExportImage: _controller.exportSelectedAsImage,
+                  showThinkingTools: _controller.showThinkingTools,
+                  showThinkingContent: _controller.showThinkingContent,
+                  onToggleThinkingTools: _controller.toggleThinkingTools,
+                  onToggleThinkingContent: _controller.toggleThinkingContent,
+                )
+              else
+                // Input bar
+                NotificationListener<SizeChangedLayoutNotification>(
+                  onNotification: (n) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) => _controller.measureInputBar());
+                    return false;
+                  },
+                  child: SizeChangedLayoutNotifier(
+                    child: Builder(
+                      builder: (context) => _buildChatInputBar(context, isTablet: false),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
-        // Selection toolbar overlay
-        _buildSelectionToolbarOverlay(),
         // Scroll navigation buttons
         _buildScrollButtons(),
       ],
@@ -341,6 +378,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     required ColorScheme cs,
   }) {
     _controller.initDesktopUi();
+
+    final collapsed = _controller.collapseVersions(_controller.messages);
+    final selectable = collapsed.where((m) => m.role == 'user' || m.role == 'assistant').toList();
+    final allSelected = selectable.isNotEmpty && selectable.every((m) => _controller.selectedItems.contains(m.id));
 
     return HomeDesktopScaffold(
       scaffoldKey: _scaffoldKey,
@@ -373,7 +414,47 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       onRightSidebarWidthChanged: _controller.updateRightSidebarWidth,
       onRightSidebarWidthChangeEnd: _controller.saveRightSidebarWidth,
       buildAssistantBackground: _buildAssistantBackground,
+      appBarOverride: _controller.selecting
+          ? ChatSelectionAppBar(
+              selectedCount: _controller.selectedCount,
+              allSelected: allSelected,
+              onClose: _controller.cancelSelection,
+              onOpenMiniMap: () {
+                unawaited(_openSelectionMiniMap());
+              },
+              miniMapKey: _selectionMiniMapKey,
+              onToggleSelectAll: _controller.toggleSelectAll,
+              onInvertSelection: _controller.invertSelection,
+            )
+          : null,
       body: _wrapWithDropTarget(_buildTabletBody(context, cs)),
+    );
+  }
+
+  Future<void> _openSelectionMiniMap() async {
+    final collapsed = _controller.collapseVersions(_controller.messages);
+    if (collapsed.isEmpty) return;
+
+    if (PlatformUtils.isDesktop && _selectionExportBarKey.currentContext != null) {
+      await showDesktopMiniMapPopover(
+        context,
+        anchorKey: _selectionExportBarKey,
+        messages: collapsed,
+        selecting: true,
+        selectedMessageIds: _controller.selectedItems,
+        selectionListenable: _controller,
+        onToggleSelection: (id) => _controller.toggleSelection(id, !_controller.selectedItems.contains(id)),
+      );
+      return;
+    }
+
+    await showMiniMapSheet(
+      context,
+      collapsed,
+      selecting: true,
+      selectedMessageIds: _controller.selectedItems,
+      selectionListenable: _controller,
+      onToggleSelection: (id) => _controller.toggleSelection(id, !_controller.selectedItems.contains(id)),
     );
   }
 
@@ -398,32 +479,48 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                    .fadeIn(duration: 200.ms, curve: Curves.easeOutCubic),
                 ),
               ),
-              NotificationListener<SizeChangedLayoutNotification>(
-                onNotification: (n) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) => _controller.measureInputBar());
-                  return false;
-                },
-                child: SizeChangedLayoutNotifier(
-                  child: Builder(
-                    builder: (context) {
-                      Widget input = _buildChatInputBar(context, isTablet: true);
-                      input = Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: ChatLayoutConstants.maxInputWidth,
+              if (_controller.selecting)
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: ChatLayoutConstants.maxInputWidth),
+                    child: ChatSelectionExportBar(
+                      key: _selectionExportBarKey,
+                      onExportMarkdown: _controller.exportSelectedAsMarkdown,
+                      onExportTxt: _controller.exportSelectedAsTxt,
+                      onExportImage: _controller.exportSelectedAsImage,
+                      showThinkingTools: _controller.showThinkingTools,
+                      showThinkingContent: _controller.showThinkingContent,
+                      onToggleThinkingTools: _controller.toggleThinkingTools,
+                      onToggleThinkingContent: _controller.toggleThinkingContent,
+                    ),
+                  ),
+                )
+              else
+                NotificationListener<SizeChangedLayoutNotification>(
+                  onNotification: (n) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) => _controller.measureInputBar());
+                    return false;
+                  },
+                  child: SizeChangedLayoutNotifier(
+                    child: Builder(
+                      builder: (context) {
+                        Widget input = _buildChatInputBar(context, isTablet: true);
+                        input = Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: ChatLayoutConstants.maxInputWidth,
+                            ),
+                            child: input,
                           ),
-                          child: input,
-                        ),
-                      );
-                      return input;
-                    },
+                        );
+                        return input;
+                      },
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
-        _buildSelectionToolbarOverlay(),
         _buildScrollButtons(),
       ],
     );
@@ -535,6 +632,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     required EdgeInsetsGeometry dividerPadding,
   }) {
     return MessageListView(
+      isProcessingFiles: _controller.isProcessingFiles,
       scrollController: _scrollController,
       messages: _controller.messages,
       versionSelections: _controller.versionSelections,
@@ -657,33 +755,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       onPickPhotos: _controller.onPickPhotos,
       onUploadFiles: _controller.onPickFiles,
       onToggleLearningMode: _openInstructionInjectionPopover,
+      onOpenWorldBook: _openWorldBookPopover,
       onLongPressLearning: _showLearningPromptSheet,
       onClearContext: _controller.clearContext,
-    );
-  }
-
-  Widget _buildSelectionToolbarOverlay() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 122),
-          child: AnimatedSelectionBar(
-            visible: _controller.selecting,
-            child: SelectionToolbar(
-              onCancel: _controller.cancelSelection,
-              onConfirm: _controller.confirmSelection,
-            ),
-          ),
-        ),
-      ),
     );
   }
 
   Widget _buildScrollButtons() {
     return Builder(builder: (context) {
       final showSetting = context.watch<SettingsProvider>().showMessageNavButtons;
+      if (_controller.selecting) return const SizedBox.shrink();
       if (!showSetting || _controller.messages.isEmpty) return const SizedBox.shrink();
       return ScrollNavButtonsPanel(
         visible: _controller.scrollCtrl.showNavButtons,
@@ -778,6 +859,26 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       );
     } else {
       await showInstructionInjectionSheet(context, assistantId: assistantId);
+    }
+  }
+
+  Future<void> _openWorldBookPopover() async {
+    final isDesktop = PlatformUtils.isDesktop;
+    final assistantId = context.read<AssistantProvider>().currentAssistantId;
+    final provider = context.read<WorldBookProvider>();
+    await provider.initialize();
+    final books = provider.books;
+    if (books.isEmpty) return;
+
+    if (isDesktop) {
+      await showDesktopWorldBookPopover(
+        context,
+        anchorKey: _inputBarKey,
+        books: books,
+        assistantId: assistantId,
+      );
+    } else {
+      await showWorldBookSheet(context, assistantId: assistantId);
     }
   }
 
