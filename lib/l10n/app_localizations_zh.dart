@@ -2876,6 +2876,13 @@ class AppLocalizationsZh extends AppLocalizations {
       '是否在聊天消息中显示模型名称和时间戳';
 
   @override
+  String get displaySettingsPageShowProviderInChatMessageTitle => '模型名称后显示供应商';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageSubtitle =>
+      '在聊天消息的模型名称后面显示供应商名称（如 模型 | 供应商）';
+
+  @override
   String get displaySettingsPageChatModelIconTitle => '聊天列表模型图标';
 
   @override
@@ -3768,6 +3775,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String logViewerMoreCount(int count) {
     return '+$count 条更多';
   }
+
+  @override
+  String get logSettingsTitle => '日志设置';
+
+  @override
+  String get logSettingsSaveOutput => '保存响应输出';
+
+  @override
+  String get logSettingsSaveOutputSubtitle => '记录响应体内容（可能占用较多存储空间）';
+
+  @override
+  String get logSettingsAutoDelete => '自动删除';
+
+  @override
+  String get logSettingsAutoDeleteSubtitle => '删除超过指定天数的日志';
+
+  @override
+  String get logSettingsAutoDeleteDisabled => '不启用';
+
+  @override
+  String logSettingsAutoDeleteDays(int count) {
+    return '$count 天';
+  }
+
+  @override
+  String get logSettingsMaxSize => '日志大小上限';
+
+  @override
+  String get logSettingsMaxSizeSubtitle => '超出后将删除最早的日志';
+
+  @override
+  String get logSettingsMaxSizeUnlimited => '不限制';
 
   @override
   String get assistantEditManageSummariesTitle => '管理摘要';
@@ -6807,6 +6846,13 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
       '是否在聊天消息中显示模型名称和时间戳';
 
   @override
+  String get displaySettingsPageShowProviderInChatMessageTitle => '模型名称后显示供应商';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageSubtitle =>
+      '在聊天消息的模型名称后面显示供应商名称（如 模型 | 供应商）';
+
+  @override
   String get displaySettingsPageChatModelIconTitle => '聊天列表模型图标';
 
   @override
@@ -7699,6 +7745,38 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String logViewerMoreCount(int count) {
     return '+$count 条更多';
   }
+
+  @override
+  String get logSettingsTitle => '日志设置';
+
+  @override
+  String get logSettingsSaveOutput => '保存响应输出';
+
+  @override
+  String get logSettingsSaveOutputSubtitle => '记录响应体内容（可能占用较多存储空间）';
+
+  @override
+  String get logSettingsAutoDelete => '自动删除';
+
+  @override
+  String get logSettingsAutoDeleteSubtitle => '删除超过指定天数的日志';
+
+  @override
+  String get logSettingsAutoDeleteDisabled => '不启用';
+
+  @override
+  String logSettingsAutoDeleteDays(int count) {
+    return '$count 天';
+  }
+
+  @override
+  String get logSettingsMaxSize => '日志大小上限';
+
+  @override
+  String get logSettingsMaxSizeSubtitle => '超出后将删除最早的日志';
+
+  @override
+  String get logSettingsMaxSizeUnlimited => '不限制';
 
   @override
   String get fileUploadDuplicateTitle => '文件已存在';
@@ -10729,6 +10807,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '是否在聊天訊息中顯示模型名稱及時間戳';
 
   @override
+  String get displaySettingsPageShowProviderInChatMessageTitle => '模型名稱後顯示供應商';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageSubtitle =>
+      '在聊天訊息的模型名稱後面顯示供應商名稱（如 模型 | 供應商）';
+
+  @override
   String get displaySettingsPageChatModelIconTitle => '聊天列表模型圖示';
 
   @override
@@ -11623,6 +11708,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String logViewerMoreCount(int count) {
     return '+$count 條更多';
   }
+
+  @override
+  String get logSettingsTitle => '日誌設定';
+
+  @override
+  String get logSettingsSaveOutput => '保存回應輸出';
+
+  @override
+  String get logSettingsSaveOutputSubtitle => '記錄回應本文內容（可能佔用較多儲存空間）';
+
+  @override
+  String get logSettingsAutoDelete => '自動刪除';
+
+  @override
+  String get logSettingsAutoDeleteSubtitle => '刪除超過指定天數的日誌';
+
+  @override
+  String get logSettingsAutoDeleteDisabled => '不啟用';
+
+  @override
+  String logSettingsAutoDeleteDays(int count) {
+    return '$count 天';
+  }
+
+  @override
+  String get logSettingsMaxSize => '日誌大小上限';
+
+  @override
+  String get logSettingsMaxSizeSubtitle => '超出後將刪除最早的日誌';
+
+  @override
+  String get logSettingsMaxSizeUnlimited => '不限制';
 
   @override
   String get assistantEditManageSummariesTitle => '管理摘要';

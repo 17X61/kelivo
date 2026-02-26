@@ -5612,6 +5612,18 @@ abstract class AppLocalizations {
   /// **'Show model name and the timestamp below it in chat messages'**
   String get displaySettingsPageShowModelNameTimestampSubtitle;
 
+  /// No description provided for @displaySettingsPageShowProviderInChatMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Provider After Model Name'**
+  String get displaySettingsPageShowProviderInChatMessageTitle;
+
+  /// No description provided for @displaySettingsPageShowProviderInChatMessageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display provider name after the model ID in chat messages (e.g. model | provider)'**
+  String get displaySettingsPageShowProviderInChatMessageSubtitle;
+
   /// No description provided for @displaySettingsPageChatModelIconTitle.
   ///
   /// In en, this message translates to:
@@ -7327,6 +7339,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{count} more'**
   String logViewerMoreCount(int count);
+
+  /// No description provided for @logSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Settings'**
+  String get logSettingsTitle;
+
+  /// No description provided for @logSettingsSaveOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Response Output'**
+  String get logSettingsSaveOutput;
+
+  /// No description provided for @logSettingsSaveOutputSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log response body content (may use significant storage)'**
+  String get logSettingsSaveOutputSubtitle;
+
+  /// No description provided for @logSettingsAutoDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-delete'**
+  String get logSettingsAutoDelete;
+
+  /// No description provided for @logSettingsAutoDeleteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete logs older than specified days'**
+  String get logSettingsAutoDeleteSubtitle;
+
+  /// No description provided for @logSettingsAutoDeleteDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get logSettingsAutoDeleteDisabled;
+
+  /// No description provided for @logSettingsAutoDeleteDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String logSettingsAutoDeleteDays(int count);
+
+  /// No description provided for @logSettingsMaxSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Log Size'**
+  String get logSettingsMaxSize;
+
+  /// No description provided for @logSettingsMaxSizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest logs deleted when exceeded'**
+  String get logSettingsMaxSizeSubtitle;
+
+  /// No description provided for @logSettingsMaxSizeUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get logSettingsMaxSizeUnlimited;
 
   /// No description provided for @assistantEditManageSummariesTitle.
   ///

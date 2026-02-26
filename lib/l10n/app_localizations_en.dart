@@ -2974,6 +2974,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show model name and the timestamp below it in chat messages';
 
   @override
+  String get displaySettingsPageShowProviderInChatMessageTitle =>
+      'Show Provider After Model Name';
+
+  @override
+  String get displaySettingsPageShowProviderInChatMessageSubtitle =>
+      'Display provider name after the model ID in chat messages (e.g. model | provider)';
+
+  @override
   String get displaySettingsPageChatModelIconTitle => 'Chat Model Icon';
 
   @override
@@ -3907,6 +3915,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String logViewerMoreCount(int count) {
     return '+$count more';
   }
+
+  @override
+  String get logSettingsTitle => 'Log Settings';
+
+  @override
+  String get logSettingsSaveOutput => 'Save Response Output';
+
+  @override
+  String get logSettingsSaveOutputSubtitle =>
+      'Log response body content (may use significant storage)';
+
+  @override
+  String get logSettingsAutoDelete => 'Auto-delete';
+
+  @override
+  String get logSettingsAutoDeleteSubtitle =>
+      'Delete logs older than specified days';
+
+  @override
+  String get logSettingsAutoDeleteDisabled => 'Disabled';
+
+  @override
+  String logSettingsAutoDeleteDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String get logSettingsMaxSize => 'Max Log Size';
+
+  @override
+  String get logSettingsMaxSizeSubtitle => 'Oldest logs deleted when exceeded';
+
+  @override
+  String get logSettingsMaxSizeUnlimited => 'Unlimited';
 
   @override
   String get assistantEditManageSummariesTitle => 'Manage Summaries';

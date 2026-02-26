@@ -1252,6 +1252,8 @@
   "displaySettingsPageShowUserMessageActionsSubtitle": "Display copy, resend, and more buttons below your messages",
   "displaySettingsPageShowModelNameTimestampTitle": "Show Model Name & Timestamp",
   "displaySettingsPageShowModelNameTimestampSubtitle": "Show model name and the timestamp below it in chat messages",
+  "displaySettingsPageShowProviderInChatMessageTitle": "Show Provider After Model Name",
+  "displaySettingsPageShowProviderInChatMessageSubtitle": "Display provider name after the model ID in chat messages (e.g. model | provider)",
   "displaySettingsPageChatModelIconTitle": "Chat Model Icon",
   "displaySettingsPageChatModelIconSubtitle": "Show model icon in chat messages",
   "displaySettingsPageShowTokenStatsTitle": "Show Token & Context Stats",
@@ -1606,6 +1608,23 @@
       }
     }
   },
+  "logSettingsTitle": "Log Settings",
+  "logSettingsSaveOutput": "Save Response Output",
+  "logSettingsSaveOutputSubtitle": "Log response body content (may use significant storage)",
+  "logSettingsAutoDelete": "Auto-delete",
+  "logSettingsAutoDeleteSubtitle": "Delete logs older than specified days",
+  "logSettingsAutoDeleteDisabled": "Disabled",
+  "logSettingsAutoDeleteDays": "{count} days",
+  "@logSettingsAutoDeleteDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "logSettingsMaxSize": "Max Log Size",
+  "logSettingsMaxSizeSubtitle": "Oldest logs deleted when exceeded",
+  "logSettingsMaxSizeUnlimited": "Unlimited",
   "assistantEditManageSummariesTitle": "Manage Summaries",
   "assistantEditSummaryEmpty": "No summaries yet",
   "assistantEditSummaryDialogTitle": "Edit Summary",
