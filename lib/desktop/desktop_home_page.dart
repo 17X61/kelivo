@@ -32,7 +32,9 @@ class DesktopHomePage extends StatefulWidget {
 class _DesktopHomePageState extends State<DesktopHomePage> {
   int _tabIndex = 0; // 0=Chat, 1=Translate, 2=Storage, 3=Settings
   bool _storageVisited = false;
+  bool _globalSearchActive = false;
   StreamSubscription<HotkeyAction>? _hotkeySub;
+  StreamSubscription<ChatAction>? _chatActionSub;
 
   @override
   void initState() {
@@ -51,10 +53,18 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
     _hotkeySub = HotkeyEventBus.instance.stream.listen((action) async {
       switch (action) {
         case HotkeyAction.openSettings:
-          if (mounted) setState(() => _tabIndex = 3);
+          if (mounted) {
+            setState(() {
+              _tabIndex = 3;
+              _globalSearchActive = false;
+            });
+            ChatActionBus.instance.fire(ChatAction.exitGlobalSearch);
+          }
           break;
         case HotkeyAction.closeWindow:
-          try { await windowManager.close(); } catch (_) {}
+          try {
+            await windowManager.close();
+          } catch (_) {}
           break;
         case HotkeyAction.toggleAppVisibility:
           try {
@@ -88,7 +98,8 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           if (_tabIndex == 0) ChatActionBus.instance.fire(ChatAction.newTopic);
           break;
         case HotkeyAction.switchModel:
-          if (_tabIndex == 0) ChatActionBus.instance.fire(ChatAction.switchModel);
+          if (_tabIndex == 0)
+            ChatActionBus.instance.fire(ChatAction.switchModel);
           break;
         case HotkeyAction.toggleLeftPanelAssistants:
           if (_tabIndex == 0)
@@ -100,6 +111,25 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           break;
         default:
           // Other actions handled in page-specific widgets
+          break;
+      }
+    });
+
+    _chatActionSub = ChatActionBus.instance.stream.listen((action) {
+      if (!mounted) return;
+      switch (action) {
+        case ChatAction.enterGlobalSearch:
+          setState(() {
+            _tabIndex = 0;
+            _globalSearchActive = true;
+          });
+          break;
+        case ChatAction.exitGlobalSearch:
+          setState(() {
+            _globalSearchActive = false;
+          });
+          break;
+        default:
           break;
       }
     });
@@ -124,18 +154,42 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
           children: [
             DesktopNavRail(
               activeIndex: _tabIndex,
+              globalSearchActive: _globalSearchActive,
               onTapChat: () {
-                setState(() => _tabIndex = 0);
+                setState(() {
+                  _tabIndex = 0;
+                  _globalSearchActive = false;
+                });
+                ChatActionBus.instance.fire(ChatAction.exitGlobalSearch);
                 // 切换到聊天页时聚焦输入框
                 ChatActionBus.instance.fire(ChatAction.focusInput);
               },
-              onTapTranslate: () => setState(() => _tabIndex = 1),
+              onTapGlobalSearch: () {
+                setState(() {
+                  _tabIndex = 0;
+                  _globalSearchActive = true;
+                });
+                ChatActionBus.instance.fire(ChatAction.enterGlobalSearch);
+              },
+              onTapTranslate: () {
+                setState(() {
+                  _tabIndex = 1;
+                  _globalSearchActive = false;
+                });
+                ChatActionBus.instance.fire(ChatAction.exitGlobalSearch);
+              },
               onTapStorage: () => setState(() {
                 _tabIndex = 2;
+                _globalSearchActive = false;
                 _storageVisited = true;
+                ChatActionBus.instance.fire(ChatAction.exitGlobalSearch);
               }),
               onTapSettings: () {
-                setState(() => _tabIndex = 3);
+                setState(() {
+                  _tabIndex = 3;
+                  _globalSearchActive = false;
+                });
+                ChatActionBus.instance.fire(ChatAction.exitGlobalSearch);
               },
             ),
             Expanded(
@@ -148,8 +202,16 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
                   const DesktopChatPage(),
                   // Translate page remains mounted
                   const DesktopTranslatePage(key: ValueKey('translate_page')),
-                  _storageVisited ? const StorageSpacePage(key: ValueKey('storage_space_page'), embedded: true) : const SizedBox.shrink(),
-                  DesktopSettingsPage(key: const ValueKey('settings_page'), initialProviderKey: widget.initialProviderKey),
+                  _storageVisited
+                      ? const StorageSpacePage(
+                          key: ValueKey('storage_space_page'),
+                          embedded: true,
+                        )
+                      : const SizedBox.shrink(),
+                  DesktopSettingsPage(
+                    key: const ValueKey('settings_page'),
+                    initialProviderKey: widget.initialProviderKey,
+                  ),
                 ],
               ),
             ),
@@ -204,6 +266,9 @@ class _DesktopHomePageState extends State<DesktopHomePage> {
   void dispose() {
     try {
       _hotkeySub?.cancel();
+    } catch (_) {}
+    try {
+      _chatActionSub?.cancel();
     } catch (_) {}
     super.dispose();
   }

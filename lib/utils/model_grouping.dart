@@ -7,10 +7,12 @@ class ModelGrouping {
     required String otherLabel,
   }) {
     final id = m.id.toLowerCase();
-    if (m.type == ModelType.embedding || id.contains('embedding') || id.contains('embed')) {
+    if (m.type == ModelType.embedding ||
+        ModelRegistry.isLikelyEmbeddingId(id)) {
       return embeddingsLabel;
     }
-    if (id.contains('gpt') || RegExp(r'(^|[^a-z])o[134]').hasMatch(id)) return 'GPT';
+    if (id.contains('gpt') || RegExp(r'(^|[^a-z])o[134]').hasMatch(id))
+      return 'GPT';
     if (id.contains('gemini-3')) return 'Gemini 3';
     if (id.contains('gemini-2.5')) return 'Gemini 2.5';
     if (id.contains('gemini')) return 'Gemini';
@@ -32,4 +34,3 @@ class ModelGrouping {
     return otherLabel;
   }
 }
-

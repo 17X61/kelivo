@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:io';
@@ -16,6 +17,7 @@ import '../../../shared/animations/widgets.dart';
 import '../../../shared/widgets/ios_tactile.dart';
 import '../../../utils/brand_assets.dart';
 import '../../../utils/sandbox_path_resolver.dart';
+import '../../../desktop/hotkeys/chat_action_bus.dart';
 
 /// Desktop/Tablet layout scaffold for the home page
 /// Handles the overall structure: left sidebar, main content, optional right sidebar
@@ -43,6 +45,10 @@ class HomeDesktopScaffold extends StatelessWidget {
     required this.onNewConversation,
     required this.onCreateNewConversation,
     required this.onSelectModel,
+    required this.globalSearchMode,
+    required this.globalSearchQuery,
+    required this.onGlobalSearchQueryChanged,
+    required this.onOpenGlobalSearchResult,
     required this.onSidebarWidthChanged,
     required this.onSidebarWidthChangeEnd,
     required this.onRightSidebarWidthChanged,
@@ -74,6 +80,11 @@ class HomeDesktopScaffold extends StatelessWidget {
   final VoidCallback onNewConversation;
   final Future<void> Function() onCreateNewConversation;
   final VoidCallback onSelectModel;
+  final bool globalSearchMode;
+  final String globalSearchQuery;
+  final ValueChanged<String> onGlobalSearchQueryChanged;
+  final Future<void> Function(String conversationId, String messageId)
+  onOpenGlobalSearchResult;
   final void Function(double dx) onSidebarWidthChanged;
   final VoidCallback onSidebarWidthChangeEnd;
   final void Function(double dx) onRightSidebarWidthChanged;
@@ -131,7 +142,9 @@ class HomeDesktopScaffold extends StatelessWidget {
                   resizeToAvoidBottomInset: true,
                   extendBodyBehindAppBar: true,
                   backgroundColor: Colors.transparent,
-                  appBar: appBarOverride ?? _buildAppBar(context, cs, topicsOnRight),
+                  appBar:
+                      appBarOverride ??
+                      _buildAppBar(context, cs, topicsOnRight),
                   body: body,
                 ),
               ),
@@ -144,7 +157,11 @@ class HomeDesktopScaffold extends StatelessWidget {
     );
   }
 
-  Widget _buildLeftSidebar(BuildContext context, ColorScheme cs, bool topicsOnRight) {
+  Widget _buildLeftSidebar(
+    BuildContext context,
+    ColorScheme cs,
+    bool topicsOnRight,
+  ) {
     final sidebar = SideDrawer(
       embedded: true,
       embeddedWidth: embeddedSidebarWidth,
@@ -154,8 +171,19 @@ class HomeDesktopScaffold extends StatelessWidget {
       loadingConversationIds: loadingConversationIds,
       useDesktopTabs: _isDesktop && !topicsOnRight,
       desktopAssistantsOnly: _isDesktop && topicsOnRight,
+      globalSearchMode: globalSearchMode,
+      globalSearchQuery: globalSearchQuery,
+      onGlobalSearchQueryChanged: onGlobalSearchQueryChanged,
+      onEnterGlobalSearch: () {
+        ChatActionBus.instance.fire(ChatAction.enterGlobalSearch);
+      },
+      onExitGlobalSearch: () {
+        ChatActionBus.instance.fire(ChatAction.exitGlobalSearch);
+      },
+      onOpenGlobalSearchResult: onOpenGlobalSearchResult,
       onNewConversation: ({closeDrawer = true}) => onNewConversation(),
-      onSelectConversation: (id, {closeDrawer = true}) => onSelectConversation(id),
+      onSelectConversation: (id, {closeDrawer = true}) =>
+          onSelectConversation(id),
     );
 
     return AnimatedContainer(
@@ -174,7 +202,11 @@ class HomeDesktopScaffold extends StatelessWidget {
     );
   }
 
-  Widget _buildRightSidebar(BuildContext context, ColorScheme cs, bool topicsOnRight) {
+  Widget _buildRightSidebar(
+    BuildContext context,
+    ColorScheme cs,
+    bool topicsOnRight,
+  ) {
     if (!_isDesktop || !topicsOnRight) return const SizedBox.shrink();
 
     return Row(
@@ -205,8 +237,16 @@ class HomeDesktopScaffold extends StatelessWidget {
                   loadingConversationIds: loadingConversationIds,
                   useDesktopTabs: false,
                   desktopTopicsOnly: true,
-                  onSelectConversation: (id, {closeDrawer = true}) => onSelectConversation(id),
-                  onNewConversation: ({closeDrawer = true}) => onNewConversation(),
+                  globalSearchMode: false,
+                  globalSearchQuery: '',
+                  onGlobalSearchQueryChanged: (_) {},
+                  onEnterGlobalSearch: () {},
+                  onExitGlobalSearch: () {},
+                  onOpenGlobalSearchResult: (_, __) async {},
+                  onSelectConversation: (id, {closeDrawer = true}) =>
+                      onSelectConversation(id),
+                  onNewConversation: ({closeDrawer = true}) =>
+                      onNewConversation(),
                 ),
               ),
             ),
@@ -223,7 +263,11 @@ class HomeDesktopScaffold extends StatelessWidget {
     return (n == null || n.isEmpty) ? l10n.homePageDefaultAssistant : n;
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, ColorScheme cs, bool topicsOnRight) {
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    ColorScheme cs,
+    bool topicsOnRight,
+  ) {
     return AppBar(
       centerTitle: false,
       systemOverlayStyle: (Theme.of(context).brightness == Brightness.dark)
@@ -261,7 +305,8 @@ class HomeDesktopScaffold extends StatelessWidget {
 
   Widget _buildTitle(BuildContext context, ColorScheme cs) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final String? brandAsset = (modelDisplay != null
+    final String? brandAsset =
+        (modelDisplay != null
             ? BrandAssets.assetForName(modelDisplay!)
             : null) ??
         (providerName != null ? BrandAssets.assetForName(providerName!) : null);
@@ -270,8 +315,12 @@ class HomeDesktopScaffold extends StatelessWidget {
     String? capsuleLabel;
 
     if (providerName != null && modelDisplay != null) {
-      final showProv = context.watch<SettingsProvider>().showProviderInModelCapsule;
-      capsuleLabel = showProv ? '$modelDisplay | $providerName' : '$modelDisplay';
+      final showProv = context
+          .watch<SettingsProvider>()
+          .showProviderInModelCapsule;
+      capsuleLabel = showProv
+          ? '$modelDisplay | $providerName'
+          : '$modelDisplay';
 
       final Widget brandIcon = AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
@@ -281,9 +330,24 @@ class HomeDesktopScaffold extends StatelessWidget {
         ),
         child: (brandAsset != null)
             ? (brandAsset.endsWith('.svg')
-                ? SvgPicture.asset(brandAsset, width: 16, height: 16, key: ValueKey('brand:$brandAsset'))
-                : Image.asset(brandAsset, width: 16, height: 16, key: ValueKey('brand:$brandAsset')))
-            : Icon(Lucide.Boxes, size: 16, color: cs.onSurface.withOpacity(0.7), key: const ValueKey('brand:default')),
+                  ? SvgPicture.asset(
+                      brandAsset,
+                      width: 16,
+                      height: 16,
+                      key: ValueKey('brand:$brandAsset'),
+                    )
+                  : Image.asset(
+                      brandAsset,
+                      width: 16,
+                      height: 16,
+                      key: ValueKey('brand:$brandAsset'),
+                    ))
+            : Icon(
+                Lucide.Boxes,
+                size: 16,
+                color: cs.onSurface.withOpacity(0.7),
+                key: const ValueKey('brand:default'),
+              ),
       );
 
       capsule = IosCardPress(
@@ -297,9 +361,7 @@ class HomeDesktopScaffold extends StatelessWidget {
           curve: Curves.easeOutCubic,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -311,7 +373,9 @@ class HomeDesktopScaffold extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       height: 1.1,
-                      color: isDark ? Colors.white.withOpacity(0.92) : cs.onSurface.withOpacity(0.9),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.92)
+                          : cs.onSurface.withOpacity(0.9),
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -354,7 +418,10 @@ class HomeDesktopScaffold extends StatelessWidget {
                 transitionBuilder: (child, anim) => FadeTransition(
                   opacity: anim,
                   child: SlideTransition(
-                    position: Tween<Offset>(begin: const Offset(0.06, 0), end: Offset.zero).animate(anim),
+                    position: Tween<Offset>(
+                      begin: const Offset(0.06, 0),
+                      end: Offset.zero,
+                    ).animate(anim),
                     child: child,
                   ),
                 ),
@@ -376,11 +443,17 @@ class HomeDesktopScaffold extends StatelessWidget {
         transitionBuilder: (child, anim) => FadeTransition(
           opacity: anim,
           child: SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(anim),
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.08),
+              end: Offset.zero,
+            ).animate(anim),
             child: child,
           ),
         ),
-        child: KeyedSubtree(key: ValueKey('hdr:$title|${capsuleLabel ?? ''}'), child: row),
+        child: KeyedSubtree(
+          key: ValueKey('hdr:$title|${capsuleLabel ?? ''}'),
+          child: row,
+        ),
       ),
     );
   }
@@ -451,7 +524,9 @@ class _SidebarResizeHandleState extends State<SidebarResizeHandle> {
           child: Container(
             width: 1,
             height: double.infinity,
-            color: _hovered ? cs.primary.withOpacity(0.28) : cs.outlineVariant.withOpacity(0.10),
+            color: _hovered
+                ? cs.primary.withOpacity(0.28)
+                : cs.outlineVariant.withOpacity(0.10),
           ),
         ),
       ),
@@ -472,7 +547,11 @@ class DesktopBackgroundLayer extends StatelessWidget {
     Widget? bg;
     if (bgRaw.isNotEmpty) {
       if (bgRaw.startsWith('http')) {
-        bg = Image.network(bgRaw, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink());
+        bg = Image.network(
+          bgRaw,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        );
       } else {
         try {
           final fixed = SandboxPathResolver.fix(bgRaw);
@@ -581,7 +660,10 @@ class DesktopScrollNavigationButtons extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   opacity: showJumpToBottom ? 1 : 0,
                   child: Padding(
-                    padding: EdgeInsets.only(right: 16, bottom: bottomOffset + 52),
+                    padding: EdgeInsets.only(
+                      right: 16,
+                      bottom: bottomOffset + 52,
+                    ),
                     child: _DesktopScrollButton(
                       isDark: isDark,
                       icon: Lucide.ChevronUp,
@@ -616,7 +698,9 @@ class _DesktopScrollButton extends StatelessWidget {
         filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Container(
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.07),
+            color: isDark
+                ? Colors.white.withOpacity(0.06)
+                : Colors.white.withOpacity(0.07),
             shape: BoxShape.circle,
             border: Border.all(
               color: isDark
@@ -724,7 +808,8 @@ class _DesktopGlassCircleButton extends StatefulWidget {
   final double size;
 
   @override
-  State<_DesktopGlassCircleButton> createState() => _DesktopGlassCircleButtonState();
+  State<_DesktopGlassCircleButton> createState() =>
+      _DesktopGlassCircleButtonState();
 }
 
 class _DesktopGlassCircleButtonState extends State<_DesktopGlassCircleButton> {
@@ -735,9 +820,15 @@ class _DesktopGlassCircleButtonState extends State<_DesktopGlassCircleButton> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final glassBase = isDark ? Colors.black.withOpacity(0.06) : Colors.white.withOpacity(0.06);
-    final overlay = isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.05);
-    final tileColor = _pressed ? Color.alphaBlend(overlay, glassBase) : glassBase;
+    final glassBase = isDark
+        ? Colors.black.withOpacity(0.06)
+        : Colors.white.withOpacity(0.06);
+    final overlay = isDark
+        ? Colors.white.withOpacity(0.06)
+        : Colors.black.withOpacity(0.05);
+    final tileColor = _pressed
+        ? Color.alphaBlend(overlay, glassBase)
+        : glassBase;
     final borderColor = cs.outlineVariant.withOpacity(0.10);
 
     return Semantics(
@@ -764,7 +855,9 @@ class _DesktopGlassCircleButtonState extends State<_DesktopGlassCircleButton> {
                   shape: BoxShape.circle,
                   border: Border.all(color: borderColor, width: 1.0),
                 ),
-                child: Center(child: Icon(widget.icon, size: 18, color: widget.color)),
+                child: Center(
+                  child: Icon(widget.icon, size: 18, color: widget.color),
+                ),
               ),
             ),
           ),

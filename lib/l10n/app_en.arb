@@ -312,7 +312,8 @@
   "assistantEditDeleteTooltip": "Delete",
   "assistantEditAssistantNameLabel": "Assistant Name",
   "assistantEditUseAssistantAvatarTitle": "Use Assistant Avatar",
-  "assistantEditUseAssistantAvatarSubtitle": "Use assistant avatar/name instead of model",
+  "assistantEditUseAssistantAvatarSubtitle": "Use assistant avatar instead of model avatar",
+  "assistantEditUseAssistantNameTitle": "Use Assistant Name",
   "assistantEditChatModelTitle": "Chat Model",
   "assistantEditChatModelSubtitle": "Default chat model for this assistant (fallback to global)",
   "assistantEditTemperatureDescription": "Controls randomness, range 0–2",
@@ -335,6 +336,7 @@
   "desktopNavChatTooltip": "Chat",
   "desktopNavTranslateTooltip": "Translate",
   "desktopNavStorageTooltip": "Storage",
+  "desktopNavGlobalSearchTooltip": "Global Search",
   "desktopNavThemeToggleTooltip": "Theme",
   "desktopNavSettingsTooltip": "Settings",
   "desktopAvatarMenuUseEmoji": "Use emoji",
@@ -545,6 +547,16 @@
   "backupPageBackupManagement": "Backup Management",
   "backupPageWebDavBackup": "WebDAV Backup",
   "backupPageWebDavServerSettings": "WebDAV Server Settings",
+  "backupPageS3Backup": "S3 Backup",
+  "backupPageS3ServerSettings": "S3 Settings",
+  "backupPageS3Endpoint": "Endpoint",
+  "backupPageS3Region": "Region",
+  "backupPageS3Bucket": "Bucket",
+  "backupPageS3AccessKeyId": "Access Key ID",
+  "backupPageS3SecretAccessKey": "Secret Access Key",
+  "backupPageS3SessionToken": "Session Token (Optional)",
+  "backupPageS3Prefix": "Prefix",
+  "backupPageS3PathStyle": "Path-style addressing",
   "backupPageSave": "Save",
   "backupPageBackupNow": "Backup Now",
   "backupPageLocalBackup": "Local Backup",
@@ -574,6 +586,13 @@
   "bottomToolsSheetPhotos": "Photos",
   "bottomToolsSheetUpload": "Upload",
   "bottomToolsSheetClearContext": "Clear Context",
+  "compressContext": "Compress Context",
+  "compressContextDesc": "Summarize and start a new chat",
+  "clearContextDesc": "Mark a context boundary",
+  "contextManagement": "Context Management",
+  "compressingContext": "Compressing context...",
+  "compressContextFailed": "Failed to compress context",
+  "compressContextNoMessages": "No messages to compress",
   "bottomToolsSheetLearningMode": "Learning Mode",
   "bottomToolsSheetLearningModeDescription": "Help you learn step by step",
   "bottomToolsSheetConfigurePrompt": "Configure prompt",
@@ -595,6 +614,7 @@
   "reasoningBudgetSheetLight": "Light Reasoning",
   "reasoningBudgetSheetMedium": "Medium Reasoning",
   "reasoningBudgetSheetHeavy": "Heavy Reasoning",
+  "reasoningBudgetSheetXhigh": "Extreme Reasoning",
   "reasoningBudgetSheetTitle": "Reasoning Chain Strength",
   "reasoningBudgetSheetCurrentLevel": "Current Level: {level}",
   "@reasoningBudgetSheetCurrentLevel": {
@@ -609,6 +629,7 @@
   "reasoningBudgetSheetLightSubtitle": "Use light reasoning to answer questions",
   "reasoningBudgetSheetMediumSubtitle": "Use moderate reasoning to answer questions",
   "reasoningBudgetSheetHeavySubtitle": "Use heavy reasoning for complex questions",
+  "reasoningBudgetSheetXhighSubtitle": "Use maximum reasoning depth for the toughest problems",
   "reasoningBudgetSheetCustomLabel": "Custom Reasoning Budget (tokens)",
   "reasoningBudgetSheetCustomHint": "e.g. 2048 (-1 auto, 0 off)",
   "chatMessageWidgetFileNotFound": "File not found: {fileName}",
@@ -660,6 +681,10 @@
     }
   },
   "chatMessageWidgetRegenerateTooltip": "Regenerate",
+  "chatMessageWidgetRegenerateConfirmTitle": "Confirm Regenerate",
+  "chatMessageWidgetRegenerateConfirmContent": "Regenerating will overwrite all messages after this one and cannot be undone. Are you sure?",
+  "chatMessageWidgetRegenerateConfirmCancel": "Cancel",
+  "chatMessageWidgetRegenerateConfirmOk": "Regenerate",
   "chatMessageWidgetStopTooltip": "Stop",
   "chatMessageWidgetSpeakTooltip": "Speak",
   "chatMessageWidgetTranslateTooltip": "Translate",
@@ -743,6 +768,7 @@
   "displaySettingsPageEnableMathSubtitle": "Render LaTeX math (inline and block)",
   "displaySettingsPageEnableUserMarkdownTitle": "Render user messages with Markdown",
   "displaySettingsPageEnableReasoningMarkdownTitle": "Render reasoning (thinking) with Markdown",
+  "displaySettingsPageEnableAssistantMarkdownTitle": "Render assistant messages with Markdown",
   "displaySettingsPageMobileCodeBlockWrapTitle": "Mobile Code Block Word Wrap",
   "displaySettingsPageAutoCollapseCodeBlockTitle": "Auto-collapse Code Blocks",
   "displaySettingsPageAutoCollapseCodeBlockLinesTitle": "Auto-collapse threshold",
@@ -798,8 +824,23 @@
   "sideDrawerDateYesterday": "Yesterday",
   "sideDrawerDateShortPattern": "MMM d",
   "sideDrawerDateFullPattern": "MMM d, yyyy",
-  "sideDrawerSearchHint": "Search chat history",
+  "sideDrawerSearchHint": "Search current assistant",
   "sideDrawerSearchAssistantsHint": "Search assistants",
+  "sideDrawerTopicSearchModeLabel": "Topic mode",
+  "sideDrawerGlobalSearchModeLabel": "Global mode",
+  "sideDrawerSearchModeSwipeToTopicHint": "Swipe the search bar for topic search",
+  "sideDrawerSearchModeSwipeToGlobalHint": "Swipe the search bar for global search",
+  "sideDrawerGlobalSearchHint": "Search all sessions",
+  "sideDrawerGlobalSearchEmptyHint": "Search across titles and messages",
+  "sideDrawerGlobalSearchNoResults": "No matching sessions",
+  "sideDrawerGlobalSearchResultCount": "{count} results",
+  "@sideDrawerGlobalSearchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sideDrawerUpdateTitle": "New version: {version}",
   "@sideDrawerUpdateTitle": {
     "placeholders": {
@@ -928,6 +969,22 @@
   "defaultModelPageTitleModelSubtitle": "Used for summarizing conversation titles; prefer fast & cheap models",
   "defaultModelPageSummaryModelTitle": "Summary Model",
   "defaultModelPageSummaryModelSubtitle": "Used for generating conversation summaries; prefer fast and cheap models",
+  "assistantEditRecentChatsSummaryFrequencyTitle": "Summary Refresh Frequency",
+  "assistantEditRecentChatsSummaryFrequencyDescription": "Refresh recent-chat summaries after the selected number of new messages.",
+  "assistantEditRecentChatsSummaryFrequencyOption": "Every {count}",
+  "@assistantEditRecentChatsSummaryFrequencyOption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "assistantEditRecentChatsSummaryFrequencyCustomButton": "Custom",
+  "assistantEditRecentChatsSummaryFrequencyCustomTitle": "Custom Summary Frequency",
+  "assistantEditRecentChatsSummaryFrequencyCustomDescription": "Enter how many new messages should accumulate before refreshing the recent-chat summary.",
+  "assistantEditRecentChatsSummaryFrequencyCustomLabel": "New message count",
+  "assistantEditRecentChatsSummaryFrequencyCustomHint": "Enter a number greater than 0",
+  "assistantEditRecentChatsSummaryFrequencyCustomInvalid": "Please enter a whole number greater than 0",
   "defaultModelPageTranslateModelTitle": "Translation Model",
   "defaultModelPageTranslateModelSubtitle": "Used for translating message content; prefer fast & accurate models",
   "defaultModelPageOcrModelTitle": "OCR Model",
@@ -957,6 +1014,20 @@
         "type": "String"
       },
       "userMessagesVar": {
+        "type": "String"
+      }
+    }
+  },
+  "defaultModelPageCompressModelTitle": "Compress Model",
+  "defaultModelPageCompressModelSubtitle": "Used for compressing conversation context; prefer fast models",
+  "defaultModelPageCompressPromptHint": "Enter prompt template for context compression",
+  "defaultModelPageCompressVars": "Variables: conversation: {contentVar}, language: {localeVar}",
+  "@defaultModelPageCompressVars": {
+    "placeholders": {
+      "contentVar": {
+        "type": "String"
+      },
+      "localeVar": {
         "type": "String"
       }
     }
@@ -1010,6 +1081,7 @@
   "modelDetailSheetAddHeader": "Add Header",
   "modelDetailSheetCustomBodyTitle": "Custom Body",
   "modelFetchInvertTooltip": "Invert",
+  "modelDetailSheetSaveFailedMessage": "Save failed. Please try again.",
   "modelDetailSheetAddBody": "Add Body",
   "modelDetailSheetBuiltinToolsDescription": "Built-in tools only support official APIs.",
   "modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint": "Code execution cannot coexist with Search/URL Context/MCP tools.",
@@ -1200,6 +1272,7 @@
   "searchServicesPageConfiguredStatus": "Configured",
   "miniMapTitle": "Minimap",
   "miniMapTooltip": "Minimap",
+  "miniMapScrollToBottomTooltip": "Scroll to bottom",
   "searchServicesPageApiKeyRequiredStatus": "API Key Required",
   "searchServicesPageUrlRequiredStatus": "URL Required",
   "searchServicesAddDialogTitle": "Add Search Service",

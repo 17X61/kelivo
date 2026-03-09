@@ -2,12 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/chat_input_data.dart';
+import '../../../core/models/assistant.dart';
 import '../../../core/models/chat_message.dart';
 import '../../../core/models/conversation.dart';
 import '../../../core/providers/assistant_provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/api/chat_api_service.dart';
 import '../../../core/services/chat/chat_service.dart';
+import '../../../core/services/logging/flutter_logger.dart';
 import '../../chat/widgets/chat_message_widget.dart' show ToolUIPart;
 import '../services/message_builder_service.dart';
 import '../services/message_generation_service.dart';
@@ -38,13 +40,13 @@ class HomeViewModel extends ChangeNotifier {
     required ChatController chatController,
     required BuildContext contextProvider,
     required this.getTitleForLocale,
-  })  : _chatService = chatService,
-        _messageBuilderService = messageBuilderService,
-        _messageGenerationService = messageGenerationService,
-        _generationController = generationController,
-        _streamController = streamController,
-        _chatController = chatController,
-        _contextProvider = contextProvider {
+  }) : _chatService = chatService,
+       _messageBuilderService = messageBuilderService,
+       _messageGenerationService = messageGenerationService,
+       _generationController = generationController,
+       _streamController = streamController,
+       _chatController = chatController,
+       _contextProvider = contextProvider {
     // Initialize ChatActions
     _chatActions = ChatActions(
       chatService: chatService,
@@ -101,7 +103,7 @@ class HomeViewModel extends ChangeNotifier {
 
   /// Called to schedule inline image sanitization.
   void Function(String messageId, String content, {bool immediate})?
-      onScheduleImageSanitize;
+  onScheduleImageSanitize;
 
   /// Called when scrolling to bottom is needed.
   VoidCallback? onScrollToBottom;
@@ -234,8 +236,10 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   /// Regenerate response at a specific message.
-  Future<bool> regenerateAtMessage(ChatMessage message,
-      {bool assistantAsNewReply = false}) async {
+  Future<bool> regenerateAtMessage(
+    ChatMessage message, {
+    bool assistantAsNewReply = false,
+  }) async {
     final conversation = currentConversation;
     if (conversation == null) {
       return false;
@@ -283,7 +287,8 @@ class HomeViewModel extends ChangeNotifier {
     // Compute selection adjustment before removal
     final versBefore = (byGroup[gid] ?? const <ChatMessage>[])
       ..sort((a, b) => a.version.compareTo(b.version));
-    final oldSel = versionSelections[gid] ??
+    final oldSel =
+        versionSelections[gid] ??
         (versBefore.isNotEmpty ? versBefore.length - 1 : 0);
     final delIndex = versBefore.indexWhere((m) => m.id == id);
 
@@ -312,7 +317,11 @@ class HomeViewModel extends ChangeNotifier {
     final sel = versionSelections[gid];
     if (sel != null && currentConversation != null) {
       try {
-        await _chatService.setSelectedVersion(currentConversation!.id, gid, sel);
+        await _chatService.setSelectedVersion(
+          currentConversation!.id,
+          gid,
+          sel,
+        );
       } catch (_) {}
     }
 
@@ -411,7 +420,7 @@ class HomeViewModel extends ChangeNotifier {
     final includeGroups = groupOrder.take(targetOrderIndex + 1).toSet();
     final selected = [
       for (final m in messages)
-        if (includeGroups.contains(m.groupId ?? m.id)) m
+        if (includeGroups.contains(m.groupId ?? m.id)) m,
     ];
     // Filter version selections to included groups
     final sel = <String, int>{};
@@ -447,6 +456,96 @@ class HomeViewModel extends ChangeNotifier {
     if (updated != null) {
       _chatController.updateCurrentConversation(updated);
       notifyListeners();
+    }
+  }
+
+  /// Compress context: summarize messages via LLM, create new conversation with summary.
+  /// Returns null on success, or an error key string on failure.
+  Future<String?> compressContext() async {
+    final convo = currentConversation;
+    if (convo == null) return 'no_conversation';
+
+    // Get messages and collapse to selected versions
+    final allMsgs = _chatController.messages;
+    final collapsed = collapseVersions(allMsgs);
+    if (collapsed.isEmpty) return 'no_messages';
+
+    // Build conversation text for compression
+    final joined = collapsed
+        .where((m) => m.content.trim().isNotEmpty)
+        .map(
+          (m) =>
+              '${m.role == "assistant" ? "Assistant" : "User"}: ${m.content}',
+        )
+        .join('\n\n');
+    if (joined.trim().isEmpty) return 'no_messages';
+
+    // Truncate to reasonable length
+    final content = joined.length > 6000 ? joined.substring(0, 6000) : joined;
+    final locale = Localizations.localeOf(_contextProvider).toLanguageTag();
+
+    // Resolve model: compress model → summary model → title model → assistant model → global default
+    final settings = _contextProvider.read<SettingsProvider>();
+    final ap = _contextProvider.read<AssistantProvider>();
+    final assistant = convo.assistantId != null
+        ? ap.getById(convo.assistantId!)
+        : ap.currentAssistant;
+
+    final provKey =
+        settings.compressModelProvider ??
+        settings.summaryModelProvider ??
+        settings.titleModelProvider ??
+        assistant?.chatModelProvider ??
+        settings.currentModelProvider;
+    final mdlId =
+        settings.compressModelId ??
+        settings.summaryModelId ??
+        settings.titleModelId ??
+        assistant?.chatModelId ??
+        settings.currentModelId;
+    if (provKey == null || mdlId == null) return 'no_model';
+
+    final cfg = settings.getProviderConfig(provKey);
+
+    // Build compression prompt from settings template
+    final prompt = settings.compressPrompt
+        .replaceAll('{content}', content)
+        .replaceAll('{locale}', locale);
+
+    try {
+      final summary = (await ChatApiService.generateText(
+        config: cfg,
+        modelId: mdlId,
+        prompt: prompt,
+      )).trim();
+
+      if (summary.isEmpty) return 'empty_summary';
+
+      // Create new conversation with the summary as first user message
+      final newConvo = await _chatService.createDraftConversation(
+        title: convo.title,
+        assistantId: convo.assistantId,
+      );
+
+      await _chatService.addMessage(
+        conversationId: newConvo.id,
+        role: 'user',
+        content: summary,
+      );
+
+      // Switch to the new conversation
+      _chatService.setCurrentConversation(newConvo.id);
+      _chatController.setCurrentConversation(
+        _chatService.getConversation(newConvo.id) ?? newConvo,
+      );
+      _streamController.clearAllState();
+      notifyListeners();
+      onConversationSwitched?.call();
+      onScrollToBottom?.call();
+
+      return null; // success
+    } catch (e) {
+      return e.toString();
     }
   }
 
@@ -491,7 +590,9 @@ class HomeViewModel extends ChangeNotifier {
 
         // Clean content from gemini thought signatures
         final cleanedContent = _streamController.captureGeminiThoughtSignature(
-            m.content, m.id);
+          m.content,
+          m.id,
+        );
         if (cleanedContent != m.content) {
           final updated = m.copyWith(content: cleanedContent);
           messages[i] = updated;
@@ -499,15 +600,19 @@ class HomeViewModel extends ChangeNotifier {
         }
 
         // Clean up any inline base64 images persisted from earlier runs
-        onScheduleImageSanitize?.call(m.id, messages[i].content,
-            immediate: true);
+        onScheduleImageSanitize?.call(
+          m.id,
+          messages[i].content,
+          immediate: true,
+        );
       }
     }
   }
 
   /// Serialize reasoning segments to JSON string.
   String serializeReasoningSegments(
-      List<stream_ctrl.ReasoningSegmentData> segments) {
+    List<stream_ctrl.ReasoningSegmentData> segments,
+  ) {
     return _streamController.serializeReasoningSegments(segments);
   }
 
@@ -522,14 +627,16 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   /// Get clear context label based on current state.
-  String getClearContextLabel(String Function(String, String) withCountFormatter,
-      String defaultLabel) {
-    final assistant =
-        _contextProvider.read<AssistantProvider>().currentAssistant;
-    final configured =
-        (assistant?.limitContextMessages ?? true)
-            ? (assistant?.contextMessageSize ?? 0)
-            : 0;
+  String getClearContextLabel(
+    String Function(String, String) withCountFormatter,
+    String defaultLabel,
+  ) {
+    final assistant = _contextProvider
+        .read<AssistantProvider>()
+        .currentAssistant;
+    final configured = (assistant?.limitContextMessages ?? true)
+        ? (assistant?.contextMessageSize ?? 0)
+        : 0;
     // Use collapsed view for counting
     final collapsed = collapseVersions(messages);
     // Map raw truncate index to collapsed start index
@@ -563,13 +670,16 @@ class HomeViewModel extends ChangeNotifier {
   // ============================================================================
 
   /// Generate title for a conversation if needed.
-  Future<void> _maybeGenerateTitleFor(String conversationId,
-      {bool force = false}) async {
+  Future<void> _maybeGenerateTitleFor(
+    String conversationId, {
+    bool force = false,
+  }) async {
     final convo = _chatService.getConversation(conversationId);
     if (convo == null) return;
     if (!force &&
         convo.title.isNotEmpty &&
-        convo.title != getTitleForLocale(_contextProvider)) return;
+        convo.title != getTitleForLocale(_contextProvider))
+      return;
 
     final settings = _contextProvider.read<SettingsProvider>();
     final assistantProvider = _contextProvider.read<AssistantProvider>();
@@ -580,25 +690,31 @@ class HomeViewModel extends ChangeNotifier {
         : assistantProvider.currentAssistant;
 
     // Decide model: prefer title model, else fall back to assistant's model, then to global default
-    final provKey = settings.titleModelProvider ??
+    final provKey =
+        settings.titleModelProvider ??
         assistant?.chatModelProvider ??
         settings.currentModelProvider;
-    final mdlId = settings.titleModelId ??
+    final mdlId =
+        settings.titleModelId ??
         assistant?.chatModelId ??
         settings.currentModelId;
     if (provKey == null || mdlId == null) return;
     final cfg = settings.getProviderConfig(provKey);
+    final budget = assistant?.thinkingBudget ?? settings.thinkingBudget;
 
     // Build content from messages (truncate to reasonable length)
     final msgs = _chatService.getMessages(convo.id);
     final tIndex = convo.truncateIndex;
-    final List<ChatMessage> sourceAll =
-        (tIndex >= 0 && tIndex <= msgs.length) ? msgs.sublist(tIndex) : msgs;
+    final List<ChatMessage> sourceAll = (tIndex >= 0 && tIndex <= msgs.length)
+        ? msgs.sublist(tIndex)
+        : msgs;
     final List<ChatMessage> source = collapseVersions(sourceAll);
     final joined = source
         .where((m) => m.content.isNotEmpty)
-        .map((m) =>
-            '${m.role == 'assistant' ? 'Assistant' : 'User'}: ${m.content}')
+        .map(
+          (m) =>
+              '${m.role == 'assistant' ? 'Assistant' : 'User'}: ${m.content}',
+        )
         .join('\n\n');
     final content = joined.length > 3000 ? joined.substring(0, 3000) : joined;
     final locale = Localizations.localeOf(_contextProvider).toLanguageTag();
@@ -609,17 +725,25 @@ class HomeViewModel extends ChangeNotifier {
 
     try {
       final title = (await ChatApiService.generateText(
-              config: cfg, modelId: mdlId, prompt: prompt))
-          .trim();
+        config: cfg,
+        modelId: mdlId,
+        prompt: prompt,
+        thinkingBudget: budget,
+      )).trim();
       if (title.isNotEmpty) {
         await _chatService.renameConversation(convo.id, title);
         if (currentConversation?.id == convo.id) {
-          _chatController
-              .updateCurrentConversation(_chatService.getConversation(convo.id));
+          _chatController.updateCurrentConversation(
+            _chatService.getConversation(convo.id),
+          );
           notifyListeners();
         }
       }
-    } catch (_) {
+    } catch (e) {
+      FlutterLogger.log(
+        '[TitleGen] Generation failed: $e',
+        tag: 'HomeViewModel',
+      );
       // Ignore title generation failure silently
     }
   }
@@ -637,16 +761,13 @@ class HomeViewModel extends ChangeNotifier {
   // ============================================================================
 
   /// Generate summary for a conversation if conditions are met.
-  /// Triggers every 5 new messages since last summary.
+  /// Triggers after the configured number of new messages since last summary.
   Future<void> _maybeGenerateSummaryFor(String conversationId) async {
     final convo = _chatService.getConversation(conversationId);
     if (convo == null) return;
 
-    final msgCount = convo.messageIds.length;
-    // Only generate summary every 5 new messages
-    if (msgCount == 0 || msgCount - convo.lastSummarizedMessageCount < 5) return;
-
     final settings = _contextProvider.read<SettingsProvider>();
+    final msgCount = convo.messageIds.length;
     final assistantProvider = _contextProvider.read<AssistantProvider>();
 
     // Get assistant for this conversation
@@ -654,15 +775,27 @@ class HomeViewModel extends ChangeNotifier {
         ? assistantProvider.getById(convo.assistantId!)
         : assistantProvider.currentAssistant;
 
+    final budget = assistant?.thinkingBudget ?? settings.thinkingBudget;
+
     // Only generate summary if assistant has recent chats reference enabled
     if (assistant?.enableRecentChatsReference != true) return;
 
+    final triggerMessageCount =
+        assistant?.recentChatsSummaryMessageCount ??
+        Assistant.defaultRecentChatsSummaryMessageCount;
+    if (msgCount == 0 ||
+        msgCount - convo.lastSummarizedMessageCount < triggerMessageCount) {
+      return;
+    }
+
     // Use summary model if configured, else fall back to title model, then current model
-    final provKey = settings.summaryModelProvider ??
+    final provKey =
+        settings.summaryModelProvider ??
         settings.titleModelProvider ??
         assistant?.chatModelProvider ??
         settings.currentModelProvider;
-    final mdlId = settings.summaryModelId ??
+    final mdlId =
+        settings.summaryModelId ??
         settings.titleModelId ??
         assistant?.chatModelId ??
         settings.currentModelId;
@@ -683,7 +816,9 @@ class HomeViewModel extends ChangeNotifier {
 
     // Get only the recent user messages since last summarization
     // Calculate how many user messages were in the last summarized state
-    final lastSummarizedMsgCount = (convo.lastSummarizedMessageCount < 0) ? 0 : convo.lastSummarizedMessageCount;
+    final lastSummarizedMsgCount = (convo.lastSummarizedMessageCount < 0)
+        ? 0
+        : convo.lastSummarizedMessageCount;
     final msgsAtLastSummary = msgs.take(lastSummarizedMsgCount).toList();
     final userMsgsAtLastSummary = msgsAtLastSummary
         .where((m) => m.role == 'user' && m.content.trim().isNotEmpty)
@@ -698,23 +833,32 @@ class HomeViewModel extends ChangeNotifier {
         .join('\n\n');
 
     // Truncate if too long
-    final content =
-        recentMessages.length > 2000 ? recentMessages.substring(0, 2000) : recentMessages;
+    final content = recentMessages.length > 2000
+        ? recentMessages.substring(0, 2000)
+        : recentMessages;
 
     final prompt = settings.summaryPrompt
         .replaceAll('{previous_summary}', previousSummary)
         .replaceAll('{user_messages}', content);
 
     try {
-      final summary =
-          (await ChatApiService.generateText(config: cfg, modelId: mdlId, prompt: prompt))
-              .trim();
+      final summary = (await ChatApiService.generateText(
+        config: cfg,
+        modelId: mdlId,
+        prompt: prompt,
+        thinkingBudget: budget,
+      )).trim();
 
       if (summary.isNotEmpty) {
-        await _chatService.updateConversationSummary(convo.id, summary, msgCount);
+        await _chatService.updateConversationSummary(
+          convo.id,
+          summary,
+          msgCount,
+        );
         if (currentConversation?.id == convo.id) {
-          _chatController
-              .updateCurrentConversation(_chatService.getConversation(convo.id));
+          _chatController.updateCurrentConversation(
+            _chatService.getConversation(convo.id),
+          );
           notifyListeners();
         }
       }

@@ -48,6 +48,30 @@ abstract class BuiltInToolNames {
     return out;
   }
 
+  /// Parse built-in tools from a per-model override map.
+  ///
+  /// Supports:
+  /// - `builtInTools`: List<String> (current format)
+  /// - `built_in_tools`: List<String> (legacy format)
+  /// - `tools`: Map<String, bool> (legacy boolean flags, e.g. urlContext=true)
+  static Set<String> parseFromOverride(Object? rawOverride) {
+    final ov = rawOverride is Map ? rawOverride : null;
+    final builtInSet = parseAndNormalize(
+      ov?['builtInTools'] ?? ov?['built_in_tools'],
+    );
+
+    final legacyTools = ov?['tools'];
+    if (legacyTools is Map) {
+      for (final entry in legacyTools.entries) {
+        if (entry.value == true) {
+          final v = normalize(entry.key.toString());
+          if (v.isNotEmpty) builtInSet.add(v);
+        }
+      }
+    }
+    return builtInSet;
+  }
+
   /// Stable ordering for persisting tool lists (keeps UI diffs minimal).
   static List<String> orderedForStorage(Iterable<String> tools) {
     final remaining = Set<String>.from(tools);
@@ -89,7 +113,8 @@ abstract class BuiltInToolsHelper {
       case ProviderKind.openai:
         // OpenAI requires Responses API, or Grok models
         if (useResponseApi) return true;
-        if (modelId != null && modelId.toLowerCase().contains('grok')) return true;
+        if (modelId != null && modelId.toLowerCase().contains('grok'))
+          return true;
         return false;
     }
   }
@@ -103,10 +128,12 @@ abstract class BuiltInToolsHelper {
       return const BuiltInToolsState();
     }
 
-    final kind = ProviderConfig.classify(cfg.id, explicitType: cfg.providerType);
+    final kind = ProviderConfig.classify(
+      cfg.id,
+      explicitType: cfg.providerType,
+    );
     final rawOv = cfg.modelOverrides[modelId];
-    final ov = rawOv is Map ? rawOv : null;
-    final builtInSet = BuiltInToolNames.parseAndNormalize(ov?['builtInTools']);
+    final builtInSet = BuiltInToolNames.parseFromOverride(rawOv);
 
     bool searchActive = builtInSet.contains(BuiltInToolNames.search);
     bool codeExecutionActive = false;
@@ -120,8 +147,12 @@ abstract class BuiltInToolsHelper {
       urlContextActive = builtInSet.contains(BuiltInToolNames.urlContext);
       youtubeActive = builtInSet.contains(BuiltInToolNames.youtube);
     } else if (kind == ProviderKind.openai) {
-      codeInterpreterActive = builtInSet.contains(BuiltInToolNames.codeInterpreter);
-      imageGenerationActive = builtInSet.contains(BuiltInToolNames.imageGeneration);
+      codeInterpreterActive = builtInSet.contains(
+        BuiltInToolNames.codeInterpreter,
+      );
+      imageGenerationActive = builtInSet.contains(
+        BuiltInToolNames.imageGeneration,
+      );
     }
 
     return BuiltInToolsState(
@@ -154,8 +185,10 @@ class BuiltInToolsState {
   });
 
   /// Returns true if any Gemini-specific built-in tool is active.
-  bool get anyGeminiToolActive => codeExecutionActive || urlContextActive || youtubeActive;
+  bool get anyGeminiToolActive =>
+      codeExecutionActive || urlContextActive || youtubeActive;
 
   /// Returns true if any built-in tool that conflicts with MCP is active.
-  bool get anyMcpConflictingToolActive => searchActive || codeExecutionActive || urlContextActive;
+  bool get anyMcpConflictingToolActive =>
+      searchActive || codeExecutionActive || urlContextActive;
 }

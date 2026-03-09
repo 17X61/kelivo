@@ -626,8 +626,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantEditUseAssistantAvatarTitle => '使用助手头像';
 
   @override
-  String get assistantEditUseAssistantAvatarSubtitle =>
-      '在聊天中使用助手头像和名字而不是模型头像和名字';
+  String get assistantEditUseAssistantAvatarSubtitle => '在聊天中使用助手头像替代模型头像';
+
+  @override
+  String get assistantEditUseAssistantNameTitle => '使用助手名字';
 
   @override
   String get assistantEditChatModelTitle => '聊天模型';
@@ -695,6 +697,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopNavStorageTooltip => '存储';
+
+  @override
+  String get desktopNavGlobalSearchTooltip => '全局搜索';
 
   @override
   String get desktopNavThemeToggleTooltip => '主题切换';
@@ -1264,6 +1269,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupPageWebDavServerSettings => 'WebDAV 服务器设置';
 
   @override
+  String get backupPageS3Backup => 'S3 备份';
+
+  @override
+  String get backupPageS3ServerSettings => 'S3 服务器设置';
+
+  @override
+  String get backupPageS3Endpoint => '端点';
+
+  @override
+  String get backupPageS3Region => '区域';
+
+  @override
+  String get backupPageS3Bucket => 'Bucket';
+
+  @override
+  String get backupPageS3AccessKeyId => '访问密钥 ID';
+
+  @override
+  String get backupPageS3SecretAccessKey => '秘密访问密钥';
+
+  @override
+  String get backupPageS3SessionToken => 'Session Token（可选）';
+
+  @override
+  String get backupPageS3Prefix => '前缀（目录）';
+
+  @override
+  String get backupPageS3PathStyle => '路径风格（Path-style）';
+
+  @override
   String get backupPageSave => '保存';
 
   @override
@@ -1352,6 +1387,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bottomToolsSheetClearContext => '清空上下文';
 
   @override
+  String get compressContext => '压缩上下文';
+
+  @override
+  String get compressContextDesc => '总结对话并开始新聊天';
+
+  @override
+  String get clearContextDesc => '标记上下文分界点';
+
+  @override
+  String get contextManagement => '上下文管理';
+
+  @override
+  String get compressingContext => '正在压缩上下文...';
+
+  @override
+  String get compressContextFailed => '压缩上下文失败';
+
+  @override
+  String get compressContextNoMessages => '没有可压缩的消息';
+
+  @override
   String get bottomToolsSheetLearningMode => '学习模式';
 
   @override
@@ -1415,6 +1471,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reasoningBudgetSheetHeavy => '重度推理';
 
   @override
+  String get reasoningBudgetSheetXhigh => '极限推理';
+
+  @override
   String get reasoningBudgetSheetTitle => '思维链强度';
 
   @override
@@ -1436,6 +1495,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reasoningBudgetSheetHeavySubtitle => '使用大量推理来回答问题，适合复杂问题';
+
+  @override
+  String get reasoningBudgetSheetXhighSubtitle => '使用最大推理深度，适合最复杂的问题';
 
   @override
   String get reasoningBudgetSheetCustomLabel => '自定义推理预算 (tokens)';
@@ -1494,6 +1556,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatMessageWidgetRegenerateTooltip => '重新生成';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmTitle => '确认重新生成';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmContent =>
+      '重新生成将会覆盖此消息之后的所有消息，且无法撤销。确定要继续吗？';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmCancel => '取消';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmOk => '重新生成';
 
   @override
   String get chatMessageWidgetStopTooltip => '停止';
@@ -1612,6 +1687,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get displaySettingsPageEnableReasoningMarkdownTitle =>
       '思维链 Markdown 渲染';
+
+  @override
+  String get displaySettingsPageEnableAssistantMarkdownTitle =>
+      '助手消息 Markdown 渲染';
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle => '移动端代码块自动换行';
@@ -1742,10 +1821,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sideDrawerDateFullPattern => 'yyyy年M月d日';
 
   @override
-  String get sideDrawerSearchHint => '搜索聊天记录';
+  String get sideDrawerSearchHint => '搜索当前助手';
 
   @override
   String get sideDrawerSearchAssistantsHint => '搜索助手';
+
+  @override
+  String get sideDrawerTopicSearchModeLabel => '话题模式';
+
+  @override
+  String get sideDrawerGlobalSearchModeLabel => '全局模式';
+
+  @override
+  String get sideDrawerSearchModeSwipeToTopicHint => '左/右滑搜索栏切换到话题搜索';
+
+  @override
+  String get sideDrawerSearchModeSwipeToGlobalHint => '左/右滑搜索栏切换到全局搜索';
+
+  @override
+  String get sideDrawerGlobalSearchHint => '搜索全部会话';
+
+  @override
+  String get sideDrawerGlobalSearchEmptyHint => '在标题和消息中全局搜索';
+
+  @override
+  String get sideDrawerGlobalSearchNoResults => '没有匹配的会话';
+
+  @override
+  String sideDrawerGlobalSearchResultCount(int count) {
+    return '共 $count 条结果';
+  }
 
   @override
   String sideDrawerUpdateTitle(String version) {
@@ -2030,6 +2135,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get defaultModelPageSummaryModelSubtitle => '用于生成对话摘要的模型，推荐使用快速且便宜的模型';
 
   @override
+  String get assistantEditRecentChatsSummaryFrequencyTitle => '摘要更新频率';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyDescription =>
+      '累计达到所选条数的新消息后，会更新历史聊天摘要。';
+
+  @override
+  String assistantEditRecentChatsSummaryFrequencyOption(int count) {
+    return '每 $count 条';
+  }
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomButton => '自定义';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomTitle => '自定义摘要频率';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomDescription =>
+      '输入累计多少条新消息后再更新历史聊天摘要。';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomLabel => '新消息条数';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomHint =>
+      '请输入大于 0 的整数';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomInvalid =>
+      '请输入大于 0 的整数';
+
+  @override
   String get defaultModelPageTranslateModelTitle => '翻译模型';
 
   @override
@@ -2074,6 +2212,20 @@ class AppLocalizationsZh extends AppLocalizations {
     String userMessagesVar,
   ) {
     return '变量：旧摘要：$previousSummaryVar，新消息：$userMessagesVar';
+  }
+
+  @override
+  String get defaultModelPageCompressModelTitle => '压缩模型';
+
+  @override
+  String get defaultModelPageCompressModelSubtitle => '用于压缩对话上下文的模型，推荐使用快速模型';
+
+  @override
+  String get defaultModelPageCompressPromptHint => '输入用于上下文压缩的提示词模板';
+
+  @override
+  String defaultModelPageCompressVars(String contentVar, String localeVar) {
+    return '变量：对话内容：$contentVar，语言：$localeVar';
   }
 
   @override
@@ -2176,6 +2328,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modelFetchInvertTooltip => '反选';
+
+  @override
+  String get modelDetailSheetSaveFailedMessage => '保存失败，请重试';
 
   @override
   String get modelDetailSheetAddBody => '添加 Body';
@@ -2715,6 +2870,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get miniMapTooltip => '迷你地图';
+
+  @override
+  String get miniMapScrollToBottomTooltip => '滚动到底部';
 
   @override
   String get searchServicesPageApiKeyRequiredStatus => '需要 API Key';
@@ -4613,8 +4771,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get assistantEditUseAssistantAvatarTitle => '使用助手头像';
 
   @override
-  String get assistantEditUseAssistantAvatarSubtitle =>
-      '在聊天中使用助手头像和名字而不是模型头像和名字';
+  String get assistantEditUseAssistantAvatarSubtitle => '在聊天中使用助手头像替代模型头像';
+
+  @override
+  String get assistantEditUseAssistantNameTitle => '使用助手名字';
 
   @override
   String get assistantEditChatModelTitle => '聊天模型';
@@ -4682,6 +4842,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get desktopNavStorageTooltip => '存储';
+
+  @override
+  String get desktopNavGlobalSearchTooltip => '全局搜索';
 
   @override
   String get desktopNavThemeToggleTooltip => '主题切换';
@@ -5251,6 +5414,36 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get backupPageWebDavServerSettings => 'WebDAV 服务器设置';
 
   @override
+  String get backupPageS3Backup => 'S3 备份';
+
+  @override
+  String get backupPageS3ServerSettings => 'S3 服务器设置';
+
+  @override
+  String get backupPageS3Endpoint => '端点';
+
+  @override
+  String get backupPageS3Region => '区域';
+
+  @override
+  String get backupPageS3Bucket => 'Bucket';
+
+  @override
+  String get backupPageS3AccessKeyId => '访问密钥 ID';
+
+  @override
+  String get backupPageS3SecretAccessKey => '秘密访问密钥';
+
+  @override
+  String get backupPageS3SessionToken => 'Session Token（可选）';
+
+  @override
+  String get backupPageS3Prefix => '前缀（目录）';
+
+  @override
+  String get backupPageS3PathStyle => '路径风格（Path-style）';
+
+  @override
   String get backupPageSave => '保存';
 
   @override
@@ -5339,6 +5532,27 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get bottomToolsSheetClearContext => '清空上下文';
 
   @override
+  String get compressContext => '压缩上下文';
+
+  @override
+  String get compressContextDesc => '总结对话并开始新聊天';
+
+  @override
+  String get clearContextDesc => '标记上下文分界点';
+
+  @override
+  String get contextManagement => '上下文管理';
+
+  @override
+  String get compressingContext => '正在压缩上下文...';
+
+  @override
+  String get compressContextFailed => '压缩上下文失败';
+
+  @override
+  String get compressContextNoMessages => '没有可压缩的消息';
+
+  @override
   String get bottomToolsSheetLearningMode => '学习模式';
 
   @override
@@ -5402,6 +5616,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get reasoningBudgetSheetHeavy => '重度推理';
 
   @override
+  String get reasoningBudgetSheetXhigh => '极限推理';
+
+  @override
   String get reasoningBudgetSheetTitle => '思维链强度';
 
   @override
@@ -5423,6 +5640,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get reasoningBudgetSheetHeavySubtitle => '使用大量推理来回答问题，适合复杂问题';
+
+  @override
+  String get reasoningBudgetSheetXhighSubtitle => '使用最大推理深度，适合最复杂的问题';
 
   @override
   String get reasoningBudgetSheetCustomLabel => '自定义推理预算 (tokens)';
@@ -5481,6 +5701,19 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get chatMessageWidgetRegenerateTooltip => '重新生成';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmTitle => '确认重新生成';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmContent =>
+      '重新生成将会覆盖此消息之后的所有消息，且无法撤销。确定要继续吗？';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmCancel => '取消';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmOk => '重新生成';
 
   @override
   String get chatMessageWidgetStopTooltip => '停止';
@@ -5599,6 +5832,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   @override
   String get displaySettingsPageEnableReasoningMarkdownTitle =>
       '思维链 Markdown 渲染';
+
+  @override
+  String get displaySettingsPageEnableAssistantMarkdownTitle =>
+      '助手消息 Markdown 渲染';
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle => '移动端代码块自动换行';
@@ -5729,10 +5966,36 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get sideDrawerDateFullPattern => 'yyyy年M月d日';
 
   @override
-  String get sideDrawerSearchHint => '搜索聊天记录';
+  String get sideDrawerSearchHint => '搜索当前助手';
 
   @override
   String get sideDrawerSearchAssistantsHint => '搜索助手';
+
+  @override
+  String get sideDrawerTopicSearchModeLabel => '话题模式';
+
+  @override
+  String get sideDrawerGlobalSearchModeLabel => '全局模式';
+
+  @override
+  String get sideDrawerSearchModeSwipeToTopicHint => '左/右滑搜索栏切换到话题搜索';
+
+  @override
+  String get sideDrawerSearchModeSwipeToGlobalHint => '左/右滑搜索栏切换到全局搜索';
+
+  @override
+  String get sideDrawerGlobalSearchHint => '搜索全部会话';
+
+  @override
+  String get sideDrawerGlobalSearchEmptyHint => '在标题和消息中全局搜索';
+
+  @override
+  String get sideDrawerGlobalSearchNoResults => '没有匹配的会话';
+
+  @override
+  String sideDrawerGlobalSearchResultCount(int count) {
+    return '共 $count 条结果';
+  }
 
   @override
   String sideDrawerUpdateTitle(String version) {
@@ -6011,6 +6274,39 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get defaultModelPageTitleModelSubtitle => '用于总结对话标题的模型，推荐使用快速且便宜的模型';
 
   @override
+  String get assistantEditRecentChatsSummaryFrequencyTitle => '摘要更新频率';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyDescription =>
+      '累计达到所选条数的新消息后，会更新历史聊天摘要。';
+
+  @override
+  String assistantEditRecentChatsSummaryFrequencyOption(int count) {
+    return '每 $count 条';
+  }
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomButton => '自定义';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomTitle => '自定义摘要频率';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomDescription =>
+      '输入累计多少条新消息后再更新历史聊天摘要。';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomLabel => '新消息条数';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomHint =>
+      '请输入大于 0 的整数';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomInvalid =>
+      '请输入大于 0 的整数';
+
+  @override
   String get defaultModelPageTranslateModelTitle => '翻译模型';
 
   @override
@@ -6146,6 +6442,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get modelFetchInvertTooltip => '反选';
+
+  @override
+  String get modelDetailSheetSaveFailedMessage => '保存失败，请重试';
 
   @override
   String get modelDetailSheetAddBody => '添加 Body';
@@ -6685,6 +6984,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get miniMapTooltip => '迷你地图';
+
+  @override
+  String get miniMapScrollToBottomTooltip => '滚动到底部';
 
   @override
   String get searchServicesPageApiKeyRequiredStatus => '需要 API Key';
@@ -8562,8 +8864,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get assistantEditUseAssistantAvatarTitle => '使用助理頭像';
 
   @override
-  String get assistantEditUseAssistantAvatarSubtitle =>
-      '在聊天中使用助理頭像和名字而不是模型頭像和名字';
+  String get assistantEditUseAssistantAvatarSubtitle => '在聊天中使用助理頭像取代模型頭像';
+
+  @override
+  String get assistantEditUseAssistantNameTitle => '使用助理名字';
 
   @override
   String get assistantEditChatModelTitle => '聊天模型';
@@ -8631,6 +8935,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopNavStorageTooltip => '儲存';
+
+  @override
+  String get desktopNavGlobalSearchTooltip => '全域搜尋';
 
   @override
   String get desktopNavThemeToggleTooltip => '主題切換';
@@ -9200,6 +9507,36 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupPageWebDavServerSettings => 'WebDAV 伺服器設定';
 
   @override
+  String get backupPageS3Backup => 'S3 備份';
+
+  @override
+  String get backupPageS3ServerSettings => 'S3 伺服器設定';
+
+  @override
+  String get backupPageS3Endpoint => 'Endpoint（地址）';
+
+  @override
+  String get backupPageS3Region => 'Region（區域）';
+
+  @override
+  String get backupPageS3Bucket => 'Bucket';
+
+  @override
+  String get backupPageS3AccessKeyId => 'Access Key ID';
+
+  @override
+  String get backupPageS3SecretAccessKey => 'Secret Access Key';
+
+  @override
+  String get backupPageS3SessionToken => 'Session Token（可選）';
+
+  @override
+  String get backupPageS3Prefix => '前綴（目錄）';
+
+  @override
+  String get backupPageS3PathStyle => '路徑風格（Path-style）';
+
+  @override
   String get backupPageSave => '儲存';
 
   @override
@@ -9287,6 +9624,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bottomToolsSheetClearContext => '清空上下文';
 
   @override
+  String get compressContext => '壓縮上下文';
+
+  @override
+  String get compressContextDesc => '總結對話並開始新聊天';
+
+  @override
+  String get clearContextDesc => '標記上下文分界點';
+
+  @override
+  String get contextManagement => '上下文管理';
+
+  @override
+  String get compressingContext => '正在壓縮上下文...';
+
+  @override
+  String get compressContextFailed => '壓縮上下文失敗';
+
+  @override
+  String get compressContextNoMessages => '沒有可壓縮的訊息';
+
+  @override
   String get bottomToolsSheetLearningMode => '學習模式';
 
   @override
@@ -9350,6 +9708,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get reasoningBudgetSheetHeavy => '重度推理';
 
   @override
+  String get reasoningBudgetSheetXhigh => '極限推理';
+
+  @override
   String get reasoningBudgetSheetTitle => '思維鏈強度';
 
   @override
@@ -9371,6 +9732,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get reasoningBudgetSheetHeavySubtitle => '使用大量推理來回答問題，適合複雜問題';
+
+  @override
+  String get reasoningBudgetSheetXhighSubtitle => '使用最大推理深度，適合最複雜的問題';
 
   @override
   String get reasoningBudgetSheetCustomLabel => '自訂推理預算 (tokens)';
@@ -9429,6 +9793,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatMessageWidgetRegenerateTooltip => '重新生成';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmTitle => '確認重新生成';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmContent =>
+      '重新生成將會覆蓋此訊息之後的所有訊息，且無法撤銷。確定要繼續嗎？';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmCancel => '取消';
+
+  @override
+  String get chatMessageWidgetRegenerateConfirmOk => '重新生成';
 
   @override
   String get chatMessageWidgetStopTooltip => '停止';
@@ -9547,6 +9924,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get displaySettingsPageEnableReasoningMarkdownTitle =>
       '思维鏈 Markdown 渲染';
+
+  @override
+  String get displaySettingsPageEnableAssistantMarkdownTitle =>
+      '助手訊息 Markdown 渲染';
 
   @override
   String get displaySettingsPageMobileCodeBlockWrapTitle => '行動端程式碼區塊自動換行';
@@ -9677,10 +10058,36 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get sideDrawerDateFullPattern => 'yyyy年M月d日';
 
   @override
-  String get sideDrawerSearchHint => '搜尋聊天記錄';
+  String get sideDrawerSearchHint => '搜尋當前助理';
 
   @override
   String get sideDrawerSearchAssistantsHint => '搜尋助理';
+
+  @override
+  String get sideDrawerTopicSearchModeLabel => '話題模式';
+
+  @override
+  String get sideDrawerGlobalSearchModeLabel => '全域模式';
+
+  @override
+  String get sideDrawerSearchModeSwipeToTopicHint => '左/右滑搜尋欄切換到話題搜尋';
+
+  @override
+  String get sideDrawerSearchModeSwipeToGlobalHint => '左/右滑搜尋欄切換到全域搜尋';
+
+  @override
+  String get sideDrawerGlobalSearchHint => '搜尋全部會話';
+
+  @override
+  String get sideDrawerGlobalSearchEmptyHint => '在標題與訊息中全域搜尋';
+
+  @override
+  String get sideDrawerGlobalSearchNoResults => '沒有匹配的會話';
+
+  @override
+  String sideDrawerGlobalSearchResultCount(int count) {
+    return '共 $count 筆結果';
+  }
 
   @override
   String sideDrawerUpdateTitle(String version) {
@@ -9965,6 +10372,39 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get defaultModelPageSummaryModelSubtitle => '用於生成對話摘要的模型，推薦使用快速且便宜的模型';
 
   @override
+  String get assistantEditRecentChatsSummaryFrequencyTitle => '摘要更新頻率';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyDescription =>
+      '累計達到所選條數的新訊息後，會更新歷史聊天摘要。';
+
+  @override
+  String assistantEditRecentChatsSummaryFrequencyOption(int count) {
+    return '每 $count 則';
+  }
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomButton => '自訂';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomTitle => '自訂摘要頻率';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomDescription =>
+      '輸入累計多少則新訊息後再更新歷史聊天摘要。';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomLabel => '新訊息數量';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomHint =>
+      '請輸入大於 0 的整數';
+
+  @override
+  String get assistantEditRecentChatsSummaryFrequencyCustomInvalid =>
+      '請輸入大於 0 的整數';
+
+  @override
   String get defaultModelPageTranslateModelTitle => '翻譯模型';
 
   @override
@@ -10009,6 +10449,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     String userMessagesVar,
   ) {
     return '變數：舊摘要：$previousSummaryVar，新訊息：$userMessagesVar';
+  }
+
+  @override
+  String get defaultModelPageCompressModelTitle => '壓縮模型';
+
+  @override
+  String get defaultModelPageCompressModelSubtitle => '用於壓縮對話上下文的模型，建議使用快速模型';
+
+  @override
+  String get defaultModelPageCompressPromptHint => '輸入用於上下文壓縮的提示詞範本';
+
+  @override
+  String defaultModelPageCompressVars(String contentVar, String localeVar) {
+    return '變數：對話內容：$contentVar，語言：$localeVar';
   }
 
   @override
@@ -10111,6 +10565,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modelFetchInvertTooltip => '反選';
+
+  @override
+  String get modelDetailSheetSaveFailedMessage => '保存失敗，請重試';
 
   @override
   String get modelDetailSheetAddBody => '新增 Body';
@@ -10646,6 +11103,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get miniMapTooltip => '迷你地圖';
+
+  @override
+  String get miniMapScrollToBottomTooltip => '捲動到底部';
 
   @override
   String get searchServicesPageApiKeyRequiredStatus => '需要 API Key';

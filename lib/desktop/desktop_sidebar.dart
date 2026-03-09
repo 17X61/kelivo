@@ -16,9 +16,12 @@ class DesktopSidebar extends StatelessWidget {
 
   final String userName;
   final String assistantName;
+
   /// Callback when a conversation is selected.
   /// The [closeDrawer] parameter is ignored on desktop (sidebar is always visible).
-  final FutureOr<void> Function(String id, {bool closeDrawer})? onSelectConversation;
+  final FutureOr<void> Function(String id, {bool closeDrawer})?
+  onSelectConversation;
+
   /// Callback when a new conversation is requested.
   /// The [closeDrawer] parameter is ignored on desktop (sidebar is always visible).
   final FutureOr<void> Function({bool closeDrawer})? onNewConversation;
@@ -34,6 +37,8 @@ class DesktopSidebar extends StatelessWidget {
       onSelectConversation: onSelectConversation,
       onNewConversation: onNewConversation,
       loadingConversationIds: loadingConversationIds,
+      onEnterGlobalSearch: () {},
+      onExitGlobalSearch: () {},
       showBottomBar: false,
     );
   }

@@ -1274,8 +1274,14 @@ abstract class AppLocalizations {
   /// No description provided for @assistantEditUseAssistantAvatarSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Use assistant avatar/name instead of model'**
+  /// **'Use assistant avatar instead of model avatar'**
   String get assistantEditUseAssistantAvatarSubtitle;
+
+  /// No description provided for @assistantEditUseAssistantNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Assistant Name'**
+  String get assistantEditUseAssistantNameTitle;
 
   /// No description provided for @assistantEditChatModelTitle.
   ///
@@ -1408,6 +1414,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Storage'**
   String get desktopNavStorageTooltip;
+
+  /// No description provided for @desktopNavGlobalSearchTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Global Search'**
+  String get desktopNavGlobalSearchTooltip;
 
   /// No description provided for @desktopNavThemeToggleTooltip.
   ///
@@ -2525,6 +2537,66 @@ abstract class AppLocalizations {
   /// **'WebDAV Server Settings'**
   String get backupPageWebDavServerSettings;
 
+  /// No description provided for @backupPageS3Backup.
+  ///
+  /// In en, this message translates to:
+  /// **'S3 Backup'**
+  String get backupPageS3Backup;
+
+  /// No description provided for @backupPageS3ServerSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'S3 Settings'**
+  String get backupPageS3ServerSettings;
+
+  /// No description provided for @backupPageS3Endpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoint'**
+  String get backupPageS3Endpoint;
+
+  /// No description provided for @backupPageS3Region.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get backupPageS3Region;
+
+  /// No description provided for @backupPageS3Bucket.
+  ///
+  /// In en, this message translates to:
+  /// **'Bucket'**
+  String get backupPageS3Bucket;
+
+  /// No description provided for @backupPageS3AccessKeyId.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Key ID'**
+  String get backupPageS3AccessKeyId;
+
+  /// No description provided for @backupPageS3SecretAccessKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret Access Key'**
+  String get backupPageS3SecretAccessKey;
+
+  /// No description provided for @backupPageS3SessionToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Token (Optional)'**
+  String get backupPageS3SessionToken;
+
+  /// No description provided for @backupPageS3Prefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefix'**
+  String get backupPageS3Prefix;
+
+  /// No description provided for @backupPageS3PathStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Path-style addressing'**
+  String get backupPageS3PathStyle;
+
   /// No description provided for @backupPageSave.
   ///
   /// In en, this message translates to:
@@ -2699,6 +2771,48 @@ abstract class AppLocalizations {
   /// **'Clear Context'**
   String get bottomToolsSheetClearContext;
 
+  /// No description provided for @compressContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress Context'**
+  String get compressContext;
+
+  /// No description provided for @compressContextDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize and start a new chat'**
+  String get compressContextDesc;
+
+  /// No description provided for @clearContextDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark a context boundary'**
+  String get clearContextDesc;
+
+  /// No description provided for @contextManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Context Management'**
+  String get contextManagement;
+
+  /// No description provided for @compressingContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressing context...'**
+  String get compressingContext;
+
+  /// No description provided for @compressContextFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to compress context'**
+  String get compressContextFailed;
+
+  /// No description provided for @compressContextNoMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages to compress'**
+  String get compressContextNoMessages;
+
   /// No description provided for @bottomToolsSheetLearningMode.
   ///
   /// In en, this message translates to:
@@ -2825,6 +2939,12 @@ abstract class AppLocalizations {
   /// **'Heavy Reasoning'**
   String get reasoningBudgetSheetHeavy;
 
+  /// No description provided for @reasoningBudgetSheetXhigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Extreme Reasoning'**
+  String get reasoningBudgetSheetXhigh;
+
   /// No description provided for @reasoningBudgetSheetTitle.
   ///
   /// In en, this message translates to:
@@ -2866,6 +2986,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use heavy reasoning for complex questions'**
   String get reasoningBudgetSheetHeavySubtitle;
+
+  /// No description provided for @reasoningBudgetSheetXhighSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use maximum reasoning depth for the toughest problems'**
+  String get reasoningBudgetSheetXhighSubtitle;
 
   /// No description provided for @reasoningBudgetSheetCustomLabel.
   ///
@@ -2962,6 +3088,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Regenerate'**
   String get chatMessageWidgetRegenerateTooltip;
+
+  /// No description provided for @chatMessageWidgetRegenerateConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Regenerate'**
+  String get chatMessageWidgetRegenerateConfirmTitle;
+
+  /// No description provided for @chatMessageWidgetRegenerateConfirmContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerating will overwrite all messages after this one and cannot be undone. Are you sure?'**
+  String get chatMessageWidgetRegenerateConfirmContent;
+
+  /// No description provided for @chatMessageWidgetRegenerateConfirmCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get chatMessageWidgetRegenerateConfirmCancel;
+
+  /// No description provided for @chatMessageWidgetRegenerateConfirmOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get chatMessageWidgetRegenerateConfirmOk;
 
   /// No description provided for @chatMessageWidgetStopTooltip.
   ///
@@ -3166,6 +3316,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Render reasoning (thinking) with Markdown'**
   String get displaySettingsPageEnableReasoningMarkdownTitle;
+
+  /// No description provided for @displaySettingsPageEnableAssistantMarkdownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Render assistant messages with Markdown'**
+  String get displaySettingsPageEnableAssistantMarkdownTitle;
 
   /// No description provided for @displaySettingsPageMobileCodeBlockWrapTitle.
   ///
@@ -3416,7 +3572,7 @@ abstract class AppLocalizations {
   /// No description provided for @sideDrawerSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search chat history'**
+  /// **'Search current assistant'**
   String get sideDrawerSearchHint;
 
   /// No description provided for @sideDrawerSearchAssistantsHint.
@@ -3424,6 +3580,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search assistants'**
   String get sideDrawerSearchAssistantsHint;
+
+  /// No description provided for @sideDrawerTopicSearchModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic mode'**
+  String get sideDrawerTopicSearchModeLabel;
+
+  /// No description provided for @sideDrawerGlobalSearchModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Global mode'**
+  String get sideDrawerGlobalSearchModeLabel;
+
+  /// No description provided for @sideDrawerSearchModeSwipeToTopicHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe the search bar for topic search'**
+  String get sideDrawerSearchModeSwipeToTopicHint;
+
+  /// No description provided for @sideDrawerSearchModeSwipeToGlobalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe the search bar for global search'**
+  String get sideDrawerSearchModeSwipeToGlobalHint;
+
+  /// No description provided for @sideDrawerGlobalSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search all sessions'**
+  String get sideDrawerGlobalSearchHint;
+
+  /// No description provided for @sideDrawerGlobalSearchEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search across titles and messages'**
+  String get sideDrawerGlobalSearchEmptyHint;
+
+  /// No description provided for @sideDrawerGlobalSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching sessions'**
+  String get sideDrawerGlobalSearchNoResults;
+
+  /// No description provided for @sideDrawerGlobalSearchResultCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} results'**
+  String sideDrawerGlobalSearchResultCount(int count);
 
   /// No description provided for @sideDrawerUpdateTitle.
   ///
@@ -3971,6 +4175,60 @@ abstract class AppLocalizations {
   /// **'Used for generating conversation summaries; prefer fast and cheap models'**
   String get defaultModelPageSummaryModelSubtitle;
 
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary Refresh Frequency'**
+  String get assistantEditRecentChatsSummaryFrequencyTitle;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh recent-chat summaries after the selected number of new messages.'**
+  String get assistantEditRecentChatsSummaryFrequencyDescription;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count}'**
+  String assistantEditRecentChatsSummaryFrequencyOption(int count);
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomButton;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Summary Frequency'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomTitle;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter how many new messages should accumulate before refreshing the recent-chat summary.'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomDescription;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New message count'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomLabel;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number greater than 0'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomHint;
+
+  /// No description provided for @assistantEditRecentChatsSummaryFrequencyCustomInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a whole number greater than 0'**
+  String get assistantEditRecentChatsSummaryFrequencyCustomInvalid;
+
   /// No description provided for @defaultModelPageTranslateModelTitle.
   ///
   /// In en, this message translates to:
@@ -4051,6 +4309,30 @@ abstract class AppLocalizations {
     String previousSummaryVar,
     String userMessagesVar,
   );
+
+  /// No description provided for @defaultModelPageCompressModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress Model'**
+  String get defaultModelPageCompressModelTitle;
+
+  /// No description provided for @defaultModelPageCompressModelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for compressing conversation context; prefer fast models'**
+  String get defaultModelPageCompressModelSubtitle;
+
+  /// No description provided for @defaultModelPageCompressPromptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter prompt template for context compression'**
+  String get defaultModelPageCompressPromptHint;
+
+  /// No description provided for @defaultModelPageCompressVars.
+  ///
+  /// In en, this message translates to:
+  /// **'Variables: conversation: {contentVar}, language: {localeVar}'**
+  String defaultModelPageCompressVars(String contentVar, String localeVar);
 
   /// No description provided for @defaultModelPageTranslateVars.
   ///
@@ -4243,6 +4525,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invert'**
   String get modelFetchInvertTooltip;
+
+  /// No description provided for @modelDetailSheetSaveFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed. Please try again.'**
+  String get modelDetailSheetSaveFailedMessage;
 
   /// No description provided for @modelDetailSheetAddBody.
   ///
@@ -5299,6 +5587,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Minimap'**
   String get miniMapTooltip;
+
+  /// No description provided for @miniMapScrollToBottomTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to bottom'**
+  String get miniMapScrollToBottomTooltip;
 
   /// No description provided for @searchServicesPageApiKeyRequiredStatus.
   ///

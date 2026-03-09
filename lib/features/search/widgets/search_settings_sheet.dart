@@ -126,7 +126,9 @@ class _SearchSettingsSheet extends StatelessWidget {
       final mid = modelId!;
       final rawOv = cfg!.modelOverrides[mid];
       final ov = rawOv is Map ? rawOv : null;
-      final builtInSet = BuiltInToolNames.parseAndNormalize(ov?['builtInTools']);
+      final builtInSet = BuiltInToolNames.parseAndNormalize(
+        ov?['builtInTools'],
+      );
       hasBuiltInSearch = builtInSet.contains(BuiltInToolNames.search);
       hasUrlContext = builtInSet.contains(BuiltInToolNames.urlContext);
     }
@@ -134,11 +136,13 @@ class _SearchSettingsSheet extends StatelessWidget {
     final builtInMode = hasBuiltInSearch || hasUrlContext;
     // Claude supported models per Anthropic docs
     final claudeSupportedModels = <String>{
+      'claude-opus-4-6',
       'claude-sonnet-4-5-20250929',
       'claude-sonnet-4-20250514',
       'claude-3-7-sonnet-20250219',
       'claude-haiku-4-5-20251001',
       'claude-3-5-haiku-latest',
+      'claude-sonnet-4-6',
       'claude-opus-4-1-20250805',
       'claude-opus-4-20250514',
     };
@@ -220,12 +224,12 @@ class _SearchSettingsSheet extends StatelessWidget {
                       final rawMo = overrides[mid];
                       final baseMo = rawMo is Map ? rawMo : null;
                       final mo = Map<String, dynamic>.from(
-                        baseMo?.map(
-                              (k, val) => MapEntry(k.toString(), val),
-                            ) ??
+                        baseMo?.map((k, val) => MapEntry(k.toString(), val)) ??
                             const <String, dynamic>{},
                       );
-                      final builtIns = BuiltInToolNames.parseAndNormalize(mo['builtInTools']);
+                      final builtIns = BuiltInToolNames.parseAndNormalize(
+                        mo['builtInTools'],
+                      );
                       if (v) {
                         builtIns.add(BuiltInToolNames.search);
                       } else {
@@ -234,7 +238,9 @@ class _SearchSettingsSheet extends StatelessWidget {
                       if (builtIns.isEmpty) {
                         mo.remove('builtInTools');
                       } else {
-                        mo['builtInTools'] = BuiltInToolNames.orderedForStorage(builtIns);
+                        mo['builtInTools'] = BuiltInToolNames.orderedForStorage(
+                          builtIns,
+                        );
                       }
                       overrides[mid] = mo;
                       await context.read<SettingsProvider>().setProviderConfig(
@@ -291,7 +297,9 @@ class _SearchSettingsSheet extends StatelessWidget {
                                   ) ??
                                   const <String, dynamic>{},
                             );
-                            final builtIns = BuiltInToolNames.parseAndNormalize(mo['builtInTools']);
+                            final builtIns = BuiltInToolNames.parseAndNormalize(
+                              mo['builtInTools'],
+                            );
                             if (v) {
                               builtIns.add(BuiltInToolNames.search);
                             } else {
@@ -300,7 +308,8 @@ class _SearchSettingsSheet extends StatelessWidget {
                             if (builtIns.isEmpty) {
                               mo.remove('builtInTools');
                             } else {
-                              mo['builtInTools'] = BuiltInToolNames.orderedForStorage(builtIns);
+                              mo['builtInTools'] =
+                                  BuiltInToolNames.orderedForStorage(builtIns);
                             }
                             overrides[mid] = mo;
                             await context

@@ -39,6 +39,7 @@ import '../services/translation_service.dart';
 import '../services/file_upload_service.dart';
 import '../widgets/chat_input_bar.dart';
 import '../../model/widgets/model_select_sheet.dart';
+import '../../search/services/global_session_search_service.dart';
 
 /// Translation data for UI state (expanded/collapsed).
 class TranslationData {
@@ -67,14 +68,14 @@ class HomePageController extends ChangeNotifier {
     required TextEditingController inputController,
     required ChatInputBarController mediaController,
     required ScrollController scrollController,
-  })  : _context = context,
-        _vsync = vsync,
-        _scaffoldKey = scaffoldKey,
-        _inputBarKey = inputBarKey,
-        _inputFocus = inputFocus,
-        _inputController = inputController,
-        _mediaController = mediaController,
-        _scrollController = scrollController {
+  }) : _context = context,
+       _vsync = vsync,
+       _scaffoldKey = scaffoldKey,
+       _inputBarKey = inputBarKey,
+       _inputFocus = inputFocus,
+       _inputController = inputController,
+       _mediaController = mediaController,
+       _scrollController = scrollController {
     _initialize();
   }
 
@@ -122,7 +123,8 @@ class HomePageController extends ChangeNotifier {
   // ============================================================================
 
   // Translations UI state
-  final Map<String, TranslationData> _translations = <String, TranslationData>{};
+  final Map<String, TranslationData> _translations =
+      <String, TranslationData>{};
 
   // Message widget keys for navigation
   final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
@@ -149,6 +151,14 @@ class HomePageController extends ChangeNotifier {
 
   // Drawer state
   double _lastDrawerValue = 0.0;
+
+  // Desktop global-search mode
+  bool _isGlobalSearchMode = false;
+  String _globalSearchQuery = '';
+
+  // Message-level spotlight target after selecting a global search result
+  String? _spotlightMessageId;
+  int _spotlightToken = 0;
 
   // Input bar measurement
   double _inputBarHeight = 72;
@@ -185,6 +195,10 @@ class HomePageController extends ChangeNotifier {
   double get rightSidebarWidth => _rightSidebarWidth;
   double get inputBarHeight => _inputBarHeight;
   bool get desktopUiInited => _desktopUiInited;
+  bool get isGlobalSearchMode => _isGlobalSearchMode;
+  String get globalSearchQuery => _globalSearchQuery;
+  String? get spotlightMessageId => _spotlightMessageId;
+  int get spotlightToken => _spotlightToken;
 
   static double get sidebarMinWidth => _sidebarMinWidth;
   static double get sidebarMaxWidth => _sidebarMaxWidth;
@@ -193,12 +207,16 @@ class HomePageController extends ChangeNotifier {
   Conversation? get currentConversation => _chatController.currentConversation;
   List<ChatMessage> get messages => _chatController.messages;
   Map<String, int> get versionSelections => _chatController.versionSelections;
-  Set<String> get loadingConversationIds => _chatController.loadingConversationIds;
-  Map<String, StreamSubscription<dynamic>> get conversationStreams => _chatController.conversationStreams;
+  Set<String> get loadingConversationIds =>
+      _chatController.loadingConversationIds;
+  Map<String, StreamSubscription<dynamic>> get conversationStreams =>
+      _chatController.conversationStreams;
 
   // Delegate to StreamController
-  Map<String, stream_ctrl.ReasoningData> get reasoning => _streamController.reasoning;
-  Map<String, List<stream_ctrl.ReasoningSegmentData>> get reasoningSegments => _streamController.reasoningSegments;
+  Map<String, stream_ctrl.ReasoningData> get reasoning =>
+      _streamController.reasoning;
+  Map<String, List<stream_ctrl.ReasoningSegmentData>> get reasoningSegments =>
+      _streamController.reasoningSegments;
   Map<String, List<ToolUIPart>> get toolParts => _streamController.toolParts;
 
   /// Lightweight notifier for streaming content updates.
@@ -236,8 +254,14 @@ class HomePageController extends ChangeNotifier {
   }
 
   void _initializeAnimations() {
-    _convoFadeController = AnimationController(vsync: _vsync, duration: const Duration(milliseconds: 180));
-    _convoFade = CurvedAnimation(parent: _convoFadeController, curve: Curves.easeOutCubic);
+    _convoFadeController = AnimationController(
+      vsync: _vsync,
+      duration: const Duration(milliseconds: 180),
+    );
+    _convoFade = CurvedAnimation(
+      parent: _convoFadeController,
+      curve: Curves.easeOutCubic,
+    );
     _convoFadeController.value = 1.0;
   }
 
@@ -267,7 +291,8 @@ class HomePageController extends ChangeNotifier {
     _messageBuilderService = MessageBuilderService(
       chatService: _chatService,
       contextProvider: _context,
-      ocrHandler: (imagePaths) => _ocrService.getOcrTextForImages(imagePaths, _context),
+      ocrHandler: (imagePaths) =>
+          _ocrService.getOcrTextForImages(imagePaths, _context),
       geminiThoughtSignatureHandler: _appendGeminiThoughtSignatureForApi,
     );
     _messageBuilderService.ocrTextWrapper = _ocrService.wrapOcrBlock;
@@ -306,12 +331,20 @@ class HomePageController extends ChangeNotifier {
   void _wireViewModelCallbacks() {
     _viewModel.onError = (error) {
       final l10n = AppLocalizations.of(_context)!;
-      showAppSnackBar(_context, message: '${l10n.generationInterrupted}: $error', type: NotificationType.error);
+      showAppSnackBar(
+        _context,
+        message: '${l10n.generationInterrupted}: $error',
+        type: NotificationType.error,
+      );
     };
     _viewModel.onWarning = (warning) {
       final l10n = AppLocalizations.of(_context)!;
       if (warning == 'no_model') {
-        showAppSnackBar(_context, message: l10n.homePagePleaseSelectModel, type: NotificationType.warning);
+        showAppSnackBar(
+          _context,
+          message: l10n.homePagePleaseSelectModel,
+          type: NotificationType.warning,
+        );
       }
     };
     _viewModel.onScrollToBottom = () => _scrollToBottomSoon();
@@ -321,9 +354,14 @@ class HomePageController extends ChangeNotifier {
         if (settings.hapticsOnGenerate) Haptics.light();
       } catch (_) {}
     };
-    _viewModel.onScheduleImageSanitize = (messageId, content, {bool immediate = false}) {
-      _scheduleInlineImageSanitize(messageId, latestContent: content, immediate: immediate);
-    };
+    _viewModel.onScheduleImageSanitize =
+        (messageId, content, {bool immediate = false}) {
+          _scheduleInlineImageSanitize(
+            messageId,
+            latestContent: content,
+            immediate: immediate,
+          );
+        };
     _viewModel.onConversationSwitched = () {
       _restoreMessageUiState();
       _scrollToBottom(animate: false);
@@ -338,8 +376,10 @@ class HomePageController extends ChangeNotifier {
     _scrollCtrl = scroll_ctrl.ChatScrollController(
       scrollController: _scrollController,
       onStateChanged: () => notifyListeners(),
-      getAutoScrollEnabled: () => _context.read<SettingsProvider>().autoScrollEnabled,
-      getAutoScrollIdleSeconds: () => _context.read<SettingsProvider>().autoScrollIdleSeconds,
+      getAutoScrollEnabled: () =>
+          _context.read<SettingsProvider>().autoScrollEnabled,
+      getAutoScrollIdleSeconds: () =>
+          _context.read<SettingsProvider>().autoScrollIdleSeconds,
     );
   }
 
@@ -360,8 +400,7 @@ class HomePageController extends ChangeNotifier {
     } catch (_) {}
   }
 
-  void _setupKeyboardListeners() {
-  }
+  void _setupKeyboardListeners() {}
 
   void _setupDesktopFeatures() {
     if (isDesktopPlatform) {
@@ -378,11 +417,14 @@ class HomePageController extends ChangeNotifier {
         case ChatAction.toggleLeftPanelAssistants:
           final sp = _context.read<SettingsProvider>();
           if (sp.desktopTopicPosition != DesktopTopicPosition.left) return;
-          final wantAssistants = (action == ChatAction.toggleLeftPanelAssistants);
+          final wantAssistants =
+              (action == ChatAction.toggleLeftPanelAssistants);
           if (!_tabletSidebarOpen) {
             _tabletSidebarOpen = true;
             notifyListeners();
-            try { _context.read<SettingsProvider>().setDesktopSidebarOpen(true); } catch (_) {}
+            try {
+              _context.read<SettingsProvider>().setDesktopSidebarOpen(true);
+            } catch (_) {}
           }
           if (wantAssistants) {
             DesktopSidebarTabBus.instance.switchToAssistants();
@@ -400,8 +442,50 @@ class HomePageController extends ChangeNotifier {
         case ChatAction.switchModel:
           await showModelSelectSheet(_context);
           break;
+        case ChatAction.enterGlobalSearch:
+          enterGlobalSearchMode(preserveQuery: true);
+          break;
+        case ChatAction.exitGlobalSearch:
+          exitGlobalSearchMode(clearQuery: true);
+          break;
       }
     });
+  }
+
+  void enterGlobalSearchMode({bool preserveQuery = true}) {
+    _isGlobalSearchMode = true;
+    if (!preserveQuery) _globalSearchQuery = '';
+    notifyListeners();
+  }
+
+  void exitGlobalSearchMode({bool clearQuery = true}) {
+    _isGlobalSearchMode = false;
+    if (clearQuery) _globalSearchQuery = '';
+    notifyListeners();
+  }
+
+  void setGlobalSearchQuery(String value) {
+    if (_globalSearchQuery == value) return;
+    _globalSearchQuery = value;
+    notifyListeners();
+  }
+
+  Future<void> openGlobalSearchResult({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    await switchConversationAnimated(conversationId);
+    // Wait one extra frame so the new conversation's message widgets have
+    // had a chance to build and register their GlobalKeys in _messageKeys.
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+    } catch (_) {}
+    if (messageId.isNotEmpty) {
+      await scrollToMessageId(messageId);
+      _spotlightMessageId = messageId;
+      _spotlightToken++;
+      notifyListeners();
+    }
   }
 
   Future<void> initChat() async {
@@ -414,7 +498,11 @@ class HomePageController extends ChangeNotifier {
       if (conversations.isNotEmpty) {
         final recent = conversations.first;
         if ((recent.assistantId ?? '').isNotEmpty) {
-          try { await _context.read<AssistantProvider>().setCurrentAssistant(recent.assistantId!); } catch (_) {}
+          try {
+            await _context.read<AssistantProvider>().setCurrentAssistant(
+              recent.assistantId!,
+            );
+          } catch (_) {}
         }
         _chatService.setCurrentConversation(recent.id);
         _chatController.setCurrentConversation(recent);
@@ -431,10 +519,16 @@ class HomePageController extends ChangeNotifier {
       _desktopUiInited = true;
       try {
         final sp = _context.read<SettingsProvider>();
-        _embeddedSidebarWidth = sp.desktopSidebarWidth.clamp(_sidebarMinWidth, _sidebarMaxWidth);
+        _embeddedSidebarWidth = sp.desktopSidebarWidth.clamp(
+          _sidebarMinWidth,
+          _sidebarMaxWidth,
+        );
         _tabletSidebarOpen = sp.desktopSidebarOpen;
         _rightSidebarOpen = sp.desktopRightSidebarOpen;
-        _rightSidebarWidth = sp.desktopRightSidebarWidth.clamp(_sidebarMinWidth, _sidebarMaxWidth);
+        _rightSidebarWidth = sp.desktopRightSidebarWidth.clamp(
+          _sidebarMinWidth,
+          _sidebarMaxWidth,
+        );
       } catch (_) {}
     }
   }
@@ -445,7 +539,8 @@ class HomePageController extends ChangeNotifier {
 
   Future<void> sendMessage(ChatInputData input) async {
     final content = input.text.trim();
-    if (content.isEmpty && input.imagePaths.isEmpty && input.documents.isEmpty) return;
+    if (content.isEmpty && input.imagePaths.isEmpty && input.documents.isEmpty)
+      return;
     if (currentConversation == null) await _createNewConversation();
 
     final success = await _viewModel.sendMessage(input);
@@ -454,14 +549,18 @@ class HomePageController extends ChangeNotifier {
     }
   }
 
-  Future<void> regenerateAtMessage(ChatMessage message, {bool assistantAsNewReply = false}) async {
+  Future<void> regenerateAtMessage(
+    ChatMessage message, {
+    bool assistantAsNewReply = false,
+  }) async {
     if (currentConversation == null) return;
 
-    final versioning = _messageGenerationService.calculateRegenerationVersioning(
-      message: message,
-      messages: messages,
-      assistantAsNewReply: assistantAsNewReply,
-    );
+    final versioning = _messageGenerationService
+        .calculateRegenerationVersioning(
+          message: message,
+          messages: messages,
+          assistantAsNewReply: assistantAsNewReply,
+        );
     if (versioning.lastKeep >= 0 && versioning.lastKeep < messages.length - 1) {
       for (int i = versioning.lastKeep + 1; i < messages.length; i++) {
         _translations.remove(messages[i].id);
@@ -487,21 +586,32 @@ class HomePageController extends ChangeNotifier {
   // ============================================================================
 
   Future<void> switchConversationAnimated(String id) async {
-    try { await _viewModel.flushCurrentConversationProgress(); } catch (_) {}
+    try {
+      await _viewModel.flushCurrentConversationProgress();
+    } catch (_) {}
     if (currentConversation?.id == id) return;
     if (!isDesktopPlatform) {
-      try { await _convoFadeController.reverse(); } catch (_) {}
+      try {
+        await _convoFadeController.reverse();
+      } catch (_) {}
     } else {
-      try { _convoFadeController.stop(); _convoFadeController.value = 1.0; } catch (_) {}
+      try {
+        _convoFadeController.stop();
+        _convoFadeController.value = 1.0;
+      } catch (_) {}
     }
 
     await _viewModel.switchConversation(id);
     notifyListeners();
-    try { await WidgetsBinding.instance.endOfFrame; } catch (_) {}
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+    } catch (_) {}
     _scrollToBottom(animate: false);
 
     if (!isDesktopPlatform) {
-      try { await _convoFadeController.forward(); } catch (_) {}
+      try {
+        await _convoFadeController.forward();
+      } catch (_) {}
     }
     if (isDesktopPlatform) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -511,13 +621,19 @@ class HomePageController extends ChangeNotifier {
   }
 
   Future<void> createNewConversationAnimated() async {
-    try { await _viewModel.flushCurrentConversationProgress(); } catch (_) {}
+    try {
+      await _viewModel.flushCurrentConversationProgress();
+    } catch (_) {}
     if (!isDesktopPlatform) {
-      try { await _convoFadeController.reverse(); } catch (_) {}
+      try {
+        await _convoFadeController.reverse();
+      } catch (_) {}
     }
     await _createNewConversation();
     if (!isDesktopPlatform) {
-      try { await _convoFadeController.forward(); } catch (_) {}
+      try {
+        await _convoFadeController.forward();
+      } catch (_) {}
     }
     if (isDesktopPlatform) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -536,6 +652,19 @@ class HomePageController extends ChangeNotifier {
   Future<void> clearContext() async {
     await _viewModel.clearContext();
     notifyListeners();
+  }
+
+  /// Compress context: summarize via LLM, create new conversation.
+  /// Returns null on success, or an error string on failure.
+  Future<String?> compressContext() async {
+    final result = await _viewModel.compressContext();
+    if (result == null) {
+      // Success - switched to new conversation
+      _translations.clear();
+      notifyListeners();
+      _scrollToBottomSoon(animate: false);
+    }
+    return result;
   }
 
   // ============================================================================
@@ -559,7 +688,9 @@ class HomePageController extends ChangeNotifier {
 
     await _viewModel.forkConversation(message);
     notifyListeners();
-    try { await WidgetsBinding.instance.endOfFrame; } catch (_) {}
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+    } catch (_) {}
     _scrollToBottom(animate: false);
     if (!isDesktopPlatform) {
       await _convoFadeController.forward();
@@ -573,7 +704,10 @@ class HomePageController extends ChangeNotifier {
         : await showMessageEditSheet(_context, message: message);
     if (result == null) return;
 
-    final newMsg = await _chatService.appendMessageVersion(messageId: message.id, content: result.content);
+    final newMsg = await _chatService.appendMessageVersion(
+      messageId: message.id,
+      content: result.content,
+    );
     if (newMsg == null) return;
 
     messages.add(newMsg);
@@ -583,7 +717,11 @@ class HomePageController extends ChangeNotifier {
 
     if (currentConversation != null) {
       try {
-        await _chatService.setSelectedVersion(currentConversation!.id, gid, newMsg.version);
+        await _chatService.setSelectedVersion(
+          currentConversation!.id,
+          gid,
+          newMsg.version,
+        );
       } catch (_) {}
     }
 
@@ -601,7 +739,9 @@ class HomePageController extends ChangeNotifier {
     final result = await _translationService.translateMessage(
       message: message,
       onTranslationStarted: () {
-        final loadingMessage = message.copyWith(translation: l10n.homePageTranslating);
+        final loadingMessage = message.copyWith(
+          translation: l10n.homePageTranslating,
+        );
         final index = messages.indexWhere((m) => m.id == message.id);
         if (index != -1) {
           messages[index] = loadingMessage;
@@ -651,7 +791,8 @@ class HomePageController extends ChangeNotifier {
   Future<void> speakMessage(ChatMessage message) async {
     if (PlatformUtils.isDesktopTarget) {
       final sp = _context.read<SettingsProvider>();
-      final hasNetworkTts = sp.ttsServiceSelected >= 0 && sp.ttsServices.isNotEmpty;
+      final hasNetworkTts =
+          sp.ttsServiceSelected >= 0 && sp.ttsServices.isNotEmpty;
       if (!hasNetworkTts) {
         showAppSnackBar(
           _context,
@@ -718,7 +859,8 @@ class HomePageController extends ChangeNotifier {
       addIfSelectable(findNextRoleIndex(messageIndex, assistantRole));
     }
 
-    if (_selectedItems.isEmpty && (anchor.role == userRole || anchor.role == assistantRole)) {
+    if (_selectedItems.isEmpty &&
+        (anchor.role == userRole || anchor.role == assistantRole)) {
       _selectedItems.add(anchor.id);
     }
     notifyListeners();
@@ -736,7 +878,9 @@ class HomePageController extends ChangeNotifier {
 
   void toggleSelectAll() {
     final collapsed = collapseVersions(messages);
-    final selectable = collapsed.where((m) => m.role == 'user' || m.role == 'assistant').toList();
+    final selectable = collapsed
+        .where((m) => m.role == 'user' || m.role == 'assistant')
+        .toList();
     if (selectable.isEmpty) return;
 
     final allSelected = selectable.every((m) => _selectedItems.contains(m.id));
@@ -793,7 +937,11 @@ class HomePageController extends ChangeNotifier {
     final selected = _selectedCollapsedMessages();
     if (selected.isEmpty) {
       final l10n = AppLocalizations.of(_context)!;
-      showAppSnackBar(_context, message: l10n.homePageSelectMessagesToShare, type: NotificationType.info);
+      showAppSnackBar(
+        _context,
+        message: l10n.homePageSelectMessagesToShare,
+        type: NotificationType.info,
+      );
       return;
     }
 
@@ -816,7 +964,11 @@ class HomePageController extends ChangeNotifier {
     final selected = _selectedCollapsedMessages();
     if (selected.isEmpty) {
       final l10n = AppLocalizations.of(_context)!;
-      showAppSnackBar(_context, message: l10n.homePageSelectMessagesToShare, type: NotificationType.info);
+      showAppSnackBar(
+        _context,
+        message: l10n.homePageSelectMessagesToShare,
+        type: NotificationType.info,
+      );
       return;
     }
 
@@ -839,7 +991,11 @@ class HomePageController extends ChangeNotifier {
     final selected = _selectedCollapsedMessages();
     if (selected.isEmpty) {
       final l10n = AppLocalizations.of(_context)!;
-      showAppSnackBar(_context, message: l10n.homePageSelectMessagesToShare, type: NotificationType.info);
+      showAppSnackBar(
+        _context,
+        message: l10n.homePageSelectMessagesToShare,
+        type: NotificationType.info,
+      );
       return;
     }
 
@@ -874,7 +1030,11 @@ class HomePageController extends ChangeNotifier {
     }
     _selecting = false;
     notifyListeners();
-    await showChatExportSheet(_context, conversation: convo, selectedMessages: selected);
+    await showChatExportSheet(
+      _context,
+      conversation: convo,
+      selectedMessages: selected,
+    );
     _selectedItems.clear();
     notifyListeners();
   }
@@ -900,7 +1060,11 @@ class HomePageController extends ChangeNotifier {
 
   Future<void> setSelectedVersion(String groupId, int version) async {
     versionSelections[groupId] = version;
-    await _chatService.setSelectedVersion(currentConversation!.id, groupId, version);
+    await _chatService.setSelectedVersion(
+      currentConversation!.id,
+      groupId,
+      version,
+    );
     notifyListeners();
   }
 
@@ -973,7 +1137,11 @@ class HomePageController extends ChangeNotifier {
     } catch (_) {}
     _tabletSidebarOpen = !_tabletSidebarOpen;
     notifyListeners();
-    try { _context.read<SettingsProvider>().setDesktopSidebarOpen(_tabletSidebarOpen); } catch (_) {}
+    try {
+      _context.read<SettingsProvider>().setDesktopSidebarOpen(
+        _tabletSidebarOpen,
+      );
+    } catch (_) {}
   }
 
   void toggleRightSidebar() {
@@ -985,25 +1153,43 @@ class HomePageController extends ChangeNotifier {
     } catch (_) {}
     _rightSidebarOpen = !_rightSidebarOpen;
     notifyListeners();
-    try { _context.read<SettingsProvider>().setDesktopRightSidebarOpen(_rightSidebarOpen); } catch (_) {}
+    try {
+      _context.read<SettingsProvider>().setDesktopRightSidebarOpen(
+        _rightSidebarOpen,
+      );
+    } catch (_) {}
   }
 
   void updateSidebarWidth(double dx) {
-    _embeddedSidebarWidth = (_embeddedSidebarWidth + dx).clamp(_sidebarMinWidth, _sidebarMaxWidth);
+    _embeddedSidebarWidth = (_embeddedSidebarWidth + dx).clamp(
+      _sidebarMinWidth,
+      _sidebarMaxWidth,
+    );
     notifyListeners();
   }
 
   void saveSidebarWidth() {
-    try { _context.read<SettingsProvider>().setDesktopSidebarWidth(_embeddedSidebarWidth); } catch (_) {}
+    try {
+      _context.read<SettingsProvider>().setDesktopSidebarWidth(
+        _embeddedSidebarWidth,
+      );
+    } catch (_) {}
   }
 
   void updateRightSidebarWidth(double dx) {
-    _rightSidebarWidth = (_rightSidebarWidth - dx).clamp(_sidebarMinWidth, _sidebarMaxWidth);
+    _rightSidebarWidth = (_rightSidebarWidth - dx).clamp(
+      _sidebarMinWidth,
+      _sidebarMaxWidth,
+    );
     notifyListeners();
   }
 
   void saveRightSidebarWidth() {
-    try { _context.read<SettingsProvider>().setDesktopRightSidebarWidth(_rightSidebarWidth); } catch (_) {}
+    try {
+      _context.read<SettingsProvider>().setDesktopRightSidebarWidth(
+        _rightSidebarWidth,
+      );
+    } catch (_) {}
   }
 
   // ============================================================================
@@ -1038,7 +1224,9 @@ class HomePageController extends ChangeNotifier {
   void dismissKeyboard() {
     _inputFocus.unfocus();
     FocusManager.instance.primaryFocus?.unfocus();
-    try { SystemChannels.textInput.invokeMethod('TextInput.hide'); } catch (_) {}
+    try {
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+    } catch (_) {}
   }
 
   void measureInputBar() {
@@ -1066,14 +1254,19 @@ class HomePageController extends ChangeNotifier {
     final start = (selection.start >= 0 && selection.start <= text.length)
         ? selection.start
         : text.length;
-    final end = (selection.end >= 0 && selection.end <= text.length && selection.end >= start)
+    final end =
+        (selection.end >= 0 &&
+            selection.end <= text.length &&
+            selection.end >= start)
         ? selection.end
         : start;
 
     final newText = text.replaceRange(start, end, selected.content);
     _inputController.value = _inputController.value.copyWith(
       text: newText,
-      selection: TextSelection.collapsed(offset: start + selected.content.length),
+      selection: TextSelection.collapsed(
+        offset: start + selected.content.length,
+      ),
       composing: TextRange.empty,
     );
     notifyListeners();
@@ -1086,18 +1279,21 @@ class HomePageController extends ChangeNotifier {
   Future<void> onPickPhotos() => _fileUploadService.onPickPhotos();
   Future<void> onPickCamera() => _fileUploadService.onPickCamera(_context);
   Future<void> onPickFiles() => _fileUploadService.onPickFiles();
-  Future<void> onFilesDroppedDesktop(List<XFile> files) => _fileUploadService.onFilesDroppedDesktop(files);
+  Future<void> onFilesDroppedDesktop(List<XFile> files) =>
+      _fileUploadService.onFilesDroppedDesktop(files);
 
   // ============================================================================
   // Public Methods - Scroll
   // ============================================================================
 
-  void scrollToBottom({bool animate = true}) => _scrollToBottom(animate: animate);
+  void scrollToBottom({bool animate = true}) =>
+      _scrollToBottom(animate: animate);
   void forceScrollToBottom() => _scrollCtrl.forceScrollToBottom();
-  void forceScrollToBottomSoon({bool animate = true}) => _scrollCtrl.forceScrollToBottomSoon(
-    animate: animate,
-    postSwitchDelay: _postSwitchScrollDelay,
-  );
+  void forceScrollToBottomSoon({bool animate = true}) =>
+      _scrollCtrl.forceScrollToBottomSoon(
+        animate: animate,
+        postSwitchDelay: _postSwitchScrollDelay,
+      );
 
   Future<void> scrollToMessageId(String targetId) async {
     final collapsed = collapseVersions(messages);
@@ -1159,7 +1355,8 @@ class HomePageController extends ChangeNotifier {
   String clearContextLabel() {
     final l10n = AppLocalizations.of(_context)!;
     return _viewModel.getClearContextLabel(
-      (actual, configured) => l10n.homePageClearContextWithCount(actual, configured),
+      (actual, configured) =>
+          l10n.homePageClearContextWithCount(actual, configured),
       l10n.homePageClearContext,
     );
   }
@@ -1181,7 +1378,10 @@ class HomePageController extends ChangeNotifier {
   }
 
   /// Transform raw content using assistant regexes.
-  String transformAssistantContent(stream_ctrl.StreamingState state, [String? raw]) {
+  String transformAssistantContent(
+    stream_ctrl.StreamingState state, [
+    String? raw,
+  ]) {
     return applyAssistantRegexes(
       raw ?? state.fullContentRaw,
       assistant: state.ctx.assistant,
@@ -1221,14 +1421,17 @@ class HomePageController extends ChangeNotifier {
     return l10n.titleForLocale;
   }
 
-  void _scrollToBottom({bool animate = true}) => _scrollCtrl.scrollToBottom(animate: animate);
-  void _scrollToBottomSoon({bool animate = true}) => _scrollCtrl.scrollToBottomSoon(animate: animate);
+  void _scrollToBottom({bool animate = true}) =>
+      _scrollCtrl.scrollToBottom(animate: animate);
+  void _scrollToBottomSoon({bool animate = true}) =>
+      _scrollCtrl.scrollToBottomSoon(animate: animate);
 
   (double, double) _getViewportBounds() {
     final size = MediaQuery.sizeOf(_context);
     final padding = MediaQuery.paddingOf(_context);
     final double listTop = kToolbarHeight + padding.top;
-    final double listBottom = size.height - padding.bottom - _inputBarHeight - 8;
+    final double listBottom =
+        size.height - padding.bottom - _inputBarHeight - 8;
     return (listTop, listBottom);
   }
 
@@ -1239,17 +1442,25 @@ class HomePageController extends ChangeNotifier {
         _streamController.restoreMessageUiState(
           m,
           getToolEventsFromDb: (id) => _chatService.getToolEvents(id),
-          getGeminiThoughtSigFromDb: (id) => _chatService.getGeminiThoughtSignature(id),
+          getGeminiThoughtSigFromDb: (id) =>
+              _chatService.getGeminiThoughtSignature(id),
         );
 
-        final cleanedContent = _streamController.captureGeminiThoughtSignature(m.content, m.id);
+        final cleanedContent = _streamController.captureGeminiThoughtSignature(
+          m.content,
+          m.id,
+        );
         if (cleanedContent != m.content) {
           final updated = m.copyWith(content: cleanedContent);
           messages[i] = updated;
           unawaited(_chatService.updateMessage(m.id, content: cleanedContent));
         }
 
-        _scheduleInlineImageSanitize(m.id, latestContent: messages[i].content, immediate: true);
+        _scheduleInlineImageSanitize(
+          m.id,
+          latestContent: messages[i].content,
+          immediate: true,
+        );
       }
 
       if (m.translation != null && m.translation!.isNotEmpty) {
@@ -1260,13 +1471,20 @@ class HomePageController extends ChangeNotifier {
     }
   }
 
-  void _scheduleInlineImageSanitize(String messageId, {String? latestContent, bool immediate = false}) {
-    final snapshot = latestContent ??
+  void _scheduleInlineImageSanitize(
+    String messageId, {
+    String? latestContent,
+    bool immediate = false,
+  }) {
+    final snapshot =
+        latestContent ??
         (() {
           final idx = messages.indexWhere((m) => m.id == messageId);
           return idx == -1 ? '' : messages[idx].content;
         })();
-    if (snapshot.isEmpty || !snapshot.contains('data:image') || !snapshot.contains('base64,')) {
+    if (snapshot.isEmpty ||
+        !snapshot.contains('data:image') ||
+        !snapshot.contains('base64,')) {
       return;
     }
 
@@ -1285,8 +1503,14 @@ class HomePageController extends ChangeNotifier {
     );
   }
 
-  String _appendGeminiThoughtSignatureForApi(ChatMessage message, String content) {
-    return _streamController.appendGeminiThoughtSignatureForApi(message, content);
+  String _appendGeminiThoughtSignatureForApi(
+    ChatMessage message,
+    String content,
+  ) {
+    return _streamController.appendGeminiThoughtSignatureForApi(
+      message,
+      content,
+    );
   }
 
   Future<void> _onMcpChanged() async {
@@ -1302,7 +1526,9 @@ class HomePageController extends ChangeNotifier {
     _convoFadeController.dispose();
     _mcpProvider?.removeListener(_onMcpChanged);
     _scrollCtrl.dispose();
-    try { _chatActionSub?.cancel(); } catch (_) {}
+    try {
+      _chatActionSub?.cancel();
+    } catch (_) {}
     _chatController.dispose();
     _streamController.dispose();
     super.dispose();
