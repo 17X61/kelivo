@@ -289,6 +289,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sponsorPageWeChatSubtitle => 'WeChat sponsor code';
 
   @override
+  String get sponsorPageScanQrHint => 'Scan the QR code to sponsor';
+
+  @override
   String get languageDisplaySimplifiedChinese => 'Simplified Chinese';
 
   @override
@@ -430,6 +433,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mcpTransportTagInmemory => 'Built-in';
 
   @override
+  String get mcpTransportTagSse => 'SSE';
+
+  @override
+  String get mcpTransportTagHttp => 'HTTP';
+
+  @override
   String get mcpServerEditSheetStdioOnlyDesktop =>
       'STDIO is only available on desktop';
 
@@ -473,6 +482,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homePagePleaseSelectModel => 'Please select a model first';
+
+  @override
+  String get homePageAudioAttachmentUnsupported =>
+      'The current model does not support audio attachments. Switch to a model that supports audio input or remove the audio file and try again.';
 
   @override
   String get homePagePleaseSetupTranslateModel =>
@@ -1544,8 +1557,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use maximum reasoning depth for the toughest problems';
 
   @override
-  String get reasoningBudgetSheetCustomLabel =>
-      'Custom Reasoning Budget (tokens)';
+  String get reasoningBudgetSheetCustomLabel => 'Custom Reasoning Budget';
 
   @override
   String get reasoningBudgetSheetCustomHint => 'e.g. 2048 (-1 auto, 0 off)';
@@ -2597,6 +2609,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerDetailPageImportJsonButton => 'Import JSON';
 
   @override
+  String get providerDetailPageImportJsonReadFailedMessage =>
+      'Failed to read file';
+
+  @override
   String get providerDetailPageTestButton => 'Test';
 
   @override
@@ -2996,6 +3012,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchServicesAddDialogApiKeyRequired => 'API Key is required';
 
   @override
+  String get searchServicesFieldCustomUrlOptional => 'Custom URL (optional)';
+
+  @override
   String get searchServicesAddDialogInstanceUrl => 'Instance URL';
 
   @override
@@ -3088,6 +3107,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutPageEasterEggButton => 'Nice!';
 
   @override
+  String get aboutPageAppName => 'Kelivo';
+
+  @override
   String get aboutPageAppDescription => 'Open-source AI Assistant';
 
   @override
@@ -3097,10 +3119,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutPageVersion => 'Version';
 
   @override
+  String aboutPageVersionDetail(String version, String buildNumber) {
+    return '$version / $buildNumber';
+  }
+
+  @override
   String get aboutPageSystem => 'System';
 
   @override
+  String get aboutPageLoadingPlaceholder => '...';
+
+  @override
+  String get aboutPageUnknownPlaceholder => '-';
+
+  @override
+  String get aboutPagePlatformMacos => 'macOS';
+
+  @override
+  String get aboutPagePlatformWindows => 'Windows';
+
+  @override
+  String get aboutPagePlatformLinux => 'Linux';
+
+  @override
+  String get aboutPagePlatformAndroid => 'Android';
+
+  @override
+  String get aboutPagePlatformIos => 'iOS';
+
+  @override
+  String aboutPagePlatformOther(String os) {
+    return 'Other ($os)';
+  }
+
+  @override
   String get aboutPageWebsite => 'Website';
+
+  @override
+  String get aboutPageGithub => 'GitHub';
 
   @override
   String get aboutPageLicense => 'License';
@@ -3206,6 +3262,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get displaySettingsPageMessageNavButtonsSubtitle =>
       'Show quick jump buttons when scrolling';
+
+  @override
+  String get displaySettingsPageUseNewAssistantAvatarUxTitle =>
+      'Show assistant avatar in chat title bar';
 
   @override
   String get displaySettingsPageHapticsOnSidebarTitle => 'Haptics on Sidebar';

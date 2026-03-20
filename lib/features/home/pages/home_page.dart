@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io' show File;
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show TargetPlatform;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:provider/provider.dart';
@@ -75,6 +74,7 @@ class _HomePageState extends State<HomePage>
   final TextEditingController _inputController = TextEditingController();
   final ChatInputBarController _mediaController = ChatInputBarController();
   final ScrollController _scrollController = ScrollController();
+  final BackdropKey _messageListBackdropKey = BackdropKey();
   final GlobalKey _inputBarKey = GlobalKey();
   final GlobalKey _selectionMiniMapKey = GlobalKey();
   final GlobalKey _selectionExportBarKey = GlobalKey();
@@ -367,9 +367,7 @@ class _HomePageState extends State<HomePage>
                       w = w
                           .animate(
                             key: ValueKey(
-                              'mob_body_' +
-                                  (_controller.currentConversation?.id ??
-                                      'none'),
+                              'mob_body_${_controller.currentConversation?.id ?? 'none'}',
                             ),
                           )
                           .fadeIn(duration: 200.ms, curve: Curves.easeOutCubic);
@@ -550,9 +548,7 @@ class _HomePageState extends State<HomePage>
                           )
                           .animate(
                             key: ValueKey(
-                              'tab_body_' +
-                                  (_controller.currentConversation?.id ??
-                                      'none'),
+                              'tab_body_${_controller.currentConversation?.id ?? 'none'}',
                             ),
                           )
                           .fadeIn(duration: 200.ms, curve: Curves.easeOutCubic),
@@ -647,7 +643,7 @@ class _HomePageState extends State<HomePage>
                       image: provider,
                       fit: BoxFit.cover,
                       colorFilter: ColorFilter.mode(
-                        Colors.black.withOpacity(0.04),
+                        Colors.black.withValues(alpha: 0.04),
                         BlendMode.srcATop,
                       ),
                     ),
@@ -665,8 +661,8 @@ class _HomePageState extends State<HomePage>
                           final top = (0.20 * maskStrength).clamp(0.0, 1.0);
                           final bottom = (0.50 * maskStrength).clamp(0.0, 1.0);
                           return [
-                            cs.background.withOpacity(top),
-                            cs.background.withOpacity(bottom),
+                            cs.surface.withValues(alpha: top),
+                            cs.surface.withValues(alpha: bottom),
                           ];
                         }(),
                       ),
@@ -707,7 +703,7 @@ class _HomePageState extends State<HomePage>
       child: Stack(
         fit: StackFit.expand,
         children: [
-          ColoredBox(color: cs.background),
+          ColoredBox(color: cs.surface),
           if (bg != null) Opacity(opacity: 0.9, child: bg),
           DecoratedBox(
             decoration: BoxDecoration(
@@ -715,8 +711,8 @@ class _HomePageState extends State<HomePage>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  cs.background.withOpacity(0.08),
-                  cs.background.withOpacity(0.36),
+                  cs.surface.withValues(alpha: 0.08),
+                  cs.surface.withValues(alpha: 0.36),
                 ],
               ),
             ),
@@ -730,49 +726,52 @@ class _HomePageState extends State<HomePage>
     BuildContext context, {
     required EdgeInsetsGeometry dividerPadding,
   }) {
-    return MessageListView(
-      isProcessingFiles: _controller.isProcessingFiles,
-      scrollController: _scrollController,
-      messages: _controller.messages,
-      versionSelections: _controller.versionSelections,
-      currentConversation: _controller.currentConversation,
-      messageKeys: _controller.messageKeys,
-      reasoning: _controller.reasoning,
-      reasoningSegments: _controller.reasoningSegments,
-      toolParts: _controller.toolParts,
-      translations: _buildTranslationUiStates(),
-      selecting: _controller.selecting,
-      selectedItems: _controller.selectedItems,
-      dividerPadding: dividerPadding,
-      streamingContentNotifier: _controller.streamingContentNotifier,
-      spotlightMessageId: _controller.spotlightMessageId,
-      spotlightToken: _controller.spotlightToken,
-      onVersionChange: (groupId, version) async {
-        await _controller.setSelectedVersion(groupId, version);
-      },
-      onRegenerateMessage: (message) =>
-          _controller.regenerateAtMessage(message),
-      onResendMessage: (message) => _controller.regenerateAtMessage(message),
-      onTranslateMessage: (message) => _controller.translateMessage(message),
-      onEditMessage: (message) => _controller.editMessage(message),
-      onDeleteMessage: (message, byGroup) =>
-          _handleDeleteMessage(context, message, byGroup),
-      onForkConversation: (message) => _controller.forkConversation(message),
-      onShareMessage: (index, messages) =>
-          _controller.shareMessage(index, messages),
-      onSpeakMessage: (message) => _controller.speakMessage(message),
-      onToggleSelection: (messageId, selected) {
-        _controller.toggleSelection(messageId, selected);
-      },
-      onToggleReasoning: (messageId) {
-        _controller.toggleReasoning(messageId);
-      },
-      onToggleTranslation: (messageId) {
-        _controller.toggleTranslation(messageId);
-      },
-      onToggleReasoningSegment: (messageId, segmentIndex) {
-        _controller.toggleReasoningSegment(messageId, segmentIndex);
-      },
+    return BackdropGroup(
+      backdropKey: _messageListBackdropKey,
+      child: MessageListView(
+        isProcessingFiles: _controller.isProcessingFiles,
+        scrollController: _scrollController,
+        messages: _controller.messages,
+        versionSelections: _controller.versionSelections,
+        currentConversation: _controller.currentConversation,
+        messageKeys: _controller.messageKeys,
+        reasoning: _controller.reasoning,
+        reasoningSegments: _controller.reasoningSegments,
+        toolParts: _controller.toolParts,
+        translations: _buildTranslationUiStates(),
+        selecting: _controller.selecting,
+        selectedItems: _controller.selectedItems,
+        dividerPadding: dividerPadding,
+        streamingContentNotifier: _controller.streamingContentNotifier,
+        spotlightMessageId: _controller.spotlightMessageId,
+        spotlightToken: _controller.spotlightToken,
+        onVersionChange: (groupId, version) async {
+          await _controller.setSelectedVersion(groupId, version);
+        },
+        onRegenerateMessage: (message) =>
+            _controller.regenerateAtMessage(message),
+        onResendMessage: (message) => _controller.regenerateAtMessage(message),
+        onTranslateMessage: (message) => _controller.translateMessage(message),
+        onEditMessage: (message) => _controller.editMessage(message),
+        onDeleteMessage: (message, byGroup) =>
+            _handleDeleteMessage(context, message, byGroup),
+        onForkConversation: (message) => _controller.forkConversation(message),
+        onShareMessage: (index, messages) =>
+            _controller.shareMessage(index, messages),
+        onSpeakMessage: (message) => _controller.speakMessage(message),
+        onToggleSelection: (messageId, selected) {
+          _controller.toggleSelection(messageId, selected);
+        },
+        onToggleReasoning: (messageId) {
+          _controller.toggleReasoning(messageId);
+        },
+        onToggleTranslation: (messageId) {
+          _controller.toggleTranslation(messageId);
+        },
+        onToggleReasoningSegment: (messageId, segmentIndex) {
+          _controller.toggleReasoningSegment(messageId, segmentIndex);
+        },
+      ),
     );
   }
 
@@ -815,16 +814,17 @@ class _HomePageState extends State<HomePage>
       },
       onOpenSearch: _openSearchSettings,
       onConfigureReasoning: () async {
-        final assistant = context.read<AssistantProvider>().currentAssistant;
+        final assistantProvider = context.read<AssistantProvider>();
+        final settingsProvider = context.read<SettingsProvider>();
+        final assistant = assistantProvider.currentAssistant;
         if (assistant != null) {
           if (assistant.thinkingBudget != null) {
-            context.read<SettingsProvider>().setThinkingBudget(
-              assistant.thinkingBudget,
-            );
+            settingsProvider.setThinkingBudget(assistant.thinkingBudget);
           }
           await _openReasoningSettings();
-          final chosen = context.read<SettingsProvider>().thinkingBudget;
-          await context.read<AssistantProvider>().updateAssistant(
+          if (!mounted) return;
+          final chosen = settingsProvider.thinkingBudget;
+          await assistantProvider.updateAssistant(
             assistant.copyWith(thinkingBudget: chosen),
           );
         }
@@ -883,8 +883,9 @@ class _HomePageState extends State<HomePage>
             .watch<SettingsProvider>()
             .showMessageNavButtons;
         if (_controller.selecting) return const SizedBox.shrink();
-        if (!showSetting || _controller.messages.isEmpty)
+        if (!showSetting || _controller.messages.isEmpty) {
           return const SizedBox.shrink();
+        }
         return ScrollNavButtonsPanel(
           visible: _controller.scrollCtrl.showNavButtons,
           bottomOffset: _controller.inputBarHeight + 12,
@@ -920,7 +921,7 @@ class _HomePageState extends State<HomePage>
           if (_controller.isDragHovering)
             IgnorePointer(
               child: Container(
-                color: Colors.black.withOpacity(0.12),
+                color: Colors.black.withValues(alpha: 0.12),
                 child: Center(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -930,12 +931,12 @@ class _HomePageState extends State<HomePage>
                     decoration: BoxDecoration(
                       color: Theme.of(
                         context,
-                      ).colorScheme.surface.withOpacity(0.95),
+                      ).colorScheme.surface.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.4),
+                        ).colorScheme.primary.withValues(alpha: 0.4),
                         width: 2,
                       ),
                     ),
@@ -980,6 +981,7 @@ class _HomePageState extends State<HomePage>
     final assistantId = context.read<AssistantProvider>().currentAssistantId;
     final provider = context.read<InstructionInjectionProvider>();
     await provider.initialize();
+    if (!mounted) return;
     final items = provider.items;
     if (items.isEmpty) return;
 
@@ -1000,6 +1002,7 @@ class _HomePageState extends State<HomePage>
     final assistantId = context.read<AssistantProvider>().currentAssistantId;
     final provider = context.read<WorldBookProvider>();
     await provider.initialize();
+    if (!mounted) return;
     final books = provider.books;
     if (books.isEmpty) return;
 

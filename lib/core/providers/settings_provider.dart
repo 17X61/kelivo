@@ -94,6 +94,8 @@ class SettingsProvider extends ChangeNotifier {
   static const String _displayAutoCollapseThinkingKey =
       'display_auto_collapse_thinking_v1';
   static const String _displayShowMessageNavKey = 'display_show_message_nav_v1';
+  static const String _displayUseNewAssistantAvatarUxKey =
+      'display_use_new_assistant_avatar_ux_v1';
   static const String _displayShowProviderInModelCapsuleKey =
       'display_show_provider_in_model_capsule_v1';
   static const String _displayShowProviderInChatMessageKey =
@@ -728,6 +730,8 @@ class SettingsProvider extends ChangeNotifier {
     _autoCollapseThinking =
         prefs.getBool(_displayAutoCollapseThinkingKey) ?? true;
     _showMessageNavButtons = prefs.getBool(_displayShowMessageNavKey) ?? true;
+    _useNewAssistantAvatarUx =
+        prefs.getBool(_displayUseNewAssistantAvatarUxKey) ?? false;
     _showProviderInModelCapsule =
         prefs.getBool(_displayShowProviderInModelCapsuleKey) ?? true;
     _showProviderInChatMessage =
@@ -1760,8 +1764,9 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> setGroupCollapsed(String groupIdOrUngrouped, bool value) async {
     if (groupIdOrUngrouped != providerUngroupedGroupKey &&
-        groupById(groupIdOrUngrouped) == null)
+        groupById(groupIdOrUngrouped) == null) {
       return;
+    }
     _providerGroupCollapsed[groupIdOrUngrouped] = value;
     _cleanupProviderOrderAndGrouping();
     notifyListeners();
@@ -2678,6 +2683,17 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     await prefs.setBool(_displayShowMessageNavKey, v);
   }
 
+  // Display: use the new assistant avatar UX in app bars.
+  bool _useNewAssistantAvatarUx = false;
+  bool get useNewAssistantAvatarUx => _useNewAssistantAvatarUx;
+  Future<void> setUseNewAssistantAvatarUx(bool v) async {
+    if (_useNewAssistantAvatarUx == v) return;
+    _useNewAssistantAvatarUx = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_displayUseNewAssistantAvatarUxKey, v);
+  }
+
   // Display: show provider name in model capsule (desktop header)
   bool _showProviderInModelCapsule = true;
   bool get showProviderInModelCapsule => _showProviderInModelCapsule;
@@ -3235,6 +3251,7 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     copy._showUserMessageActions = _showUserMessageActions;
     copy._autoCollapseThinking = _autoCollapseThinking;
     copy._showMessageNavButtons = _showMessageNavButtons;
+    copy._useNewAssistantAvatarUx = _useNewAssistantAvatarUx;
     copy._showProviderInModelCapsule = _showProviderInModelCapsule;
     copy._showProviderInChatMessage = _showProviderInChatMessage;
     copy._hapticsOnGenerate = _hapticsOnGenerate;
@@ -3512,6 +3529,7 @@ class ProviderConfig {
   final Map<String, dynamic> modelOverrides;
   // Per-provider proxy
   final bool? proxyEnabled;
+  final String? proxyType; // http|https|socks5
   final String? proxyHost;
   final String? proxyPort;
   final String? proxyUsername;
@@ -3525,6 +3543,16 @@ class ProviderConfig {
   final KeyManagementConfig? keyManagement;
   // AIhubmix promo header opt-in
   final bool? aihubmixAppCodeEnabled;
+
+  static String resolveProxyType(String? value) {
+    switch (value?.trim().toLowerCase()) {
+      case 'socks5':
+        return 'socks5';
+      case 'http':
+      default:
+        return 'http';
+    }
+  }
 
   ProviderConfig({
     required this.id,
@@ -3542,6 +3570,7 @@ class ProviderConfig {
     this.models = const [],
     this.modelOverrides = const {},
     this.proxyEnabled,
+    this.proxyType,
     this.proxyHost,
     this.proxyPort,
     this.proxyUsername,
@@ -3573,6 +3602,7 @@ class ProviderConfig {
     List<String>? models,
     Map<String, dynamic>? modelOverrides,
     bool? proxyEnabled,
+    String? proxyType,
     String? proxyHost,
     String? proxyPort,
     String? proxyUsername,
@@ -3599,6 +3629,7 @@ class ProviderConfig {
     models: models ?? this.models,
     modelOverrides: modelOverrides ?? this.modelOverrides,
     proxyEnabled: proxyEnabled ?? this.proxyEnabled,
+    proxyType: proxyType ?? this.proxyType,
     proxyHost: proxyHost ?? this.proxyHost,
     proxyPort: proxyPort ?? this.proxyPort,
     proxyUsername: proxyUsername ?? this.proxyUsername,
@@ -3632,6 +3663,7 @@ class ProviderConfig {
     'models': models,
     'modelOverrides': modelOverrides,
     'proxyEnabled': proxyEnabled,
+    'proxyType': proxyType,
     'proxyHost': proxyHost,
     'proxyPort': proxyPort,
     'proxyUsername': proxyUsername,
@@ -3671,6 +3703,7 @@ class ProviderConfig {
         ) ??
         const {},
     proxyEnabled: json['proxyEnabled'] as bool?,
+    proxyType: json['proxyType'] as String?,
     proxyHost: json['proxyHost'] as String?,
     proxyPort: json['proxyPort'] as String?,
     proxyUsername: json['proxyUsername'] as String?,
@@ -3694,10 +3727,12 @@ class ProviderConfig {
 
     // Otherwise, infer from the key
     final k = key.toLowerCase();
-    if (k.contains('gemini') || k.contains('google'))
+    if (k.contains('gemini') || k.contains('google')) {
       return ProviderKind.google;
-    if (k.contains('claude') || k.contains('anthropic'))
+    }
+    if (k.contains('claude') || k.contains('anthropic')) {
       return ProviderKind.claude;
+    }
     return ProviderKind.openai;
   }
 
@@ -3707,25 +3742,31 @@ class ProviderConfig {
     if (k.contains('kelivoin')) return 'https://text.pollinations.ai/openai';
     if (k.contains('openrouter')) return 'https://openrouter.ai/api/v1';
     if (k.contains('aihubmix')) return 'https://aihubmix.com/v1';
-    if (RegExp(r'qwen|aliyun|dashscope').hasMatch(k))
+    if (RegExp(r'qwen|aliyun|dashscope').hasMatch(k)) {
       return 'https://dashscope.aliyuncs.com/compatible-mode/v1';
-    if (RegExp(r'bytedance|doubao|volces|ark').hasMatch(k))
+    }
+    if (RegExp(r'bytedance|doubao|volces|ark').hasMatch(k)) {
       return 'https://ark.cn-beijing.volces.com/api/v3';
+    }
     if (k.contains('silicon')) return 'https://api.siliconflow.cn/v1';
-    if (k.contains('grok') || k.contains('x.ai') || k.contains('xai'))
+    if (k.contains('grok') || k.contains('x.ai') || k.contains('xai')) {
       return 'https://api.x.ai/v1';
+    }
     if (k.contains('deepseek')) return 'https://api.deepseek.com/v1';
-    if (RegExp(r'zhipu|智谱|glm').hasMatch(k))
+    if (RegExp(r'zhipu|智谱|glm').hasMatch(k)) {
       return 'https://open.bigmodel.cn/api/paas/v4';
-    if (k.contains('gemini') || k.contains('google'))
+    }
+    if (k.contains('gemini') || k.contains('google')) {
       return 'https://generativelanguage.googleapis.com/v1beta';
-    if (k.contains('claude') || k.contains('anthropic'))
+    }
+    if (k.contains('claude') || k.contains('anthropic')) {
       return 'https://api.anthropic.com/v1';
+    }
     return 'https://api.openai.com/v1';
   }
 
   static ProviderConfig defaultsFor(String key, {String? displayName}) {
-    bool _defaultEnabled(String k) {
+    bool defaultEnabled(String k) {
       final s = k.toLowerCase();
       if (s.contains('tensdaq')) return true;
       if (s.contains('openai')) return true;
@@ -3742,7 +3783,7 @@ class ProviderConfig {
       case ProviderKind.google:
         return ProviderConfig(
           id: key,
-          enabled: _defaultEnabled(key),
+          enabled: defaultEnabled(key),
           name: displayName ?? key,
           apiKey: '',
           baseUrl: _defaultBase(key),
@@ -3766,7 +3807,7 @@ class ProviderConfig {
       case ProviderKind.claude:
         return ProviderConfig(
           id: key,
-          enabled: _defaultEnabled(key),
+          enabled: defaultEnabled(key),
           name: displayName ?? key,
           apiKey: '',
           baseUrl: _defaultBase(key),
@@ -3788,7 +3829,7 @@ class ProviderConfig {
         if (lowerKey.contains('kelivoin')) {
           return ProviderConfig(
             id: key,
-            enabled: _defaultEnabled(key),
+            enabled: defaultEnabled(key),
             name: displayName ?? key,
             apiKey: 'kelivo',
             baseUrl: _defaultBase(key),
@@ -3836,7 +3877,7 @@ class ProviderConfig {
         if (lowerKey.contains('silicon')) {
           return ProviderConfig(
             id: key,
-            enabled: _defaultEnabled(key),
+            enabled: defaultEnabled(key),
             name: displayName ?? key,
             apiKey: '',
             baseUrl: _defaultBase(key),
@@ -3871,7 +3912,7 @@ class ProviderConfig {
         }
         return ProviderConfig(
           id: key,
-          enabled: _defaultEnabled(key),
+          enabled: defaultEnabled(key),
           name: displayName ?? key,
           apiKey: '',
           baseUrl: _defaultBase(key),

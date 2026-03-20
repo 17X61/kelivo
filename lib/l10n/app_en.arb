@@ -164,6 +164,7 @@
   "sponsorPageAfdianSubtitle": "afdian.com/a/kelivo",
   "sponsorPageWeChatTitle": "WeChat Sponsor",
   "sponsorPageWeChatSubtitle": "WeChat sponsor code",
+  "sponsorPageScanQrHint": "Scan the QR code to sponsor",
   "languageDisplaySimplifiedChinese": "Simplified Chinese",
   "languageDisplayEnglish": "English",
   "languageDisplayTraditionalChinese": "Traditional Chinese",
@@ -239,6 +240,8 @@
   "mcpTransportOptionStdio": "STDIO",
   "mcpTransportTagStdio": "STDIO",
   "mcpTransportTagInmemory": "Built-in",
+  "mcpTransportTagSse": "SSE",
+  "mcpTransportTagHttp": "HTTP",
   "mcpServerEditSheetStdioOnlyDesktop": "STDIO is only available on desktop",
   "mcpServerEditSheetStdioCommandLabel": "Command",
   "mcpServerEditSheetStdioArgumentsLabel": "Arguments",
@@ -253,6 +256,7 @@
   "displaySettingsPageLanguageChineseLabel": "Simplified Chinese",
   "displaySettingsPageLanguageEnglishLabel": "English",
   "homePagePleaseSelectModel": "Please select a model first",
+  "homePageAudioAttachmentUnsupported": "The current model does not support audio attachments. Switch to a model that supports audio input or remove the audio file and try again.",
   "homePagePleaseSetupTranslateModel": "Please set a translation model first",
   "homePageTranslating": "Translating...",
   "homePageTranslateFailed": "Translation failed: {error}",
@@ -630,7 +634,7 @@
   "reasoningBudgetSheetMediumSubtitle": "Use moderate reasoning to answer questions",
   "reasoningBudgetSheetHeavySubtitle": "Use heavy reasoning for complex questions",
   "reasoningBudgetSheetXhighSubtitle": "Use maximum reasoning depth for the toughest problems",
-  "reasoningBudgetSheetCustomLabel": "Custom Reasoning Budget (tokens)",
+  "reasoningBudgetSheetCustomLabel": "Custom Reasoning Budget",
   "reasoningBudgetSheetCustomHint": "e.g. 2048 (-1 auto, 0 off)",
   "chatMessageWidgetFileNotFound": "File not found: {fileName}",
   "@chatMessageWidgetFileNotFound": {
@@ -1138,6 +1142,7 @@
   "providerDetailPageProjectIdLabel": "Project ID",
   "providerDetailPageServiceAccountJsonLabel": "Service Account JSON (paste or import)",
   "providerDetailPageImportJsonButton": "Import JSON",
+  "providerDetailPageImportJsonReadFailedMessage": "Failed to read file",
   "providerDetailPageTestButton": "Test",
   "providerDetailPageSaveButton": "Save",
   "providerDetailPageProviderRemovedMessage": "Provider removed",
@@ -1281,6 +1286,7 @@
   "searchServicesAddDialogCancel": "Cancel",
   "searchServicesAddDialogAdd": "Add",
   "searchServicesAddDialogApiKeyRequired": "API Key is required",
+  "searchServicesFieldCustomUrlOptional": "Custom URL (optional)",
   "searchServicesAddDialogInstanceUrl": "Instance URL",
   "searchServicesAddDialogUrlRequired": "URL is required",
   "searchServicesAddDialogEnginesOptional": "Engines (optional)",
@@ -1309,11 +1315,39 @@
   "searchSettingsSheetNoServicesMessage": "No services. Add from Search Services.",
   "aboutPageEasterEggMessage": "Thanks for exploring! \n (No egg yet)",
   "aboutPageEasterEggButton": "Nice!",
+  "aboutPageAppName": "Kelivo",
   "aboutPageAppDescription": "Open-source AI Assistant",
   "aboutPageNoQQGroup": "No QQ group yet",
   "aboutPageVersion": "Version",
+  "aboutPageVersionDetail": "{version} / {buildNumber}",
+  "@aboutPageVersionDetail": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageSystem": "System",
+  "aboutPageLoadingPlaceholder": "...",
+  "aboutPageUnknownPlaceholder": "-",
+  "aboutPagePlatformMacos": "macOS",
+  "aboutPagePlatformWindows": "Windows",
+  "aboutPagePlatformLinux": "Linux",
+  "aboutPagePlatformAndroid": "Android",
+  "aboutPagePlatformIos": "iOS",
+  "aboutPagePlatformOther": "Other ({os})",
+  "@aboutPagePlatformOther": {
+    "placeholders": {
+      "os": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageWebsite": "Website",
+  "aboutPageGithub": "GitHub",
   "aboutPageLicense": "License",
   "aboutPageJoinQQGroup": "Join our QQ Group",
   "aboutPageJoinDiscord": "Join us on Discord",
@@ -1342,6 +1376,7 @@
   "displaySettingsPageShowUpdatesSubtitle": "Show app update notifications",
   "displaySettingsPageMessageNavButtonsTitle": "Message Navigation Buttons",
   "displaySettingsPageMessageNavButtonsSubtitle": "Show quick jump buttons when scrolling",
+  "displaySettingsPageUseNewAssistantAvatarUxTitle": "Show assistant avatar in chat title bar",
   "displaySettingsPageHapticsOnSidebarTitle": "Haptics on Sidebar",
   "displaySettingsPageHapticsOnSidebarSubtitle": "Enable haptic feedback when opening/closing sidebar",
   "displaySettingsPageHapticsGlobalTitle": "Global Haptics",

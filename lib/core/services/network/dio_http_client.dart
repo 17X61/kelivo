@@ -1,16 +1,44 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:http/http.dart' as http;
+import 'package:socks5_proxy/socks_client.dart' as socks;
 
 import 'request_logger.dart';
 
+Future<InternetAddress?> _resolveProxyAddress(String host) async {
+  final parsed = InternetAddress.tryParse(host);
+  if (parsed != null) return parsed;
+  try {
+    final list = await InternetAddress.lookup(host);
+    return list.isNotEmpty ? list.first : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+ConnectionTask<Socket> _directConnection(Uri uri, SecurityContext? context) {
+  if (uri.scheme == 'https') {
+    final Future<SecureSocket> socket = SecureSocket.connect(
+      uri.host,
+      uri.port,
+      context: context,
+    );
+    return ConnectionTask.fromSocket(
+      socket,
+      () async => (await socket).close(),
+    );
+  }
+  final Future<Socket> socket = Socket.connect(uri.host, uri.port);
+  return ConnectionTask.fromSocket(socket, () async => (await socket).close());
+}
+
 class NetworkProxyConfig {
   final bool enabled;
+  final String type;
   final String host;
   final int port;
   final String? username;
@@ -18,6 +46,7 @@ class NetworkProxyConfig {
 
   const NetworkProxyConfig({
     required this.enabled,
+    this.type = 'http',
     required this.host,
     required this.port,
     this.username,
@@ -46,14 +75,53 @@ class DioHttpClient extends http.BaseClient {
         client.idleTimeout = const Duration(days: 3650);
         if (_proxy?.isValid == true) {
           final p = _proxy!;
-          client.findProxy = (_) => 'PROXY ${p.host}:${p.port}';
-          if (p.username != null && p.username!.trim().isNotEmpty) {
-            client.addProxyCredentials(
-              p.host,
-              p.port,
-              '',
-              HttpClientBasicCredentials(p.username!, p.password ?? ''),
-            );
+          if (p.type == 'socks5') {
+            Future<InternetAddress?>? proxyAddrFuture;
+            client.connectionFactory = (uri, proxyHost, proxyPort) async {
+              proxyAddrFuture ??= _resolveProxyAddress(p.host);
+              final proxyAddr = await proxyAddrFuture;
+              if (proxyAddr == null) {
+                return _directConnection(uri, null);
+              }
+
+              final proxies = <socks.ProxySettings>[
+                socks.ProxySettings(
+                  proxyAddr,
+                  p.port,
+                  username: p.username,
+                  password: p.password,
+                ),
+              ];
+
+              final socket = socks.SocksTCPClient.connect(
+                proxies,
+                InternetAddress(uri.host, type: InternetAddressType.unix),
+                uri.port,
+              );
+
+              if (uri.scheme == 'https') {
+                final Future<SecureSocket> secureSocket;
+                return ConnectionTask.fromSocket(
+                  secureSocket = (await socket).secure(uri.host),
+                  () async => (await secureSocket).close(),
+                );
+              }
+
+              return ConnectionTask.fromSocket(
+                socket,
+                () async => (await socket).close(),
+              );
+            };
+          } else {
+            client.findProxy = (_) => 'PROXY ${p.host}:${p.port}';
+            if (p.username != null && p.username!.trim().isNotEmpty) {
+              client.addProxyCredentials(
+                p.host,
+                p.port,
+                '',
+                HttpClientBasicCredentials(p.username!, p.password ?? ''),
+              );
+            }
           }
         }
         return client;
@@ -149,15 +217,12 @@ class DioHttpClient extends http.BaseClient {
       }
 
       final body = resp.data!;
-      final int? contentLength =
-          (body.contentLength != null && body.contentLength! >= 0)
+      final int? contentLength = (body.contentLength >= 0)
           ? body.contentLength
           : null;
-      StreamSubscription<Uint8List>? sub;
-
       final controller = StreamController<List<int>>(sync: true);
       controller.onListen = () {
-        sub = body.stream.listen(
+        body.stream.listen(
           (chunk) {
             controller.add(chunk);
             if (RequestLogger.enabled && RequestLogger.saveOutput) {
@@ -206,7 +271,7 @@ class DioHttpClient extends http.BaseClient {
         contentLength: contentLength,
         request: request,
         headers: headers,
-        isRedirect: resp.isRedirect ?? false,
+        isRedirect: resp.isRedirect,
         reasonPhrase: resp.statusMessage,
       );
     } on DioException catch (e) {

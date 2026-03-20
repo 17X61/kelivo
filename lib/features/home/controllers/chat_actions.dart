@@ -111,6 +111,11 @@ class ChatActions {
   // Private Helpers
   // ============================================================================
 
+  /// Track in-flight _finishStreaming futures so _handleStreamDone can await
+  /// completion before removing notifiers or triggering rebuild.
+  final Map<String, Future<void>> _finishStreamingFutures =
+      <String, Future<void>>{};
+
   List<ChatMessage> get _messages => chatController.messages;
   Map<String, int> get _versionSelections => chatController.versionSelections;
   Conversation? get _currentConversation => chatController.currentConversation;
@@ -130,6 +135,79 @@ class ChatActions {
 
   bool _isReasoningEnabled(int? budget) {
     return messageGenerationService.isReasoningEnabled(budget);
+  }
+
+  bool _supportsAudioAttachmentsForProvider(
+    SettingsProvider settings, {
+    required String providerKey,
+    required String modelId,
+  }) {
+    return messageGenerationService.supportsAudioAttachmentsForProvider(
+      settings,
+      providerKey: providerKey,
+      modelId: modelId,
+    );
+  }
+
+  bool _hasUnsupportedAudioAttachments({
+    required List<ChatMessage> messages,
+    required Conversation conversation,
+    required SettingsProvider settings,
+    required String providerKey,
+    required String modelId,
+    ChatInputData? pendingInput,
+  }) {
+    if (_supportsAudioAttachmentsForProvider(
+      settings,
+      providerKey: providerKey,
+      modelId: modelId,
+    )) {
+      return false;
+    }
+
+    if (pendingInput != null &&
+        messageGenerationService.inputContainsAudioAttachments(pendingInput)) {
+      return true;
+    }
+
+    final apiMessages = messageGenerationService.messageBuilderService
+        .buildApiMessages(
+          messages: messages,
+          versionSelections: _versionSelections,
+          currentConversation: conversation,
+        );
+    return messageGenerationService.apiMessagesContainAudioAttachments(
+      apiMessages,
+    );
+  }
+
+  List<ChatMessage> _projectMessagesAfterRegenerationCut({
+    required List<ChatMessage> messages,
+    required int lastKeep,
+    required String? targetGroupId,
+  }) {
+    if (lastKeep >= messages.length - 1) {
+      return List<ChatMessage>.of(messages);
+    }
+
+    final keepGroups = <String>{};
+    for (int i = 0; i <= lastKeep && i < messages.length; i++) {
+      keepGroups.add(messages[i].groupId ?? messages[i].id);
+    }
+    if (targetGroupId != null) keepGroups.add(targetGroupId);
+
+    final projected = <ChatMessage>[];
+    for (int i = 0; i < messages.length; i++) {
+      if (i <= lastKeep) {
+        projected.add(messages[i]);
+        continue;
+      }
+      final gid = messages[i].groupId ?? messages[i].id;
+      if (keepGroups.contains(gid)) {
+        projected.add(messages[i]);
+      }
+    }
+    return projected;
   }
 
   /// Transform raw content using assistant regexes.
@@ -183,6 +261,17 @@ class ChatActions {
     }
     final providerKey = modelConfig.providerKey!;
     final modelId = modelConfig.modelId!;
+
+    if (_hasUnsupportedAudioAttachments(
+      messages: _messages,
+      conversation: conversation,
+      settings: settings,
+      providerKey: providerKey,
+      modelId: modelId,
+      pendingInput: input,
+    )) {
+      return ChatActionResult.error('audio_attachment_unsupported');
+    }
 
     // Create user message
     final userMessage = await messageGenerationService.createUserMessage(
@@ -245,6 +334,8 @@ class ChatActions {
         input: input,
         lastUserImagePaths: prepared.lastUserImagePaths,
         settings: settings,
+        providerKey: providerKey,
+        modelId: modelId,
       );
 
       // Execute generation
@@ -287,6 +378,12 @@ class ChatActions {
     required Conversation conversation,
     bool assistantAsNewReply = false,
   }) async {
+    // Avoid using BuildContext across async gaps (this class holds a BuildContext).
+    final settings = contextProvider.read<SettingsProvider>();
+    final assistant = contextProvider
+        .read<AssistantProvider>()
+        .currentAssistant;
+
     await cancelStreaming(conversation);
 
     final idx = _messages.indexWhere((m) => m.id == message.id);
@@ -304,22 +401,7 @@ class ChatActions {
       return ChatActionResult.error('invalid_versioning');
     }
 
-    // Remove trailing messages - returns list of removed IDs for UI cleanup
-    final removeIds = await messageGenerationService.removeTrailingMessages(
-      messages: _messages,
-      lastKeep: versioning.lastKeep,
-      targetGroupId: versioning.targetGroupId,
-    );
-    if (removeIds.isNotEmpty) {
-      _messages.removeWhere((m) => removeIds.contains(m.id));
-      onMessagesChanged?.call();
-    }
-
     // Get model config
-    final settings = contextProvider.read<SettingsProvider>();
-    final assistant = contextProvider
-        .read<AssistantProvider>()
-        .currentAssistant;
     final assistantId = assistant?.id;
     final modelConfig = messageGenerationService.getModelConfig(
       settings,
@@ -331,6 +413,32 @@ class ChatActions {
     }
     final providerKey = modelConfig.providerKey!;
     final modelId = modelConfig.modelId!;
+
+    final projectedMessages = _projectMessagesAfterRegenerationCut(
+      messages: _messages,
+      lastKeep: versioning.lastKeep,
+      targetGroupId: versioning.targetGroupId,
+    );
+    if (_hasUnsupportedAudioAttachments(
+      messages: projectedMessages,
+      conversation: conversation,
+      settings: settings,
+      providerKey: providerKey,
+      modelId: modelId,
+    )) {
+      return ChatActionResult.error('audio_attachment_unsupported');
+    }
+
+    // Remove trailing messages - returns list of removed IDs for UI cleanup
+    final removeIds = await messageGenerationService.removeTrailingMessages(
+      messages: _messages,
+      lastKeep: versioning.lastKeep,
+      targetGroupId: versioning.targetGroupId,
+    );
+    if (removeIds.isNotEmpty) {
+      _messages.removeWhere((m) => removeIds.contains(m.id));
+      onMessagesChanged?.call();
+    }
 
     // Create assistant message placeholder (new version)
     final assistantMessage = await messageGenerationService
@@ -390,6 +498,8 @@ class ChatActions {
       input: null,
       lastUserImagePaths: prepared.lastUserImagePaths,
       settings: settings,
+      providerKey: providerKey,
+      modelId: modelId,
     );
 
     // Execute generation
@@ -517,8 +627,18 @@ class ChatActions {
       );
 
       await _conversationStreams[conversationId]?.cancel();
-      final sub = stream.listen(
-        (chunk) => _handleStreamChunk(chunk, state),
+      // Use a StreamSubscription that processes chunks sequentially.
+      // With the default listen() + async callback, Dart does NOT await the
+      // returned Future, so multiple chunks interleave at await points. This
+      // causes later-resuming handlers to overwrite final content with stale
+      // partial snapshots. By pausing/resuming the subscription around each
+      // async handler, we ensure serial processing.
+      late final StreamSubscription<ChatStreamChunk> sub;
+      sub = stream.listen(
+        (chunk) {
+          sub.pause();
+          _handleStreamChunk(chunk, state).whenComplete(() => sub.resume());
+        },
         onError: (e) => _handleStreamError(e, state),
         onDone: () => _handleStreamDone(state),
         cancelOnError: true,
@@ -651,6 +771,9 @@ class ChatActions {
     stream_ctrl.StreamingState state,
     String chunkContent,
   ) async {
+    // Fast bail-out: if _finishStreaming already ran, don't touch state at all.
+    if (state.finishHandled) return;
+
     final messageId = state.messageId;
     final conversationId = state.conversationId;
 
@@ -679,6 +802,13 @@ class ChatActions {
         // ignore
       }
     }
+
+    // After any await point, _finishStreaming may have already run and
+    // updated _messages[index] with the FULL final content. If we continue
+    // with this stale streamingProcessed we would overwrite the final content
+    // with a partial snapshot. Bail out early to prevent that.
+    if (state.finishHandled) return;
+
     onScheduleImageSanitize?.call(
       messageId,
       streamingProcessed,
@@ -692,6 +822,10 @@ class ChatActions {
       totalTokens: state.totalTokens,
     );
 
+    // Re-check after await: _finishStreaming may have completed during the
+    // DB write above and already set the definitive content on _messages[index].
+    if (state.finishHandled) return;
+
     if (state.ctx.streamOutput && _currentConversation?.id == conversationId) {
       final index = _messages.indexWhere((m) => m.id == messageId);
       if (index != -1) {
@@ -699,10 +833,6 @@ class ChatActions {
           content: streamingProcessed,
           totalTokens: state.totalTokens,
         );
-        // NOTE: Do NOT call onMessagesChanged here!
-        // Streaming content updates are handled by StreamingContentNotifier
-        // via ValueListenableBuilder, which only rebuilds the streaming message widget.
-        // Calling onMessagesChanged would trigger a full page rebuild and cause lag.
       }
     }
 
@@ -710,6 +840,11 @@ class ChatActions {
     if (state.ctx.streamOutput && chunkContent.isNotEmpty) {
       await _finishReasoningOnContent(state);
     }
+
+    // Re-check before scheduling timer — timer creation after _finishStreaming
+    // would create a new timer that periodically overwrites _messages[index]
+    // with stale partial content.
+    if (state.finishHandled) return;
 
     // Schedule throttled UI update via StreamController
     if (state.ctx.streamOutput) {
@@ -757,6 +892,10 @@ class ChatActions {
   ) async {
     final messageId = state.messageId;
     final conversationId = state.conversationId;
+    final autoCollapseThinking =
+        (!state.ctx.streamOutput && state.bufferedReasoning.isNotEmpty)
+        ? contextProvider.read<SettingsProvider>().autoCollapseThinking
+        : null;
 
     if (chunkContent.isNotEmpty) {
       state.fullContentRaw += chunkContent;
@@ -777,7 +916,13 @@ class ChatActions {
       state.totalTokens = state.usage!.totalTokens;
     }
 
-    await _finishStreaming(state);
+    // Track the _finishStreaming future so _handleStreamDone can await it
+    // if it fires concurrently (stream.onDone can fire while we're still
+    // awaiting async work inside _finishStreaming).
+    final finishFuture = _finishStreaming(state);
+    _finishStreamingFutures[messageId] = finishFuture;
+    await finishFuture;
+    _finishStreamingFutures.remove(messageId);
 
     // Notify for background notification if needed
     onStreamFinished?.call();
@@ -792,14 +937,11 @@ class ChatActions {
         reasoningStartAt: startAt,
         reasoningFinishedAt: now,
       );
-      final autoCollapse = contextProvider
-          .read<SettingsProvider>()
-          .autoCollapseThinking;
       streamController.reasoning[messageId] = stream_ctrl.ReasoningData()
         ..text = state.bufferedReasoning
         ..startAt = startAt
         ..finishedAt = now
-        ..expanded = !autoCollapse;
+        ..expanded = !(autoCollapseThinking ?? false);
     }
 
     await _conversationStreams.remove(conversationId)?.cancel();
@@ -846,6 +988,17 @@ class ChatActions {
 
     // Replace extremely long inline base64 images with local files to avoid jank
     final processedContent = _transformAssistantContent(state);
+
+    // Flush final content to the streaming notifier before async operations.
+    // This ensures any intermediate rebuild (e.g., from isProcessingFiles change
+    // or onDone firing concurrently) still shows the correct content via the
+    // notifier-based streaming path.
+    streamController.streamingContentNotifier.updateContent(
+      messageId,
+      processedContent,
+      state.totalTokens,
+    );
+
     final sanitizedContent =
         await MarkdownMediaSanitizer.replaceInlineBase64Images(
           processedContent,
@@ -866,6 +1019,10 @@ class ChatActions {
       );
       onMessagesChanged?.call();
     }
+
+    // Remove notifier AFTER onMessagesChanged so the UI rebuild sees final content
+    streamController.removeStreamingNotifier(messageId);
+
     _setConversationLoading(conversationId, false);
 
     // Use unified reasoning completion method
@@ -933,6 +1090,10 @@ class ChatActions {
       );
       onMessagesChanged?.call();
     }
+
+    // Remove notifier AFTER onMessagesChanged so the UI rebuild sees final content
+    streamController.removeStreamingNotifier(messageId);
+
     _setConversationLoading(conversationId, false);
 
     // Use unified reasoning completion method on error
@@ -965,17 +1126,28 @@ class ChatActions {
     onFileProcessingFinished?.call();
 
     final conversationId = state.conversationId;
+    final messageId = state.messageId;
 
     // Ensure streaming is marked as ended
-    streamController.markStreamingEnded(state.messageId);
+    streamController.markStreamingEnded(messageId);
 
-    streamController.cleanupTimers(state.messageId);
-    if (_loadingConversationIds.contains(conversationId)) {
+    streamController.cleanupTimers(messageId);
+
+    // If _finishStreaming is already in-flight (started by _handleStreamFinish),
+    // wait for it to complete before removing notifiers or triggering rebuild.
+    // This prevents a race where the notifier is removed and a rebuild is
+    // triggered while _finishStreaming hasn't yet updated _messages[index].
+    final inFlight = _finishStreamingFutures[messageId];
+    if (inFlight != null) {
+      await inFlight;
+    } else if (_loadingConversationIds.contains(conversationId)) {
       await _finishStreaming(
         state,
         generateTitle: state.ctx.generateTitleOnFinish,
       );
     }
+    // Idempotent: ensure notifier is removed even if _finishStreaming was skipped
+    streamController.removeStreamingNotifier(messageId);
     onStreamFinished?.call();
     await _conversationStreams.remove(conversationId)?.cancel();
   }

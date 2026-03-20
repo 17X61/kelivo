@@ -39,7 +39,6 @@ import '../services/translation_service.dart';
 import '../services/file_upload_service.dart';
 import '../widgets/chat_input_bar.dart';
 import '../../model/widgets/model_select_sheet.dart';
-import '../../search/services/global_session_search_service.dart';
 
 /// Translation data for UI state (expanded/collapsed).
 class TranslationData {
@@ -333,7 +332,7 @@ class HomePageController extends ChangeNotifier {
       final l10n = AppLocalizations.of(_context)!;
       showAppSnackBar(
         _context,
-        message: '${l10n.generationInterrupted}: $error',
+        message: _localizeGenerationError(l10n, error),
         type: NotificationType.error,
       );
     };
@@ -372,6 +371,15 @@ class HomePageController extends ChangeNotifier {
     };
   }
 
+  String _localizeGenerationError(AppLocalizations l10n, String error) {
+    switch (error) {
+      case 'audio_attachment_unsupported':
+        return l10n.homePageAudioAttachmentUnsupported;
+      default:
+        return '${l10n.generationInterrupted}: $error';
+    }
+  }
+
   void _initializeScrollController() {
     _scrollCtrl = scroll_ctrl.ChatScrollController(
       scrollController: _scrollController,
@@ -384,16 +392,22 @@ class HomePageController extends ChangeNotifier {
   }
 
   void _initializeProviders() {
-    Future.microtask(() async {
-      try {
-        await _context.read<QuickPhraseProvider>().initialize();
-      } catch (_) {}
-    });
-    Future.microtask(() async {
-      try {
-        await _context.read<InstructionInjectionProvider>().initialize();
-      } catch (_) {}
-    });
+    try {
+      final quickPhraseProvider = _context.read<QuickPhraseProvider>();
+      Future.microtask(() async {
+        try {
+          await quickPhraseProvider.initialize();
+        } catch (_) {}
+      });
+    } catch (_) {}
+    try {
+      final instructionProvider = _context.read<InstructionInjectionProvider>();
+      Future.microtask(() async {
+        try {
+          await instructionProvider.initialize();
+        } catch (_) {}
+      });
+    } catch (_) {}
     try {
       _mcpProvider = _context.read<McpProvider>();
       _mcpProvider!.addListener(_onMcpChanged);
@@ -408,22 +422,27 @@ class HomePageController extends ChangeNotifier {
         _inputFocus.requestFocus();
       });
     }
-    _chatActionSub = ChatActionBus.instance.stream.listen((action) async {
+    _chatActionSub = ChatActionBus.instance.stream.listen((action) {
+      final ctx = _context;
+      if (!ctx.mounted) return;
+      final settingsProvider = ctx.read<SettingsProvider>();
       switch (action) {
         case ChatAction.newTopic:
-          await createNewConversationAnimated();
+          unawaited(createNewConversationAnimated());
           break;
         case ChatAction.toggleLeftPanelTopics:
         case ChatAction.toggleLeftPanelAssistants:
-          final sp = _context.read<SettingsProvider>();
-          if (sp.desktopTopicPosition != DesktopTopicPosition.left) return;
+          if (settingsProvider.desktopTopicPosition !=
+              DesktopTopicPosition.left) {
+            return;
+          }
           final wantAssistants =
               (action == ChatAction.toggleLeftPanelAssistants);
           if (!_tabletSidebarOpen) {
             _tabletSidebarOpen = true;
             notifyListeners();
             try {
-              _context.read<SettingsProvider>().setDesktopSidebarOpen(true);
+              settingsProvider.setDesktopSidebarOpen(true);
             } catch (_) {}
           }
           if (wantAssistants) {
@@ -440,7 +459,7 @@ class HomePageController extends ChangeNotifier {
           }
           break;
         case ChatAction.switchModel:
-          await showModelSelectSheet(_context);
+          unawaited(showModelSelectSheet(ctx));
           break;
         case ChatAction.enterGlobalSearch:
           enterGlobalSearchMode(preserveQuery: true);
@@ -489,8 +508,9 @@ class HomePageController extends ChangeNotifier {
   }
 
   Future<void> initChat() async {
-    await _chatService.init();
     final prefs = _context.read<SettingsProvider>();
+    final assistantProvider = _context.read<AssistantProvider>();
+    await _chatService.init();
     if (prefs.newChatOnLaunch) {
       await _createNewConversation();
     } else {
@@ -499,9 +519,7 @@ class HomePageController extends ChangeNotifier {
         final recent = conversations.first;
         if ((recent.assistantId ?? '').isNotEmpty) {
           try {
-            await _context.read<AssistantProvider>().setCurrentAssistant(
-              recent.assistantId!,
-            );
+            await assistantProvider.setCurrentAssistant(recent.assistantId!);
           } catch (_) {}
         }
         _chatService.setCurrentConversation(recent.id);
@@ -539,9 +557,14 @@ class HomePageController extends ChangeNotifier {
 
   Future<void> sendMessage(ChatInputData input) async {
     final content = input.text.trim();
-    if (content.isEmpty && input.imagePaths.isEmpty && input.documents.isEmpty)
+    if (content.isEmpty &&
+        input.imagePaths.isEmpty &&
+        input.documents.isEmpty) {
       return;
-    if (currentConversation == null) await _createNewConversation();
+    }
+    if (currentConversation == null) {
+      await _createNewConversation();
+    }
 
     final success = await _viewModel.sendMessage(input);
     if (success) {
@@ -698,10 +721,13 @@ class HomePageController extends ChangeNotifier {
   }
 
   Future<void> editMessage(ChatMessage message) async {
+    final ctx = _context;
+    if (!ctx.mounted) return;
     final isDesktop = isDesktopPlatform;
-    final MessageEditResult? result = isDesktop
-        ? await showMessageEditDesktopDialog(_context, message: message)
-        : await showMessageEditSheet(_context, message: message);
+    final Future<MessageEditResult?> future = isDesktop
+        ? showMessageEditDesktopDialog(ctx, message: message)
+        : showMessageEditSheet(ctx, message: message);
+    final MessageEditResult? result = await future;
     if (result == null) return;
 
     final newMsg = await _chatService.appendMessageVersion(
@@ -734,7 +760,8 @@ class HomePageController extends ChangeNotifier {
   }
 
   Future<void> translateMessage(ChatMessage message) async {
-    final l10n = AppLocalizations.of(_context)!;
+    final ctx = _context;
+    final l10n = AppLocalizations.of(ctx)!;
 
     final result = await _translationService.translateMessage(
       message: message,
@@ -769,10 +796,11 @@ class HomePageController extends ChangeNotifier {
     );
 
     if (result.isCancelled) return;
+    if (!ctx.mounted) return;
 
     if (result.type == TranslationResultType.noModelConfigured) {
       showAppSnackBar(
-        _context,
+        ctx,
         message: l10n.homePagePleaseSetupTranslateModel,
         type: NotificationType.warning,
       );
@@ -781,7 +809,7 @@ class HomePageController extends ChangeNotifier {
 
     if (result.type == TranslationResultType.error) {
       showAppSnackBar(
-        _context,
+        ctx,
         message: l10n.homePageTranslateFailed(result.errorMessage ?? ''),
         type: NotificationType.error,
       );

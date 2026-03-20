@@ -86,6 +86,7 @@
   "sponsorPageAfdianSubtitle": "afdian.com/a/kelivo",
   "sponsorPageWeChatTitle": "微信赞助",
   "sponsorPageWeChatSubtitle": "微信赞助码",
+  "sponsorPageScanQrHint": "扫描二维码赞助",
   "languageDisplaySimplifiedChinese": "简体中文",
   "languageDisplayEnglish": "English",
   "languageDisplayTraditionalChinese": "繁體中文",
@@ -360,6 +361,7 @@
   "displaySettingsPageLanguageChineseLabel": "简体中文",
   "displaySettingsPageLanguageEnglishLabel": "English",
   "homePagePleaseSelectModel": "请先选择模型",
+  "homePageAudioAttachmentUnsupported": "当前模型不支持音频附件，请切换到支持音频输入的模型或移除音频文件后重试。",
   "homePagePleaseSetupTranslateModel": "请先设置翻译模型",
   "homePageTranslating": "翻译中...",
   "homePageTranslateFailed": "翻译失败: {error}",
@@ -507,7 +509,7 @@
   "reasoningBudgetSheetMediumSubtitle": "使用较多推理来回答问题",
   "reasoningBudgetSheetHeavySubtitle": "使用大量推理来回答问题，适合复杂问题",
   "reasoningBudgetSheetXhighSubtitle": "使用最大推理深度，适合最复杂的问题",
-  "reasoningBudgetSheetCustomLabel": "自定义推理预算 (tokens)",
+  "reasoningBudgetSheetCustomLabel": "自定义推理预算",
   "reasoningBudgetSheetCustomHint": "例如：2048 (-1 自动，0 关闭)",
   "chatMessageWidgetFileNotFound": "文件不存在: {fileName}",
   "chatMessageWidgetCannotOpenFile": "无法打开文件: {message}",
@@ -827,6 +829,7 @@
   "providerDetailPageProjectIdLabel": "项目 ID",
   "providerDetailPageServiceAccountJsonLabel": "服务账号 JSON（粘贴或导入）",
   "providerDetailPageImportJsonButton": "导入 JSON",
+  "providerDetailPageImportJsonReadFailedMessage": "读取文件失败",
   "providerDetailPageTestButton": "测试",
   "providerDetailPageSaveButton": "保存",
   "providerDetailPageProviderRemovedMessage": "供应商已删除",
@@ -956,6 +959,7 @@
   "searchServicesAddDialogCancel": "取消",
   "searchServicesAddDialogAdd": "添加",
   "searchServicesAddDialogApiKeyRequired": "API Key 必填",
+  "searchServicesFieldCustomUrlOptional": "自定义 URL（可选）",
   "searchServicesAddDialogInstanceUrl": "实例 URL",
   "searchServicesAddDialogUrlRequired": "URL 必填",
   "searchServicesAddDialogEnginesOptional": "搜索引擎（可选）",
@@ -984,11 +988,39 @@
   "searchSettingsSheetNoServicesMessage": "暂无可用服务，请先在\"搜索服务\"中添加",
   "aboutPageEasterEggMessage": "\n（好吧现在还没彩蛋）",
   "aboutPageEasterEggButton": "好的",
+  "aboutPageAppName": "Kelivo",
   "aboutPageAppDescription": "开源AI 助手",
   "aboutPageNoQQGroup": "暂无QQ群",
   "aboutPageVersion": "版本",
+  "aboutPageVersionDetail": "{version} / {buildNumber}",
+  "@aboutPageVersionDetail": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageSystem": "系统",
+  "aboutPageLoadingPlaceholder": "...",
+  "aboutPageUnknownPlaceholder": "-",
+  "aboutPagePlatformMacos": "macOS",
+  "aboutPagePlatformWindows": "Windows",
+  "aboutPagePlatformLinux": "Linux",
+  "aboutPagePlatformAndroid": "Android",
+  "aboutPagePlatformIos": "iOS",
+  "aboutPagePlatformOther": "其他（{os}）",
+  "@aboutPagePlatformOther": {
+    "placeholders": {
+      "os": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageWebsite": "官网",
+  "aboutPageGithub": "GitHub",
   "aboutPageLicense": "许可证",
   "aboutPageJoinQQGroup": "加入QQ群",
   "aboutPageJoinDiscord": "在 Discord 中加入我们",
@@ -1017,6 +1049,7 @@
   "displaySettingsPageShowUpdatesSubtitle": "显示应用更新通知",
   "displaySettingsPageMessageNavButtonsTitle": "消息导航按钮",
   "displaySettingsPageMessageNavButtonsSubtitle": "滚动时显示快速跳转按钮",
+  "displaySettingsPageUseNewAssistantAvatarUxTitle": "聊天标题栏显示助手头像",
   "displaySettingsPageHapticsOnSidebarTitle": "侧边栏触觉反馈",
   "displaySettingsPageHapticsOnSidebarSubtitle": "打开/关闭侧边栏时启用触觉反馈",
   "displaySettingsPageHapticsGlobalTitle": "全局触觉反馈",
@@ -1273,6 +1306,8 @@
   "mcpTransportOptionStdio": "STDIO",
   "mcpTransportTagStdio": "STDIO",
   "mcpTransportTagInmemory": "内置",
+  "mcpTransportTagSse": "SSE",
+  "mcpTransportTagHttp": "HTTP",
   "mcpServerEditSheetStdioOnlyDesktop": "STDIO 仅在桌面端可用",
   "mcpServerEditSheetStdioCommandLabel": "命令",
   "mcpServerEditSheetStdioArgumentsLabel": "参数",

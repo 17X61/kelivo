@@ -4,21 +4,22 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/interactive_drawer.dart';
-import '../widgets/chat_input_bar.dart';
 import '../widgets/side_drawer.dart';
 import '../../../icons/lucide_adapter.dart';
 import '../../../core/providers/user_provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/assistant_provider.dart';
+import '../../../core/services/haptics.dart';
 import '../../../shared/animations/widgets.dart';
 import '../../../shared/widgets/ios_tactile.dart';
 import '../../../utils/sandbox_path_resolver.dart';
+import '../widgets/assistant_avatar.dart';
+import '../widgets/assistant_entry_actions.dart';
 
 /// Mobile layout scaffold for the home page
 /// This widget handles only the structural layout - AppBar, drawer, body structure
@@ -130,6 +131,9 @@ class HomeMobileScaffold extends StatelessWidget {
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.linux;
+    final useNewAssistantAvatarUx = context
+        .watch<SettingsProvider>()
+        .useNewAssistantAvatarUx;
 
     return AppBar(
       systemOverlayStyle: (Theme.of(context).brightness == Brightness.dark)
@@ -167,40 +171,83 @@ class HomeMobileScaffold extends StatelessWidget {
         },
       ),
       titleSpacing: 2,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedTextSwap(
-            text: title,
-            style: TextStyle(
-              fontSize: isDesktopPlatform ? 14 : 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          if (providerName != null && modelDisplay != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(6),
-                onTap: onSelectModel,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 0),
-                  child: AnimatedTextSwap(
-                    text: '$modelDisplay ($providerName)',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: cs.onSurface.withOpacity(0.6),
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+      title: useNewAssistantAvatarUx
+          ? Row(
+              children: [
+                _buildAssistantTitleAvatar(context),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedTextSwap(
+                        text: title,
+                        style: TextStyle(
+                          fontSize: isDesktopPlatform ? 14 : 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (providerName != null && modelDisplay != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(6),
+                            onTap: onSelectModel,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 0),
+                              child: AnimatedTextSwap(
+                                text: '$modelDisplay ($providerName)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: cs.onSurface.withValues(alpha: 0.6),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedTextSwap(
+                  text: title,
+                  style: TextStyle(
+                    fontSize: isDesktopPlatform ? 14 : 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (providerName != null && modelDisplay != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: onSelectModel,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 0),
+                        child: AnimatedTextSwap(
+                          text: '$modelDisplay ($providerName)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: cs.onSurface.withValues(alpha: 0.6),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-        ],
-      ),
       actions: [
         IosIconButton(
           size: 20,
@@ -219,6 +266,37 @@ class HomeMobileScaffold extends StatelessWidget {
         ),
         const SizedBox(width: 4),
       ],
+    );
+  }
+
+  Widget _buildAssistantTitleAvatar(BuildContext context) {
+    final assistantProvider = context.watch<AssistantProvider>();
+    final currentAssistant = assistantProvider.currentAssistant;
+    final currentAssistantId = assistantProvider.currentAssistantId;
+
+    return IosCardPress(
+      borderRadius: BorderRadius.circular(999),
+      baseColor: Colors.transparent,
+      padding: const EdgeInsets.all(2),
+      longPressTimeout: const Duration(milliseconds: 280),
+      onTap: () {
+        onDismissKeyboard();
+        onToggleDrawer();
+      },
+      onLongPress: currentAssistantId == null
+          ? null
+          : () {
+              Haptics.light();
+              AssistantEntryActions.openAssistantSettings(
+                context,
+                currentAssistantId,
+              );
+            },
+      child: AssistantAvatar(
+        assistant: currentAssistant,
+        fallbackName: _getAssistantName(context),
+        size: 28,
+      ),
     );
   }
 }
@@ -257,7 +335,7 @@ class MobileBackgroundLayer extends StatelessWidget {
                   image: provider,
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.04),
+                    Colors.black.withValues(alpha: 0.04),
                     BlendMode.srcATop,
                   ),
                 ),
@@ -272,11 +350,11 @@ class MobileBackgroundLayer extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      cs.surface.withOpacity(
-                        (0.20 * maskStrength).clamp(0.0, 1.0),
+                      cs.surface.withValues(
+                        alpha: (0.20 * maskStrength).clamp(0.0, 1.0),
                       ),
-                      cs.surface.withOpacity(
-                        (0.50 * maskStrength).clamp(0.0, 1.0),
+                      cs.surface.withValues(
+                        alpha: (0.50 * maskStrength).clamp(0.0, 1.0),
                       ),
                     ],
                   ),
@@ -402,13 +480,15 @@ class _ScrollButton extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.white.withOpacity(0.06)
-                : Colors.white.withOpacity(0.07),
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.07),
             shape: BoxShape.circle,
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.10)
-                  : Theme.of(context).colorScheme.outline.withOpacity(0.20),
+                  ? Colors.white.withValues(alpha: 0.10)
+                  : Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.20),
               width: 1,
             ),
           ),
@@ -501,14 +581,12 @@ class _GlassCircleButton extends StatefulWidget {
     required this.color,
     required this.onTap,
     this.semanticLabel,
-    this.size = 40,
   });
 
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
   final String? semanticLabel;
-  final double size;
 
   @override
   State<_GlassCircleButton> createState() => _GlassCircleButtonState();
@@ -523,15 +601,15 @@ class _GlassCircleButtonState extends State<_GlassCircleButton> {
     final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final glassBase = isDark
-        ? Colors.black.withOpacity(0.06)
-        : Colors.white.withOpacity(0.06);
+        ? Colors.black.withValues(alpha: 0.06)
+        : Colors.white.withValues(alpha: 0.06);
     final overlay = isDark
-        ? Colors.white.withOpacity(0.06)
-        : Colors.black.withOpacity(0.05);
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.black.withValues(alpha: 0.05);
     final tileColor = _pressed
         ? Color.alphaBlend(overlay, glassBase)
         : glassBase;
-    final borderColor = cs.outlineVariant.withOpacity(0.10);
+    final borderColor = cs.outlineVariant.withValues(alpha: 0.10);
 
     return Semantics(
       button: true,
@@ -550,8 +628,8 @@ class _GlassCircleButtonState extends State<_GlassCircleButton> {
             child: BackdropFilter(
               filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
-                width: widget.size,
-                height: widget.size,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: tileColor,
                   shape: BoxShape.circle,

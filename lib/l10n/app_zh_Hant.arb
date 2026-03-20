@@ -86,6 +86,7 @@
   "sponsorPageAfdianSubtitle": "afdian.com/a/kelivo",
   "sponsorPageWeChatTitle": "微信贊助",
   "sponsorPageWeChatSubtitle": "微信贊助碼",
+  "sponsorPageScanQrHint": "掃描二維碼贊助",
   "languageDisplaySimplifiedChinese": "简体中文",
   "languageDisplayEnglish": "English",
   "languageDisplayTraditionalChinese": "繁體中文",
@@ -318,6 +319,8 @@
   "mcpTransportOptionStdio": "STDIO",
   "mcpTransportTagStdio": "STDIO",
   "mcpTransportTagInmemory": "內建",
+  "mcpTransportTagSse": "SSE",
+  "mcpTransportTagHttp": "HTTP",
   "mcpServerEditSheetStdioOnlyDesktop": "STDIO 僅在桌面端可用",
   "mcpServerEditSheetStdioCommandLabel": "命令",
   "mcpServerEditSheetStdioArgumentsLabel": "參數",
@@ -362,6 +365,7 @@
   "displaySettingsPageLanguageChineseLabel": "简体中文",
   "displaySettingsPageLanguageEnglishLabel": "English",
   "homePagePleaseSelectModel": "請先選擇模型",
+  "homePageAudioAttachmentUnsupported": "目前模型不支援音訊附件，請切換到支援音訊輸入的模型或移除音訊檔案後再試。",
   "homePagePleaseSetupTranslateModel": "請先設定翻譯模型",
   "homePageTranslating": "翻譯中...",
   "homePageTranslateFailed": "翻譯失敗: {error}",
@@ -503,7 +507,7 @@
   "reasoningBudgetSheetMediumSubtitle": "使用較多推理來回答問題",
   "reasoningBudgetSheetHeavySubtitle": "使用大量推理來回答問題，適合複雜問題",
   "reasoningBudgetSheetXhighSubtitle": "使用最大推理深度，適合最複雜的問題",
-  "reasoningBudgetSheetCustomLabel": "自訂推理預算 (tokens)",
+  "reasoningBudgetSheetCustomLabel": "自訂推理預算",
   "reasoningBudgetSheetCustomHint": "例如：2048 (-1 自動，0 關閉)",
   "chatMessageWidgetFileNotFound": "檔案不存在: {fileName}",
   "chatMessageWidgetCannotOpenFile": "無法開啟檔案: {message}",
@@ -813,6 +817,7 @@
   "providerDetailPageProjectIdLabel": "專案 ID",
   "providerDetailPageServiceAccountJsonLabel": "服務帳號 JSON（貼上或匯入）",
   "providerDetailPageImportJsonButton": "匯入 JSON",
+  "providerDetailPageImportJsonReadFailedMessage": "讀取檔案失敗",
   "providerDetailPageTestButton": "測試",
   "providerDetailPageSaveButton": "儲存",
   "providerDetailPageProviderRemovedMessage": "供應商已刪除",
@@ -938,6 +943,7 @@
   "searchServicesAddDialogCancel": "取消",
   "searchServicesAddDialogAdd": "新增",
   "searchServicesAddDialogApiKeyRequired": "API Key 必填",
+  "searchServicesFieldCustomUrlOptional": "自訂 URL（可選）",
   "searchServicesAddDialogInstanceUrl": "實例 URL",
   "searchServicesAddDialogUrlRequired": "URL 必填",
   "searchServicesAddDialogEnginesOptional": "搜尋引擎（可選）",
@@ -966,11 +972,39 @@
   "searchSettingsSheetNoServicesMessage": "暫無可用服務，請先在\"搜尋服務\"中新增",
   "aboutPageEasterEggMessage": "\n（好吧現在還沒彩蛋）",
   "aboutPageEasterEggButton": "好的",
+  "aboutPageAppName": "Kelivo",
   "aboutPageAppDescription": "開源 AI 助理",
   "aboutPageNoQQGroup": "暫無QQ群",
   "aboutPageVersion": "版本",
+  "aboutPageVersionDetail": "{version} / {buildNumber}",
+  "@aboutPageVersionDetail": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageSystem": "系統",
+  "aboutPageLoadingPlaceholder": "...",
+  "aboutPageUnknownPlaceholder": "-",
+  "aboutPagePlatformMacos": "macOS",
+  "aboutPagePlatformWindows": "Windows",
+  "aboutPagePlatformLinux": "Linux",
+  "aboutPagePlatformAndroid": "Android",
+  "aboutPagePlatformIos": "iOS",
+  "aboutPagePlatformOther": "其他（{os}）",
+  "@aboutPagePlatformOther": {
+    "placeholders": {
+      "os": {
+        "type": "String"
+      }
+    }
+  },
   "aboutPageWebsite": "官網",
+  "aboutPageGithub": "GitHub",
   "aboutPageLicense": "授權",
   "aboutPageJoinQQGroup": "加入 QQ 群",
   "aboutPageJoinDiscord": "加入我們的 Discord",
@@ -999,6 +1033,7 @@
   "displaySettingsPageShowUpdatesSubtitle": "顯示應用程式更新通知",
   "displaySettingsPageMessageNavButtonsTitle": "訊息導航按鈕",
   "displaySettingsPageMessageNavButtonsSubtitle": "滾動時顯示快速跳轉按鈕",
+  "displaySettingsPageUseNewAssistantAvatarUxTitle": "聊天標題欄顯示助手頭像",
   "displaySettingsPageHapticsOnSidebarTitle": "側邊欄觸覺回饋",
   "displaySettingsPageHapticsOnSidebarSubtitle": "開啟/關閉側邊欄時啟用觸覺回饋",
   "displaySettingsPageHapticsGlobalTitle": "全域觸覺回饋",

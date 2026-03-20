@@ -10,6 +10,7 @@ import 'dart:ui' as ui;
 import '../../../l10n/app_localizations.dart';
 import '../widgets/side_drawer.dart';
 import '../../../icons/lucide_adapter.dart';
+import '../../../core/models/assistant.dart';
 import '../../../core/providers/user_provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/assistant_provider.dart';
@@ -18,6 +19,9 @@ import '../../../shared/widgets/ios_tactile.dart';
 import '../../../utils/brand_assets.dart';
 import '../../../utils/sandbox_path_resolver.dart';
 import '../../../desktop/hotkeys/chat_action_bus.dart';
+import '../../../desktop/hotkeys/sidebar_tab_bus.dart';
+import '../widgets/assistant_avatar.dart';
+import '../widgets/assistant_entry_actions.dart';
 
 /// Desktop/Tablet layout scaffold for the home page
 /// Handles the overall structure: left sidebar, main content, optional right sidebar
@@ -131,7 +135,7 @@ class HomeDesktopScaffold extends StatelessWidget {
                       ? VerticalDivider(
                           width: 0.6,
                           thickness: 0.5,
-                          color: cs.outlineVariant.withOpacity(0.20),
+                          color: cs.outlineVariant.withValues(alpha: 0.20),
                         )
                       : const SizedBox.shrink(),
                 ),
@@ -305,6 +309,12 @@ class HomeDesktopScaffold extends StatelessWidget {
 
   Widget _buildTitle(BuildContext context, ColorScheme cs) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final useNewAssistantAvatarUx = context
+        .watch<SettingsProvider>()
+        .useNewAssistantAvatarUx;
+    final currentAssistant = context
+        .watch<AssistantProvider>()
+        .currentAssistant;
     final String? brandAsset =
         (modelDisplay != null
             ? BrandAssets.assetForName(modelDisplay!)
@@ -345,7 +355,7 @@ class HomeDesktopScaffold extends StatelessWidget {
             : Icon(
                 Lucide.Boxes,
                 size: 16,
-                color: cs.onSurface.withOpacity(0.7),
+                color: cs.onSurface.withValues(alpha: 0.7),
                 key: const ValueKey('brand:default'),
               ),
       );
@@ -369,13 +379,13 @@ class HomeDesktopScaffold extends StatelessWidget {
                 const SizedBox(width: 6),
                 Flexible(
                   child: AnimatedTextSwap(
-                    text: capsuleLabel!,
+                    text: capsuleLabel,
                     style: TextStyle(
                       fontSize: 12,
                       height: 1.1,
                       color: isDark
-                          ? Colors.white.withOpacity(0.92)
-                          : cs.onSurface.withOpacity(0.9),
+                          ? Colors.white.withValues(alpha: 0.92)
+                          : cs.onSurface.withValues(alpha: 0.9),
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -393,6 +403,14 @@ class HomeDesktopScaffold extends StatelessWidget {
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        if (useNewAssistantAvatarUx) ...[
+          _buildAssistantTitleAvatar(
+            context,
+            assistant: currentAssistant,
+            fallbackName: _getAssistantName(context),
+          ),
+          const SizedBox(width: 10),
+        ],
         Flexible(
           fit: FlexFit.loose,
           child: AnimatedSize(
@@ -427,7 +445,7 @@ class HomeDesktopScaffold extends StatelessWidget {
                 ),
                 child: KeyedSubtree(
                   key: ValueKey('cap:${capsuleLabel ?? ''}'),
-                  child: capsule!,
+                  child: capsule,
                 ),
               ),
             ),
@@ -456,6 +474,62 @@ class HomeDesktopScaffold extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildAssistantTitleAvatar(
+    BuildContext context, {
+    required Assistant? assistant,
+    required String fallbackName,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onSecondaryTapDown: !_isDesktop || assistant == null
+          ? null
+          : (details) {
+              AssistantEntryActions.showAssistantItemMenu(
+                context: context,
+                assistant: assistant,
+                globalPosition: details.globalPosition,
+              );
+            },
+      child: IosCardPress(
+        borderRadius: BorderRadius.circular(999),
+        baseColor: Colors.transparent,
+        padding: const EdgeInsets.all(2),
+        onTap: _isDesktop
+            ? () => _revealAssistantTopics(context)
+            : onToggleSidebar,
+        onLongPress: !_isDesktop && assistant != null
+            ? () {
+                AssistantEntryActions.openAssistantSettings(
+                  context,
+                  assistant.id,
+                );
+              }
+            : null,
+        child: AssistantAvatar(
+          assistant: assistant,
+          fallbackName: fallbackName,
+          size: 28,
+        ),
+      ),
+    );
+  }
+
+  void _revealAssistantTopics(BuildContext context) {
+    final topicsOnRight =
+        context.read<SettingsProvider>().desktopTopicPosition ==
+        DesktopTopicPosition.right;
+    if (topicsOnRight) {
+      if (!rightSidebarOpen) {
+        onToggleRightSidebar();
+      }
+      return;
+    }
+    if (!tabletSidebarOpen) {
+      onToggleSidebar();
+    }
+    DesktopSidebarTabBus.instance.switchToTopics();
   }
 
   List<Widget> _buildActions(BuildContext context, bool topicsOnRight) {
@@ -525,8 +599,8 @@ class _SidebarResizeHandleState extends State<SidebarResizeHandle> {
             width: 1,
             height: double.infinity,
             color: _hovered
-                ? cs.primary.withOpacity(0.28)
-                : cs.outlineVariant.withOpacity(0.10),
+                ? cs.primary.withValues(alpha: 0.28)
+                : cs.outlineVariant.withValues(alpha: 0.10),
           ),
         ),
       ),
@@ -575,8 +649,8 @@ class DesktopBackgroundLayer extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  cs.surface.withOpacity(0.08),
-                  cs.surface.withOpacity(0.36),
+                  cs.surface.withValues(alpha: 0.08),
+                  cs.surface.withValues(alpha: 0.36),
                 ],
               ),
             ),
@@ -699,13 +773,15 @@ class _DesktopScrollButton extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.white.withOpacity(0.06)
-                : Colors.white.withOpacity(0.07),
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.07),
             shape: BoxShape.circle,
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.10)
-                  : Theme.of(context).colorScheme.outline.withOpacity(0.20),
+                  ? Colors.white.withValues(alpha: 0.10)
+                  : Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.20),
               width: 1,
             ),
           ),
@@ -798,14 +874,12 @@ class _DesktopGlassCircleButton extends StatefulWidget {
     required this.color,
     required this.onTap,
     this.semanticLabel,
-    this.size = 40,
   });
 
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
   final String? semanticLabel;
-  final double size;
 
   @override
   State<_DesktopGlassCircleButton> createState() =>
@@ -821,15 +895,15 @@ class _DesktopGlassCircleButtonState extends State<_DesktopGlassCircleButton> {
     final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final glassBase = isDark
-        ? Colors.black.withOpacity(0.06)
-        : Colors.white.withOpacity(0.06);
+        ? Colors.black.withValues(alpha: 0.06)
+        : Colors.white.withValues(alpha: 0.06);
     final overlay = isDark
-        ? Colors.white.withOpacity(0.06)
-        : Colors.black.withOpacity(0.05);
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.black.withValues(alpha: 0.05);
     final tileColor = _pressed
         ? Color.alphaBlend(overlay, glassBase)
         : glassBase;
-    final borderColor = cs.outlineVariant.withOpacity(0.10);
+    final borderColor = cs.outlineVariant.withValues(alpha: 0.10);
 
     return Semantics(
       button: true,
@@ -848,8 +922,8 @@ class _DesktopGlassCircleButtonState extends State<_DesktopGlassCircleButton> {
             child: BackdropFilter(
               filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
-                width: widget.size,
-                height: widget.size,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: tileColor,
                   shape: BoxShape.circle,

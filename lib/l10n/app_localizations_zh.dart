@@ -286,6 +286,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sponsorPageWeChatSubtitle => '微信赞助码';
 
   @override
+  String get sponsorPageScanQrHint => '扫描二维码赞助';
+
+  @override
   String get languageDisplaySimplifiedChinese => '简体中文';
 
   @override
@@ -426,6 +429,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mcpTransportTagInmemory => '内置';
 
   @override
+  String get mcpTransportTagSse => 'SSE';
+
+  @override
+  String get mcpTransportTagHttp => 'HTTP';
+
+  @override
   String get mcpServerEditSheetStdioOnlyDesktop => 'STDIO 仅在桌面端可用';
 
   @override
@@ -466,6 +475,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homePagePleaseSelectModel => '请先选择模型';
+
+  @override
+  String get homePageAudioAttachmentUnsupported =>
+      '当前模型不支持音频附件，请切换到支持音频输入的模型或移除音频文件后重试。';
 
   @override
   String get homePagePleaseSetupTranslateModel => '请先设置翻译模型';
@@ -1500,7 +1513,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reasoningBudgetSheetXhighSubtitle => '使用最大推理深度，适合最复杂的问题';
 
   @override
-  String get reasoningBudgetSheetCustomLabel => '自定义推理预算 (tokens)';
+  String get reasoningBudgetSheetCustomLabel => '自定义推理预算';
 
   @override
   String get reasoningBudgetSheetCustomHint => '例如：2048 (-1 自动，0 关闭)';
@@ -2506,6 +2519,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providerDetailPageImportJsonButton => '导入 JSON';
 
   @override
+  String get providerDetailPageImportJsonReadFailedMessage => '读取文件失败';
+
+  @override
   String get providerDetailPageTestButton => '测试';
 
   @override
@@ -2899,6 +2915,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchServicesAddDialogApiKeyRequired => 'API Key 必填';
 
   @override
+  String get searchServicesFieldCustomUrlOptional => '自定义 URL（可选）';
+
+  @override
   String get searchServicesAddDialogInstanceUrl => '实例 URL';
 
   @override
@@ -2983,6 +3002,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutPageEasterEggButton => '好的';
 
   @override
+  String get aboutPageAppName => 'Kelivo';
+
+  @override
   String get aboutPageAppDescription => '开源AI 助手';
 
   @override
@@ -2992,10 +3014,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutPageVersion => '版本';
 
   @override
+  String aboutPageVersionDetail(String version, String buildNumber) {
+    return '$version / $buildNumber';
+  }
+
+  @override
   String get aboutPageSystem => '系统';
 
   @override
+  String get aboutPageLoadingPlaceholder => '...';
+
+  @override
+  String get aboutPageUnknownPlaceholder => '-';
+
+  @override
+  String get aboutPagePlatformMacos => 'macOS';
+
+  @override
+  String get aboutPagePlatformWindows => 'Windows';
+
+  @override
+  String get aboutPagePlatformLinux => 'Linux';
+
+  @override
+  String get aboutPagePlatformAndroid => 'Android';
+
+  @override
+  String get aboutPagePlatformIos => 'iOS';
+
+  @override
+  String aboutPagePlatformOther(String os) {
+    return '其他（$os）';
+  }
+
+  @override
   String get aboutPageWebsite => '官网';
+
+  @override
+  String get aboutPageGithub => 'GitHub';
 
   @override
   String get aboutPageLicense => '许可证';
@@ -3088,6 +3144,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get displaySettingsPageMessageNavButtonsSubtitle => '滚动时显示快速跳转按钮';
+
+  @override
+  String get displaySettingsPageUseNewAssistantAvatarUxTitle => '聊天标题栏显示助手头像';
 
   @override
   String get displaySettingsPageHapticsOnSidebarTitle => '侧边栏触觉反馈';
@@ -4431,6 +4490,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get sponsorPageWeChatSubtitle => '微信赞助码';
 
   @override
+  String get sponsorPageScanQrHint => '扫描二维码赞助';
+
+  @override
   String get languageDisplaySimplifiedChinese => '简体中文';
 
   @override
@@ -4571,6 +4633,12 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get mcpTransportTagInmemory => '内置';
 
   @override
+  String get mcpTransportTagSse => 'SSE';
+
+  @override
+  String get mcpTransportTagHttp => 'HTTP';
+
+  @override
   String get mcpServerEditSheetStdioOnlyDesktop => 'STDIO 仅在桌面端可用';
 
   @override
@@ -4611,6 +4679,10 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get homePagePleaseSelectModel => '请先选择模型';
+
+  @override
+  String get homePageAudioAttachmentUnsupported =>
+      '当前模型不支持音频附件，请切换到支持音频输入的模型或移除音频文件后重试。';
 
   @override
   String get homePagePleaseSetupTranslateModel => '请先设置翻译模型';
@@ -5645,7 +5717,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get reasoningBudgetSheetXhighSubtitle => '使用最大推理深度，适合最复杂的问题';
 
   @override
-  String get reasoningBudgetSheetCustomLabel => '自定义推理预算 (tokens)';
+  String get reasoningBudgetSheetCustomLabel => '自定义推理预算';
 
   @override
   String get reasoningBudgetSheetCustomHint => '例如：2048 (-1 自动，0 关闭)';
@@ -6620,6 +6692,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get providerDetailPageImportJsonButton => '导入 JSON';
 
   @override
+  String get providerDetailPageImportJsonReadFailedMessage => '读取文件失败';
+
+  @override
   String get providerDetailPageTestButton => '测试';
 
   @override
@@ -7013,6 +7088,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get searchServicesAddDialogApiKeyRequired => 'API Key 必填';
 
   @override
+  String get searchServicesFieldCustomUrlOptional => '自定义 URL（可选）';
+
+  @override
   String get searchServicesAddDialogInstanceUrl => '实例 URL';
 
   @override
@@ -7097,6 +7175,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get aboutPageEasterEggButton => '好的';
 
   @override
+  String get aboutPageAppName => 'Kelivo';
+
+  @override
   String get aboutPageAppDescription => '开源 AI 助手';
 
   @override
@@ -7106,10 +7187,44 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get aboutPageVersion => '版本';
 
   @override
+  String aboutPageVersionDetail(String version, String buildNumber) {
+    return '$version / $buildNumber';
+  }
+
+  @override
   String get aboutPageSystem => '系统';
 
   @override
+  String get aboutPageLoadingPlaceholder => '...';
+
+  @override
+  String get aboutPageUnknownPlaceholder => '-';
+
+  @override
+  String get aboutPagePlatformMacos => 'macOS';
+
+  @override
+  String get aboutPagePlatformWindows => 'Windows';
+
+  @override
+  String get aboutPagePlatformLinux => 'Linux';
+
+  @override
+  String get aboutPagePlatformAndroid => 'Android';
+
+  @override
+  String get aboutPagePlatformIos => 'iOS';
+
+  @override
+  String aboutPagePlatformOther(String os) {
+    return '其他（$os）';
+  }
+
+  @override
   String get aboutPageWebsite => '官网';
+
+  @override
+  String get aboutPageGithub => 'GitHub';
 
   @override
   String get aboutPageLicense => '许可证';
@@ -7202,6 +7317,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get displaySettingsPageMessageNavButtonsSubtitle => '滚动时显示快速跳转按钮';
+
+  @override
+  String get displaySettingsPageUseNewAssistantAvatarUxTitle => '聊天标题栏显示助手头像';
 
   @override
   String get displaySettingsPageHapticsOnSidebarTitle => '侧边栏触觉反馈';
@@ -8524,6 +8642,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get sponsorPageWeChatSubtitle => '微信贊助碼';
 
   @override
+  String get sponsorPageScanQrHint => '掃描二維碼贊助';
+
+  @override
   String get languageDisplaySimplifiedChinese => '简体中文';
 
   @override
@@ -8664,6 +8785,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mcpTransportTagInmemory => '內建';
 
   @override
+  String get mcpTransportTagSse => 'SSE';
+
+  @override
+  String get mcpTransportTagHttp => 'HTTP';
+
+  @override
   String get mcpServerEditSheetStdioOnlyDesktop => 'STDIO 僅在桌面端可用';
 
   @override
@@ -8704,6 +8831,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homePagePleaseSelectModel => '請先選擇模型';
+
+  @override
+  String get homePageAudioAttachmentUnsupported =>
+      '目前模型不支援音訊附件，請切換到支援音訊輸入的模型或移除音訊檔案後再試。';
 
   @override
   String get homePagePleaseSetupTranslateModel => '請先設定翻譯模型';
@@ -9737,7 +9868,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get reasoningBudgetSheetXhighSubtitle => '使用最大推理深度，適合最複雜的問題';
 
   @override
-  String get reasoningBudgetSheetCustomLabel => '自訂推理預算 (tokens)';
+  String get reasoningBudgetSheetCustomLabel => '自訂推理預算';
 
   @override
   String get reasoningBudgetSheetCustomHint => '例如：2048 (-1 自動，0 關閉)';
@@ -10743,6 +10874,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get providerDetailPageImportJsonButton => '匯入 JSON';
 
   @override
+  String get providerDetailPageImportJsonReadFailedMessage => '讀取檔案失敗';
+
+  @override
   String get providerDetailPageTestButton => '測試';
 
   @override
@@ -11132,6 +11266,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get searchServicesAddDialogApiKeyRequired => 'API Key 必填';
 
   @override
+  String get searchServicesFieldCustomUrlOptional => '自訂 URL（可選）';
+
+  @override
   String get searchServicesAddDialogInstanceUrl => '實例 URL';
 
   @override
@@ -11216,6 +11353,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get aboutPageEasterEggButton => '好的';
 
   @override
+  String get aboutPageAppName => 'Kelivo';
+
+  @override
   String get aboutPageAppDescription => '開源 AI 助理';
 
   @override
@@ -11225,10 +11365,44 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get aboutPageVersion => '版本';
 
   @override
+  String aboutPageVersionDetail(String version, String buildNumber) {
+    return '$version / $buildNumber';
+  }
+
+  @override
   String get aboutPageSystem => '系統';
 
   @override
+  String get aboutPageLoadingPlaceholder => '...';
+
+  @override
+  String get aboutPageUnknownPlaceholder => '-';
+
+  @override
+  String get aboutPagePlatformMacos => 'macOS';
+
+  @override
+  String get aboutPagePlatformWindows => 'Windows';
+
+  @override
+  String get aboutPagePlatformLinux => 'Linux';
+
+  @override
+  String get aboutPagePlatformAndroid => 'Android';
+
+  @override
+  String get aboutPagePlatformIos => 'iOS';
+
+  @override
+  String aboutPagePlatformOther(String os) {
+    return '其他（$os）';
+  }
+
+  @override
   String get aboutPageWebsite => '官網';
+
+  @override
+  String get aboutPageGithub => 'GitHub';
 
   @override
   String get aboutPageLicense => '授權';
@@ -11321,6 +11495,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get displaySettingsPageMessageNavButtonsSubtitle => '滾動時顯示快速跳轉按鈕';
+
+  @override
+  String get displaySettingsPageUseNewAssistantAvatarUxTitle => '聊天標題欄顯示助手頭像';
 
   @override
   String get displaySettingsPageHapticsOnSidebarTitle => '側邊欄觸覺回饋';

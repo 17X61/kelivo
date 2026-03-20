@@ -66,6 +66,8 @@ class _DisplaySettingsBody extends StatelessWidget {
                   _RowDivider(),
                   _ToggleRowShowModelIcon(),
                   _RowDivider(),
+                  _ToggleRowUseNewAssistantAvatarUx(),
+                  _RowDivider(),
                   _ToggleRowShowModelNameTs(),
                   _RowDivider(),
                   _ToggleRowShowTokenStats(),
@@ -153,8 +155,8 @@ class _SettingsCard extends StatelessWidget {
         side: BorderSide(
           width: 0.5,
           color: isDark
-              ? Colors.white.withOpacity(0.06)
-              : cs.outlineVariant.withOpacity(0.12),
+              ? Colors.white.withValues(alpha: 0.06)
+              : cs.outlineVariant.withValues(alpha: 0.12),
         ),
       ),
       child: Padding(
@@ -194,7 +196,7 @@ class _RowDivider extends StatelessWidget {
         thickness: 0.5,
         indent: 8,
         endIndent: 8,
-        color: cs.outlineVariant.withOpacity(0.12),
+        color: cs.outlineVariant.withValues(alpha: 0.12),
       ),
     );
   }
@@ -221,7 +223,7 @@ class _LabeledRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: cs.onSurface.withOpacity(0.9),
+                color: cs.onSurface.withValues(alpha: 0.9),
                 decoration: TextDecoration.none,
               ),
             ),
@@ -279,8 +281,8 @@ class _ThemeModeSegmentedState extends State<_ThemeModeSegmented> {
     ];
 
     final trackBg = isDark
-        ? Colors.white.withOpacity(0.06)
-        : Colors.black.withOpacity(0.04);
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.black.withValues(alpha: 0.04);
     return Container(
       decoration: BoxDecoration(
         color: trackBg,
@@ -308,12 +310,16 @@ class _ThemeModeSegmentedState extends State<_ThemeModeSegmented> {
                   decoration: BoxDecoration(
                     color: () {
                       final selected = mode == items[i].$1;
-                      if (selected)
-                        return cs.primary.withOpacity(isDark ? 0.18 : 0.14);
-                      if (_hover == i)
+                      if (selected) {
+                        return cs.primary.withValues(
+                          alpha: isDark ? 0.18 : 0.14,
+                        );
+                      }
+                      if (_hover == i) {
                         return isDark
-                            ? Colors.white.withOpacity(0.10)
-                            : Colors.black.withOpacity(0.06);
+                            ? Colors.white.withValues(alpha: 0.10)
+                            : Colors.black.withValues(alpha: 0.06);
+                      }
                       return Colors.transparent;
                     }(),
                     borderRadius: BorderRadius.circular(12),
@@ -326,7 +332,7 @@ class _ThemeModeSegmentedState extends State<_ThemeModeSegmented> {
                         size: 16,
                         color: (mode == items[i].$1)
                             ? cs.primary
-                            : cs.onSurface.withOpacity(0.74),
+                            : cs.onSurface.withValues(alpha: 0.74),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -339,7 +345,7 @@ class _ThemeModeSegmentedState extends State<_ThemeModeSegmented> {
                           fontWeight: FontWeight.w400,
                           color: (mode == items[i].$1)
                               ? cs.primary
-                              : cs.onSurface.withOpacity(0.82),
+                              : cs.onSurface.withValues(alpha: 0.82),
                           decoration: TextDecoration.none,
                         ),
                       ),
@@ -351,76 +357,6 @@ class _ThemeModeSegmentedState extends State<_ThemeModeSegmented> {
             if (i != items.length - 1) const SizedBox(width: 4),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _HoverPill extends StatelessWidget {
-  const _HoverPill({
-    required this.hovered,
-    required this.selected,
-    required this.onHover,
-    required this.onTap,
-    required this.label,
-    required this.icon,
-  });
-  final bool hovered;
-  final bool selected;
-  final ValueChanged<bool> onHover;
-  final VoidCallback onTap;
-  final String label;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = selected
-        ? cs.primary.withOpacity(0.12)
-        : hovered
-        ? (isDark
-              ? Colors.white.withOpacity(0.06)
-              : Colors.black.withOpacity(0.04))
-        : Colors.transparent;
-    final fg = selected ? cs.primary : cs.onSurface.withOpacity(0.86);
-    return MouseRegion(
-      onEnter: (_) => onHover(true),
-      onExit: (_) => onHover(false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: selected
-                  ? cs.primary.withOpacity(0.35)
-                  : cs.outlineVariant.withOpacity(0.18),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Keep pill text size aligned with row labels
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: fg,
-                  decoration: TextDecoration.none,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(icon, size: 16, color: fg),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -495,7 +431,7 @@ class _ThemeDotState extends State<_ThemeDot> {
             boxShadow: _hover
                 ? [
                     BoxShadow(
-                      color: widget.color.withOpacity(0.45),
+                      color: widget.color.withValues(alpha: 0.45),
                       blurRadius: 14,
                       spreadRadius: 1,
                     ),
@@ -503,7 +439,7 @@ class _ThemeDotState extends State<_ThemeDot> {
                 : [],
             border: Border.all(
               color: widget.selected
-                  ? cs.onSurface.withOpacity(0.85)
+                  ? cs.onSurface.withValues(alpha: 0.85)
                   : Colors.white,
               width: widget.selected ? 2 : 2,
             ),
@@ -676,11 +612,11 @@ class _SimpleOptionTileState extends State<_SimpleOptionTile> {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = widget.selected
-        ? cs.primary.withOpacity(0.12)
+        ? cs.primary.withValues(alpha: 0.12)
         : (_hover
               ? (isDark
-                    ? Colors.white.withOpacity(0.08)
-                    : Colors.black.withOpacity(0.04))
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.04))
               : Colors.transparent);
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
@@ -714,7 +650,7 @@ class _SimpleOptionTileState extends State<_SimpleOptionTile> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
-                      color: cs.onSurface.withOpacity(0.88),
+                      color: cs.onSurface.withValues(alpha: 0.88),
                       fontWeight: widget.selected
                           ? FontWeight.w600
                           : FontWeight.w400,
@@ -752,8 +688,8 @@ class _AppLanguageRowState extends State<_AppLanguageRow> {
   void _openDropdownOverlay() {
     if (_entry != null) return;
     final rb = _key.currentContext?.findRenderObject() as RenderBox?;
-    final overlayBox =
-        Overlay.of(context)?.context.findRenderObject() as RenderBox?;
+    final overlay = Overlay.of(context);
+    final overlayBox = overlay.context.findRenderObject() as RenderBox?;
     if (rb == null || overlayBox == null) return;
     final size = rb.size;
     final triggerW = size.width;
@@ -761,7 +697,6 @@ class _AppLanguageRowState extends State<_AppLanguageRow> {
     final minW = triggerW;
     _entry = OverlayEntry(
       builder: (ctx) {
-        final cs = Theme.of(ctx).colorScheme;
         // measure desired content width for centering under trigger
         double measureContentWidth() {
           // Keep measurement consistent with dropdown item text (14)
@@ -815,7 +750,7 @@ class _AppLanguageRowState extends State<_AppLanguageRow> {
         );
       },
     );
-    Overlay.of(context)?.insert(_entry!);
+    overlay.insert(_entry!);
     setState(() => _open = true);
   }
 
@@ -831,8 +766,9 @@ class _AppLanguageRowState extends State<_AppLanguageRow> {
     final sp = context.watch<SettingsProvider>();
     String labelFor(Locale l) {
       if (l.languageCode == 'zh') {
-        if ((l.scriptCode ?? '').toLowerCase() == 'hant')
+        if ((l.scriptCode ?? '').toLowerCase() == 'hant') {
           return l10n.languageDisplayTraditionalChinese;
+        }
         return l10n.displaySettingsPageLanguageChineseLabel;
       }
       return l10n.displaySettingsPageLanguageEnglishLabel;
@@ -892,8 +828,8 @@ class _HoverDropdownButton extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = hovered || open
         ? (isDark
-              ? Colors.white.withOpacity(0.06)
-              : Colors.black.withOpacity(0.04))
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.04))
         : Colors.transparent;
     final angle = open ? 3.1415926 : 0.0;
     return MouseRegion(
@@ -914,7 +850,7 @@ class _HoverDropdownButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(borderRadius),
             // Match input border color and width
             border: Border.all(
-              color: cs.outlineVariant.withOpacity(0.12),
+              color: cs.outlineVariant.withValues(alpha: 0.12),
               width: 0.6,
             ),
           ),
@@ -926,7 +862,7 @@ class _HoverDropdownButton extends StatelessWidget {
                         label,
                         style: TextStyle(
                           fontSize: fontSize,
-                          color: cs.onSurface.withOpacity(0.9),
+                          color: cs.onSurface.withValues(alpha: 0.9),
                           fontWeight: FontWeight.w400,
                         ),
                       ),
@@ -939,7 +875,7 @@ class _HoverDropdownButton extends StatelessWidget {
                       child: Icon(
                         lucide.Lucide.ChevronDown,
                         size: 16,
-                        color: cs.onSurface.withOpacity(0.8),
+                        color: cs.onSurface.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -951,7 +887,7 @@ class _HoverDropdownButton extends StatelessWidget {
                       label,
                       style: TextStyle(
                         fontSize: fontSize,
-                        color: cs.onSurface.withOpacity(0.9),
+                        color: cs.onSurface.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -963,7 +899,7 @@ class _HoverDropdownButton extends StatelessWidget {
                       child: Icon(
                         lucide.Lucide.ChevronDown,
                         size: 16,
-                        color: cs.onSurface.withOpacity(0.8),
+                        color: cs.onSurface.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -994,11 +930,11 @@ class _OverlayMenuItemState extends State<_OverlayMenuItem> {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = widget.selected
-        ? cs.primary.withOpacity(0.08)
+        ? cs.primary.withValues(alpha: 0.08)
         : (_hover
               ? (isDark
-                    ? Colors.white.withOpacity(0.06)
-                    : Colors.black.withOpacity(0.04))
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.04))
               : Colors.transparent);
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
@@ -1020,7 +956,7 @@ class _OverlayMenuItemState extends State<_OverlayMenuItem> {
                   widget.label,
                   style: TextStyle(
                     fontSize: 14,
-                    color: cs.onSurface.withOpacity(0.9),
+                    color: cs.onSurface.withValues(alpha: 0.9),
                   ),
                 ),
               ),
@@ -1062,8 +998,8 @@ class _OverlayItemState extends State<_OverlayItem> {
     final bg = _hover
         ? Color.alphaBlend(
             (isDark
-                ? Colors.white.withOpacity(0.06)
-                : Colors.black.withOpacity(0.04)),
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.black.withValues(alpha: 0.04)),
             widget.background,
           )
         : widget.background;
@@ -1085,7 +1021,7 @@ class _OverlayItemState extends State<_OverlayItem> {
               Icon(
                 widget.icon,
                 size: 16,
-                color: cs.onSurface.withOpacity(0.85),
+                color: cs.onSurface.withValues(alpha: 0.85),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -1093,7 +1029,7 @@ class _OverlayItemState extends State<_OverlayItem> {
                   widget.label,
                   style: TextStyle(
                     fontSize: 14,
-                    color: cs.onSurface.withOpacity(0.9),
+                    color: cs.onSurface.withValues(alpha: 0.9),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1192,12 +1128,12 @@ class _LanguageDropdownState extends State<_LanguageDropdown> {
                   : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: cs.outlineVariant.withOpacity(0.12),
+                color: cs.outlineVariant.withValues(alpha: 0.12),
                 width: 0.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -1237,10 +1173,10 @@ class _LanguageDropdownState extends State<_LanguageDropdown> {
                                   );
                               break;
                             case 'en_US':
-                            default:
                               await context
                                   .read<SettingsProvider>()
                                   .setAppLocale(const Locale('en', 'US'));
+                              break;
                           }
                           if (!mounted) return;
                           widget.onClose();
@@ -1297,8 +1233,8 @@ class _LanguageDropdownItemState extends State<_LanguageDropdownItem> {
           decoration: BoxDecoration(
             color: _hover
                 ? (isDark
-                      ? Colors.white.withOpacity(0.06)
-                      : Colors.black.withOpacity(0.04))
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.black.withValues(alpha: 0.04))
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
@@ -1370,7 +1306,6 @@ class _ChatFontSizeRowState extends State<_ChatFontSizeRow> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
     return _LabeledRow(
       label: l10n.displaySettingsPageChatFontSizeTitle,
       trailing: Row(
@@ -1390,7 +1325,9 @@ class _ChatFontSizeRowState extends State<_ChatFontSizeRow> {
           Text(
             '%',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 14,
               decoration: TextDecoration.none,
             ),
@@ -1439,18 +1376,17 @@ class _BorderInputState extends State<_BorderInput> {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // hover to change border color (not background)
-    final active = _focus.hasFocus || _hover;
     final baseBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: BorderSide(
-        color: cs.outlineVariant.withOpacity(0.28),
+        color: cs.outlineVariant.withValues(alpha: 0.28),
         width: 0.8,
       ),
     );
     final hoverBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: BorderSide(
-        color: cs.outlineVariant.withOpacity(0.38),
+        color: cs.outlineVariant.withValues(alpha: 0.38),
         width: 0.9,
       ),
     );
@@ -1495,6 +1431,7 @@ class _DesktopAppFontRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final sp = context.watch<SettingsProvider>();
+    final settingsProvider = context.read<SettingsProvider>();
     final current = sp.appFontFamily;
     final displayText = (current == null || current.isEmpty)
         ? l10n.desktopFontFamilySystemDefault
@@ -1515,11 +1452,9 @@ class _DesktopAppFontRow extends StatelessWidget {
               );
               if (fam == null) return;
               if (fam == '__SYSTEM__') {
-                await context.read<SettingsProvider>().clearAppFont();
+                await settingsProvider.clearAppFont();
               } else {
-                await context.read<SettingsProvider>().setAppFontSystemFamily(
-                  fam,
-                );
+                await settingsProvider.setAppFontSystemFamily(fam);
               }
             },
           ),
@@ -1528,9 +1463,7 @@ class _DesktopAppFontRow extends StatelessWidget {
             message: l10n.displaySettingsPageFontResetLabel,
             child: _IconBtn(
               icon: lucide.Lucide.RotateCcw,
-              onTap: () async {
-                await context.read<SettingsProvider>().clearAppFont();
-              },
+              onTap: () async => settingsProvider.clearAppFont(),
             ),
           ),
         ],
@@ -1545,6 +1478,7 @@ class _DesktopCodeFontRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final sp = context.watch<SettingsProvider>();
+    final settingsProvider = context.read<SettingsProvider>();
     final current = sp.codeFontFamily;
     final displayText = (current == null || current.isEmpty)
         ? l10n.desktopFontFamilyMonospaceDefault
@@ -1565,11 +1499,9 @@ class _DesktopCodeFontRow extends StatelessWidget {
               );
               if (fam == null) return;
               if (fam == '__MONO__') {
-                await context.read<SettingsProvider>().clearCodeFont();
+                await settingsProvider.clearCodeFont();
               } else {
-                await context.read<SettingsProvider>().setCodeFontSystemFamily(
-                  fam,
-                );
+                await settingsProvider.setCodeFontSystemFamily(fam);
               }
             },
           ),
@@ -1578,9 +1510,7 @@ class _DesktopCodeFontRow extends StatelessWidget {
             message: l10n.displaySettingsPageFontResetLabel,
             child: _IconBtn(
               icon: lucide.Lucide.RotateCcw,
-              onTap: () async {
-                await context.read<SettingsProvider>().clearCodeFont();
-              },
+              onTap: () async => settingsProvider.clearCodeFont(),
             ),
           ),
         ],
@@ -1610,8 +1540,8 @@ class _DesktopFontDropdownButtonState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = _hover
         ? (isDark
-              ? Colors.white.withOpacity(0.06)
-              : Colors.black.withOpacity(0.05))
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.05))
         : Colors.transparent;
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
@@ -1625,7 +1555,7 @@ class _DesktopFontDropdownButtonState
             color: bg,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: cs.outlineVariant.withOpacity(0.28),
+              color: cs.outlineVariant.withValues(alpha: 0.28),
               width: 0.8,
             ),
           ),
@@ -1649,7 +1579,7 @@ class _DesktopFontDropdownButtonState
               Icon(
                 lucide.Lucide.ChevronDown,
                 size: 16,
-                color: cs.onSurface.withOpacity(0.7),
+                color: cs.onSurface.withValues(alpha: 0.7),
               ),
             ],
           ),
@@ -1668,17 +1598,20 @@ Future<String?> _showDesktopFontChooserDialog(
 }) async {
   final cs = Theme.of(context).colorScheme;
   final l10n = AppLocalizations.of(context)!;
+  final rootNavigator = Navigator.of(context, rootNavigator: true);
   final ctrl = TextEditingController();
   String? result;
 
-  Future<List<String>> _fetchSystemFonts() async {
+  Future<List<String>> fetchSystemFonts() async {
     try {
       final sf = SystemFonts();
       // Only fetch the font family list to avoid huge memory spikes.
-      final alt = await Future.value(sf.getFontList());
-      final out = List<String>.from(alt ?? const <String>[]);
+      final fontList = await Future.value(sf.getFontList());
+      final out = List<String>.from(fontList);
       out.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-      if (out.isNotEmpty) return out;
+      if (out.isNotEmpty) {
+        return out;
+      }
     } catch (_) {
       /* ignore and fallback */
     }
@@ -1704,8 +1637,7 @@ Future<String?> _showDesktopFontChooserDialog(
 
   // Show loading dialog only if fetch takes time, and ensure it closes
   bool loadingShown = false;
-  Timer? loadingTimer;
-  loadingTimer = Timer(const Duration(milliseconds: 300), () {
+  final loadingTimer = Timer(const Duration(milliseconds: 300), () {
     loadingShown = true;
     showDialog(
       context: context,
@@ -1744,12 +1676,17 @@ Future<String?> _showDesktopFontChooserDialog(
       },
     );
   });
-  final fonts = await _fetchSystemFonts();
-  if (loadingTimer?.isActive ?? false) loadingTimer?.cancel();
+  final fonts = await fetchSystemFonts();
+  if (loadingTimer.isActive) {
+    loadingTimer.cancel();
+  }
   if (loadingShown) {
     try {
-      Navigator.of(context, rootNavigator: true).pop();
+      rootNavigator.pop();
     } catch (_) {}
+  }
+  if (!context.mounted) {
+    return null;
   }
   await showDialog<String>(
     context: context,
@@ -1804,18 +1741,16 @@ Future<String?> _showDesktopFontChooserDialog(
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outlineVariant.withOpacity(0.12),
+                            color: Theme.of(context).colorScheme.outlineVariant
+                                .withValues(alpha: 0.12),
                             width: 0.6,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outlineVariant.withOpacity(0.12),
+                            color: Theme.of(context).colorScheme.outlineVariant
+                                .withValues(alpha: 0.12),
                             width: 0.6,
                           ),
                         ),
@@ -1824,7 +1759,7 @@ Future<String?> _showDesktopFontChooserDialog(
                           borderSide: BorderSide(
                             color: Theme.of(
                               context,
-                            ).colorScheme.primary.withOpacity(0.35),
+                            ).colorScheme.primary.withValues(alpha: 0.35),
                             width: 0.8,
                           ),
                         ),
@@ -1841,7 +1776,7 @@ Future<String?> _showDesktopFontChooserDialog(
                         decoration: BoxDecoration(
                           color: Theme.of(context).brightness == Brightness.dark
                               ? Colors.white10
-                              : Colors.black.withOpacity(0.03),
+                              : Colors.black.withValues(alpha: 0.03),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: ListView.builder(
@@ -1896,8 +1831,9 @@ class _FontRowItemState extends State<_FontRowItem> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final fam = widget.family;
       if (_loadedSystemFontFamilies.contains(fam) ||
-          _loadingSystemFontFamilies.contains(fam))
+          _loadingSystemFontFamilies.contains(fam)) {
         return;
+      }
       _loadingSystemFontFamilies.add(fam);
       try {
         await SystemFonts().loadFont(fam);
@@ -1917,8 +1853,8 @@ class _FontRowItemState extends State<_FontRowItem> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = _hover
         ? (isDark
-              ? Colors.white.withOpacity(0.06)
-              : Colors.black.withOpacity(0.04))
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.04))
         : Colors.transparent;
     final sample = 'Aa字';
     return MouseRegion(
@@ -2216,7 +2152,7 @@ class _ToggleRowRequestLogging extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: cs.onSurface.withOpacity(0.9),
+                color: cs.onSurface.withValues(alpha: 0.9),
                 decoration: TextDecoration.none,
               ),
             ),
@@ -2273,7 +2209,7 @@ class _ToggleRowFlutterLogging extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: cs.onSurface.withOpacity(0.9),
+                color: cs.onSurface.withValues(alpha: 0.9),
                 decoration: TextDecoration.none,
               ),
             ),
@@ -2357,6 +2293,21 @@ class _ToggleRowMsgNavButtons extends StatelessWidget {
   }
 }
 
+class _ToggleRowUseNewAssistantAvatarUx extends StatelessWidget {
+  const _ToggleRowUseNewAssistantAvatarUx();
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final sp = context.watch<SettingsProvider>();
+    return _ToggleRow(
+      label: l10n.displaySettingsPageUseNewAssistantAvatarUxTitle,
+      value: sp.useNewAssistantAvatarUx,
+      onChanged: (v) =>
+          context.read<SettingsProvider>().setUseNewAssistantAvatarUx(v),
+    );
+  }
+}
+
 class _ToggleRowShowChatListDate extends StatelessWidget {
   const _ToggleRowShowChatListDate();
   @override
@@ -2415,93 +2366,6 @@ class _ToggleRowNewChatOnLaunch extends StatelessWidget {
   }
 }
 
-class _ToggleRowHapticsGlobal extends StatelessWidget {
-  const _ToggleRowHapticsGlobal();
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final sp = context.watch<SettingsProvider>();
-    return _ToggleRow(
-      label: l10n.displaySettingsPageHapticsGlobalTitle,
-      value: sp.hapticsGlobalEnabled,
-      onChanged: (v) =>
-          context.read<SettingsProvider>().setHapticsGlobalEnabled(v),
-    );
-  }
-}
-
-class _ToggleRowHapticsSwitch extends StatelessWidget {
-  const _ToggleRowHapticsSwitch();
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final sp = context.watch<SettingsProvider>();
-    return _ToggleRow(
-      label: l10n.displaySettingsPageHapticsIosSwitchTitle,
-      value: sp.hapticsIosSwitch,
-      onChanged: (v) => context.read<SettingsProvider>().setHapticsIosSwitch(v),
-    );
-  }
-}
-
-class _ToggleRowHapticsSidebar extends StatelessWidget {
-  const _ToggleRowHapticsSidebar();
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final sp = context.watch<SettingsProvider>();
-    return _ToggleRow(
-      label: l10n.displaySettingsPageHapticsOnSidebarTitle,
-      value: sp.hapticsOnDrawer,
-      onChanged: (v) => context.read<SettingsProvider>().setHapticsOnDrawer(v),
-    );
-  }
-}
-
-class _ToggleRowHapticsListItem extends StatelessWidget {
-  const _ToggleRowHapticsListItem();
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final sp = context.watch<SettingsProvider>();
-    return _ToggleRow(
-      label: l10n.displaySettingsPageHapticsOnListItemTapTitle,
-      value: sp.hapticsOnListItemTap,
-      onChanged: (v) =>
-          context.read<SettingsProvider>().setHapticsOnListItemTap(v),
-    );
-  }
-}
-
-class _ToggleRowHapticsCardTap extends StatelessWidget {
-  const _ToggleRowHapticsCardTap();
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final sp = context.watch<SettingsProvider>();
-    return _ToggleRow(
-      label: l10n.displaySettingsPageHapticsOnCardTapTitle,
-      value: sp.hapticsOnCardTap,
-      onChanged: (v) => context.read<SettingsProvider>().setHapticsOnCardTap(v),
-    );
-  }
-}
-
-class _ToggleRowHapticsGenerate extends StatelessWidget {
-  const _ToggleRowHapticsGenerate();
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final sp = context.watch<SettingsProvider>();
-    return _ToggleRow(
-      label: l10n.displaySettingsPageHapticsOnGenerateTitle,
-      value: sp.hapticsOnGenerate,
-      onChanged: (v) =>
-          context.read<SettingsProvider>().setHapticsOnGenerate(v),
-    );
-  }
-}
-
 class _ToggleRow extends StatelessWidget {
   const _ToggleRow({
     required this.label,
@@ -2525,7 +2389,7 @@ class _ToggleRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: cs.onSurface.withOpacity(0.9),
+                color: cs.onSurface.withValues(alpha: 0.9),
                 decoration: TextDecoration.none,
               ),
             ),
@@ -2618,7 +2482,7 @@ class _AutoScrollDelayRowState extends State<_AutoScrollDelayRow> {
             style: TextStyle(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(enabled ? 0.7 : 0.35),
+              ).colorScheme.onSurface.withValues(alpha: enabled ? 0.7 : 0.35),
               fontSize: 14,
               decoration: TextDecoration.none,
             ),
@@ -2683,7 +2547,9 @@ class _AutoCollapseCodeBlockLinesRowState
           Text(
             l10n.displaySettingsPageAutoCollapseCodeBlockLinesUnit,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 14,
               decoration: TextDecoration.none,
             ),
@@ -2746,7 +2612,9 @@ class _BackgroundMaskRowState extends State<_BackgroundMaskRow> {
           Text(
             '%',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 14,
               decoration: TextDecoration.none,
             ),
@@ -2804,7 +2672,6 @@ class _SendShortcutDropdownState extends State<_SendShortcutDropdown> {
         final modifier = Platform.isMacOS ? '⌘' : 'Ctrl';
         return '$modifier + Enter';
       case DesktopSendShortcut.enter:
-      default:
         return l10n.displaySettingsPageSendShortcutEnter;
     }
   }
@@ -2812,13 +2679,13 @@ class _SendShortcutDropdownState extends State<_SendShortcutDropdown> {
   void _openMenu() {
     if (_entry != null) return;
     final rb = _triggerKey.currentContext?.findRenderObject() as RenderBox?;
+    final overlay = Overlay.of(context);
     if (rb == null) return;
     final triggerSize = rb.size;
     final triggerWidth = triggerSize.width;
 
     _entry = OverlayEntry(
       builder: (ctx) {
-        final cs = Theme.of(ctx).colorScheme;
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         final usePure = Provider.of<SettingsProvider>(
           ctx,
@@ -2856,7 +2723,7 @@ class _SendShortcutDropdownState extends State<_SendShortcutDropdown> {
         );
       },
     );
-    Overlay.of(context)?.insert(_entry!);
+    overlay.insert(_entry!);
     setState(() => _open = true);
   }
 
@@ -2867,7 +2734,7 @@ class _SendShortcutDropdownState extends State<_SendShortcutDropdown> {
     final sp = context.watch<SettingsProvider>();
     final label = _labelFor(context, sp.desktopSendShortcut);
 
-    final baseBorder = cs.outlineVariant.withOpacity(0.18);
+    final baseBorder = cs.outlineVariant.withValues(alpha: 0.18);
     final hoverBorder = cs.primary;
     final borderColor = _open || _hover ? hoverBorder : baseBorder;
 
@@ -2892,7 +2759,7 @@ class _SendShortcutDropdownState extends State<_SendShortcutDropdown> {
               boxShadow: _open
                   ? [
                       BoxShadow(
-                        color: cs.primary.withOpacity(0.10),
+                        color: cs.primary.withValues(alpha: 0.10),
                         blurRadius: 0,
                         spreadRadius: 2,
                       ),
@@ -2908,7 +2775,7 @@ class _SendShortcutDropdownState extends State<_SendShortcutDropdown> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 14,
-                    color: cs.onSurface.withOpacity(0.88),
+                    color: cs.onSurface.withValues(alpha: 0.88),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -2919,7 +2786,7 @@ class _SendShortcutDropdownState extends State<_SendShortcutDropdown> {
                   child: Icon(
                     lucide.Lucide.ChevronDown,
                     size: 14,
-                    color: cs.onSurface.withOpacity(0.5),
+                    color: cs.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -2977,7 +2844,7 @@ class _SendShortcutOverlayState extends State<_SendShortcutOverlay>
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = cs.outlineVariant.withOpacity(0.12);
+    final borderColor = cs.outlineVariant.withValues(alpha: 0.12);
 
     // Platform-specific modifier key
     final modifier = Platform.isMacOS ? '⌘' : 'Ctrl';
@@ -3003,7 +2870,7 @@ class _SendShortcutOverlayState extends State<_SendShortcutOverlay>
               border: Border.all(color: borderColor, width: 0.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.32 : 0.08),
+                  color: Colors.black.withValues(alpha: isDark ? 0.32 : 0.08),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
