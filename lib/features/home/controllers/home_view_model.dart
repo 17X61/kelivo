@@ -144,6 +144,7 @@ class HomeViewModel extends ChangeNotifier {
   // ============================================================================
 
   void _onMessagesChanged() {
+    _chatController.invalidateCache();
     notifyListeners();
   }
 
@@ -158,6 +159,7 @@ class HomeViewModel extends ChangeNotifier {
         content: content,
         totalTokens: totalTokens,
       );
+      _chatController.invalidateCache();
       // NOTE: Do NOT call notifyListeners() here!
       // Streaming content updates are now handled by StreamingContentNotifier
       // via ValueListenableBuilder, which only rebuilds the streaming message widget.
@@ -339,6 +341,8 @@ class HomeViewModel extends ChangeNotifier {
 
   /// Switch to an existing conversation.
   Future<void> switchConversation(String id) async {
+    final assistantProvider = _contextProvider.read<AssistantProvider>();
+
     // Flush current conversation progress before switching
     await _chatActions.flushConversationProgress(currentConversation);
 
@@ -350,6 +354,12 @@ class HomeViewModel extends ChangeNotifier {
     _chatService.setCurrentConversation(id);
     final convo = _chatService.getConversation(id);
     if (convo != null) {
+      final convoAssistantId = convo.assistantId;
+      if (convoAssistantId != null &&
+          assistantProvider.currentAssistantId != convoAssistantId &&
+          assistantProvider.getById(convoAssistantId) != null) {
+        await assistantProvider.setCurrentAssistant(convoAssistantId);
+      }
       _chatController.setCurrentConversation(convo);
       _streamController.clearGeminiThoughtSigs();
       notifyListeners();
